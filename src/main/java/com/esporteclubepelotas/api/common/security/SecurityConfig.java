@@ -53,8 +53,18 @@ public class SecurityConfig {
                                 "/webjars/**"
                         ).permitAll()
 
-                        // 2. Autenticacao Publica
-                        .requestMatchers("/auth/login", "/auth/register", "/auth/refresh").permitAll()
+                        // 2. Autenticacao Publica & Registro
+                        .requestMatchers(
+                                "/auth/login",
+                                "/auth/register",
+                                "/auth/refresh",
+                                "/auth/verify",
+                                "/auth/resend-code",
+                                "/auth/forgot-password",
+                                "/auth/reset-password",
+                                "/users/register",
+                                "/users/check-availability"
+                        ).permitAll()
 
                         // 3. Consultas Publicas (GET)
                         .requestMatchers(HttpMethod.GET, "/news/**").permitAll()

@@ -6,7 +6,10 @@ import com.esporteclubepelotas.api.modules.setting.service.SettingService;
 import com.esporteclubepelotas.api.modules.systemmodule.entity.SystemModule;
 import com.esporteclubepelotas.api.modules.systemmodule.repository.SystemModuleRepository;
 import com.esporteclubepelotas.api.modules.theme.service.ThemeService;
+import com.esporteclubepelotas.api.modules.user.entity.AddressItem;
+import com.esporteclubepelotas.api.modules.user.entity.PhoneItem;
 import com.esporteclubepelotas.api.modules.user.entity.User;
+import com.esporteclubepelotas.api.modules.user.entity.UserPreferences;
 import com.esporteclubepelotas.api.modules.user.entity.UserStatus;
 import com.esporteclubepelotas.api.modules.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -169,6 +173,32 @@ public class DatabaseSeeder implements CommandLineRunner {
         Role role = roleRepository.findByName(roleName)
                 .orElseThrow(() -> new IllegalStateException("Role " + roleName + " não encontrada para associar ao usuário " + email));
 
+        List<PhoneItem> phones = new ArrayList<>();
+        phones.add(PhoneItem.builder()
+                .number("(53) 99999-0001")
+                .isWhatsapp(true)
+                .isPrimary(true)
+                .isVerified(true)
+                .build());
+
+        List<AddressItem> addresses = new ArrayList<>();
+        addresses.add(AddressItem.builder()
+                .zipCode("96015-560")
+                .street("Avenida Bento Gonçalves")
+                .number("1908")
+                .complement("Estádio Boca do Lobo")
+                .neighborhood("Centro")
+                .city("Pelotas")
+                .state("RS")
+                .isPrimary(true)
+                .build());
+
+        UserPreferences preferences = UserPreferences.builder()
+                .shirtSize("G")
+                .receiveNewsletter(true)
+                .receiveSms(false)
+                .build();
+
         User user = User.builder()
                 .firstName(firstName)
                 .lastName(lastName)
@@ -182,6 +212,10 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .emailVerified(true)
                 .mustChangePassword(false)
                 .birthDate(LocalDate.of(1908, 10, 11))
+                .phone("(53) 99999-0001")
+                .phones(phones)
+                .addresses(addresses)
+                .preferences(preferences)
                 .build();
 
         userRepository.save(user);

@@ -1,6 +1,7 @@
 package com.esporteclubepelotas.api.modules.user.repository;
 
 import com.esporteclubepelotas.api.modules.user.entity.User;
+import com.esporteclubepelotas.api.modules.user.entity.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,17 +21,30 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Query("SELECT u FROM User u WHERE u.email = :identifier OR u.cpf = :identifier")
     Optional<User> findByIdentifier(@Param("identifier") String identifier);
 
+    Optional<User> findByResetPasswordToken(String resetPasswordToken);
+
+    Optional<User> findByEmailAndVerificationCode(String email, String verificationCode);
+
     boolean existsByEmail(String email);
 
     boolean existsByCpf(String cpf);
 
     Page<User> findAllByIsActiveTrue(Pageable pageable);
 
-    @Query("SELECT u FROM User u WHERE u.isActive = true AND " +
-            "(:search IS NULL OR LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+    @Query("SELECT u FROM User u WHERE " +
+            "(:includeInactive = true OR u.isActive = true) AND " +
+            "(:status IS NULL OR u.status = :status) AND " +
+            "(:roleName IS NULL OR UPPER(u.role.name) = UPPER(:roleName)) AND " +
+            "(:search IS NULL OR " +
+            "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             "LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
             "u.cpf LIKE CONCAT('%', :search, '%'))")
-    Page<User> searchUsers(@Param("search") String search, Pageable pageable);
+    Page<User> findUsersWithFilters(
+            @Param("search") String search,
+            @Param("roleName") String roleName,
+            @Param("status") UserStatus status,
+            @Param("includeInactive") boolean includeInactive,
+            Pageable pageable
+    );
 }
-

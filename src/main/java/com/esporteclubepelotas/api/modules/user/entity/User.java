@@ -7,10 +7,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -75,6 +79,36 @@ public class User {
 
     private Instant lockoutUntil;
 
+    @Column(length = 100)
+    private String resetPasswordToken;
+
+    private Instant resetPasswordExpires;
+
+    @Column(length = 10)
+    private String verificationCode;
+
+    private Instant verificationCodeExpires;
+
+    @Column(nullable = false)
+    @Builder.Default
+    private int tokenVersion = 1;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Builder.Default
+    private List<PhoneItem> phones = new ArrayList<>();
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Builder.Default
+    private List<AddressItem> addresses = new ArrayList<>();
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Builder.Default
+    private UserPreferences preferences = new UserPreferences();
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Builder.Default
+    private List<PendingChangeItem> pendingChanges = new ArrayList<>();
+
     @CreationTimestamp
     @Column(updatable = false)
     private Instant createdAt;
@@ -90,6 +124,17 @@ public class User {
         if (this.cpf != null) {
             this.cpf = this.cpf.replaceAll("[^0-9]", "");
         }
+        if (this.phones == null) {
+            this.phones = new ArrayList<>();
+        }
+        if (this.addresses == null) {
+            this.addresses = new ArrayList<>();
+        }
+        if (this.preferences == null) {
+            this.preferences = new UserPreferences();
+        }
+        if (this.pendingChanges == null) {
+            this.pendingChanges = new ArrayList<>();
+        }
     }
 }
-
