@@ -21,3 +21,4 @@ public class RestAuthenticationEntryPoint implements AuthenticationEntryPoint {
         response.getWriter().write("{\"statusCode\":401,\"message\":\"Não autenticado. Forneça um token JWT válido.\",\"error\":\"Unauthorized\"}");
     }
 }
+
