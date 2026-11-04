@@ -53,6 +53,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- H2 Database (Fallback em memória caso não haja PostgreSQL configurado) -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- Lombok (Produtividade de Getters/Setters/Builders) -->
         <dependency>
             <groupId>org.projectlombok</groupId>

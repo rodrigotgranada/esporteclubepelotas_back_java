@@ -63,3 +63,4 @@ SPRING_DATASOURCE_PASSWORD=<sua-senha>
 3. Em **Branch**, selecione `main` (ou `develop`).
 4. Em **Environment Variables**, adicione suas credenciais do Neon (`SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`).
 5. Clique em **Deploy web service**. O Render usará o `Dockerfile` automaticamente!
+

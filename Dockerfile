@@ -39,3 +39,4 @@ ENV JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -Xmx350m -Xms128m"
 
 # Inicia a aplicação Spring Boot
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
