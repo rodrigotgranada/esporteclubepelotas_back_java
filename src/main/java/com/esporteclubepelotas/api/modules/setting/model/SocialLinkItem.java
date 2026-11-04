@@ -14,3 +14,4 @@ public class SocialLinkItem implements Serializable {
     private String label;
     private String url;
 }
+

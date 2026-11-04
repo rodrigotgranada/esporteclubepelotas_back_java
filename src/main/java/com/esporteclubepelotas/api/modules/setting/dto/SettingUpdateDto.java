@@ -25,3 +25,4 @@ public class SettingUpdateDto {
     private String googleMapsEmbedUrl;
     private String copyrightText;
 }
+

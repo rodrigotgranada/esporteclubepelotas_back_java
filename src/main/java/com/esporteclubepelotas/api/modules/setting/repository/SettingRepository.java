@@ -11,3 +11,4 @@ public interface SettingRepository extends JpaRepository<Setting, Long> {
 
     Optional<Setting> findFirstByOrderByIdAsc();
 }
+

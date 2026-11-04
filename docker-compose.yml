@@ -34,8 +34,8 @@ services:
       postgres:
         condition: service_healthy
     ports:
-      # Mapeia na porta 7998 (compatível 100% com o Frontend Next.js local)
-      - "7998:7998"
+      # Mapeia a porta da API no host (7998 por padrão, ou APP_PORT se 7998 estiver ocupada)
+      - "${APP_PORT:-7998}:7998"
     environment:
       PORT: 7998
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ecpelotas_local}
@@ -54,3 +54,4 @@ services:
 volumes:
   ecpelotas_pgdata:
     driver: local
+

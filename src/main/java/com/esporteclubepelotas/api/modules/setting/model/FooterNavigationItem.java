@@ -20,3 +20,4 @@ public class FooterNavigationItem implements Serializable {
     @JsonProperty("isExternal")
     private Boolean isExternal;
 }
+

@@ -152,3 +152,4 @@ public final class PaletteGeneratorHelper {
         return new GeneratedPalettes(light, dark);
     }
 }
+

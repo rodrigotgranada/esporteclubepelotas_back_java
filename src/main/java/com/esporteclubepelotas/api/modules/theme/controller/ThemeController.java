@@ -90,3 +90,4 @@ public class ThemeController {
         return ResponseEntity.ok(Map.of("success", true, "message", "Tema removido com sucesso"));
     }
 }
+

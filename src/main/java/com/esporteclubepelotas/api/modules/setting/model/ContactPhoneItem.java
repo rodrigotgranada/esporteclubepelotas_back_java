@@ -17,3 +17,4 @@ public class ContactPhoneItem implements Serializable {
     @JsonProperty("isWhatsapp")
     private Boolean isWhatsapp;
 }
+

@@ -67,3 +67,4 @@ public class SettingController {
         return ResponseEntity.ok(settingService.updateSettings(dto, null));
     }
 }
+

@@ -13,3 +13,4 @@ public class OpeningHourItem implements Serializable {
     private String department;
     private String schedule;
 }
+

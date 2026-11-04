@@ -50,3 +50,4 @@ class SwaggerAndHealthEndpointsTest {
                 .andExpect(status().isOk());
     }
 }
+

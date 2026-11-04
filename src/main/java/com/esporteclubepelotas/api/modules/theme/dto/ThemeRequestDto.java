@@ -36,3 +36,4 @@ public class ThemeRequestDto {
 
     private ThemePalette dark;
 }
+

@@ -34,3 +34,4 @@ public class OpenApiConfig {
                                         .description("Insira o token JWT retornado no login (/auth/login) para testar rotas protegidas")));
     }
 }
+
