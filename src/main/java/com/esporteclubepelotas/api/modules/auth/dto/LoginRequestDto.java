@@ -21,3 +21,4 @@ public class LoginRequestDto {
     @NotBlank(message = "A senha é obrigatória")
     private String password;
 }
+

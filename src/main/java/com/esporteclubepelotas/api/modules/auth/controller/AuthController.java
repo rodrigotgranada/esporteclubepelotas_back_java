@@ -38,3 +38,4 @@ public class AuthController {
         return ResponseEntity.ok(authService.changePassword(principal.getId(), dto));
     }
 }
+

@@ -12,3 +12,4 @@ public interface SystemModuleRepository extends JpaRepository<SystemModule, Stri
     Optional<SystemModule> findBySlug(String slug);
     List<SystemModule> findAllByOrderByCreatedAtAsc();
 }
+

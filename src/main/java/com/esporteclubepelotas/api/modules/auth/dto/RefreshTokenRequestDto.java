@@ -15,3 +15,4 @@ public class RefreshTokenRequestDto {
     @NotBlank(message = "O refresh token é obrigatório")
     private String refreshToken;
 }
+

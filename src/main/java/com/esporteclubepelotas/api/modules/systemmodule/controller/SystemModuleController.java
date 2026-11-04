@@ -32,3 +32,4 @@ public class SystemModuleController {
         return ResponseEntity.ok(moduleRepository.save(module));
     }
 }
+

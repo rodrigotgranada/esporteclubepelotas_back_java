@@ -50,3 +50,4 @@ public class UserController {
         return ResponseEntity.ok(userAdminService.updateUserStatus(id, status));
     }
 }
+

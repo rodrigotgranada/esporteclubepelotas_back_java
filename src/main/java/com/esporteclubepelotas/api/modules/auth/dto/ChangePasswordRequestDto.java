@@ -20,3 +20,4 @@ public class ChangePasswordRequestDto {
     @Size(min = 6, message = "A nova senha deve ter no mínimo 6 caracteres")
     private String newPassword;
 }
+

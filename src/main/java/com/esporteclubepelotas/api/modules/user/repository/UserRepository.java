@@ -33,3 +33,4 @@ public interface UserRepository extends JpaRepository<User, String> {
             "u.cpf LIKE CONCAT('%', :search, '%'))")
     Page<User> searchUsers(@Param("search") String search, Pageable pageable);
 }
+

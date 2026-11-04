@@ -1,0 +1,56 @@
+services:
+  # ==========================================================
+  # Banco de Dados PostgreSQL Local (v17)
+  # ==========================================================
+  postgres:
+    image: postgres:17-alpine
+    container_name: ecpelotas_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ecpelotas_local}
+      POSTGRES_USER: ${POSTGRES_USER:-pelotas_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pelotas_pass}
+    ports:
+      # Mapeado para 5433 no host para não conflitar caso a 5432 esteja ocupada
+      - "5433:5432"
+    volumes:
+      - ecpelotas_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pelotas_user} -d ${POSTGRES_DB:-ecpelotas_local}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================================
+  # API Backend Java (Spring Boot 3 + Java 17)
+  # ==========================================================
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ecpelotas_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      # Mapeia na porta 7998 (compatível 100% com o Frontend Next.js local)
+      - "7998:7998"
+    environment:
+      PORT: 7998
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ecpelotas_local}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-pelotas_user}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-pelotas_pass}
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-key}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:7999}
+      STORAGE_PROVIDER: ${STORAGE_PROVIDER:-firebase}
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID:-esporteclubepelotasdev}
+      FIREBASE_STORAGE_BUCKET: ${FIREBASE_STORAGE_BUCKET:-esporteclubepelotasdev.firebasestorage.app}
+      FIREBASE_CREDENTIALS_BASE64: ${FIREBASE_CREDENTIALS_BASE64:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+
+volumes:
+  ecpelotas_pgdata:
+    driver: local

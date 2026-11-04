@@ -7,6 +7,8 @@ import com.esporteclubepelotas.api.modules.systemmodule.repository.SystemModuleR
 import com.esporteclubepelotas.api.modules.user.entity.User;
 import com.esporteclubepelotas.api.modules.user.entity.UserStatus;
 import com.esporteclubepelotas.api.modules.user.repository.UserRepository;
+import com.esporteclubepelotas.api.modules.setting.service.SettingService;
+import com.esporteclubepelotas.api.modules.theme.service.ThemeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -25,12 +27,16 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final SystemModuleRepository moduleRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ThemeService themeService;
+    private final SettingService settingService;
 
     @Override
     public void run(String... args) {
         seedRoles();
         seedModules();
         seedAdminUser();
+        themeService.seedDefaultTheme();
+        settingService.seedDefaultSettings();
     }
 
     private void seedRoles() {
@@ -132,3 +138,4 @@ public class DatabaseSeeder implements CommandLineRunner {
         log.info("✅ [DatabaseSeeder] Usuário Admin cadastrado: admin@esporteclubepelotas.com.br / CPF: 00000000000");
     }
 }
+

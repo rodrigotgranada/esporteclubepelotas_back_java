@@ -31,12 +31,11 @@ USER appuser
 # Copia o artefato compilado do estágio anterior
 COPY --from=builder /app/target/*.jar app.jar
 
-# Expõe a porta padrão (o Render injetará a variável $PORT)
-EXPOSE 8080
+# Expõe a porta padrão (Render ou Docker local)
+EXPOSE 7998
 
 # Otimização de memória para limites de 512MB do Render Free
 ENV JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -Xmx350m -Xms128m"
 
 # Inicia a aplicação Spring Boot
 ENTRYPOINT ["java", "-jar", "app.jar"]
-

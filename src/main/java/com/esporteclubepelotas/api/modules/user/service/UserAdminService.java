@@ -78,3 +78,4 @@ public class UserAdminService {
         return UserSummaryDto.fromEntity(userRepository.save(user));
     }
 }
+
