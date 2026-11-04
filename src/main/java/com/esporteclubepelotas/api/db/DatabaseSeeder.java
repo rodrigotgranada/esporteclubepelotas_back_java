@@ -2,13 +2,13 @@ package com.esporteclubepelotas.api.db;
 
 import com.esporteclubepelotas.api.modules.role.entity.Role;
 import com.esporteclubepelotas.api.modules.role.repository.RoleRepository;
+import com.esporteclubepelotas.api.modules.setting.service.SettingService;
 import com.esporteclubepelotas.api.modules.systemmodule.entity.SystemModule;
 import com.esporteclubepelotas.api.modules.systemmodule.repository.SystemModuleRepository;
+import com.esporteclubepelotas.api.modules.theme.service.ThemeService;
 import com.esporteclubepelotas.api.modules.user.entity.User;
 import com.esporteclubepelotas.api.modules.user.entity.UserStatus;
 import com.esporteclubepelotas.api.modules.user.repository.UserRepository;
-import com.esporteclubepelotas.api.modules.setting.service.SettingService;
-import com.esporteclubepelotas.api.modules.theme.service.ThemeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
@@ -34,7 +34,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     public void run(String... args) {
         seedRoles();
         seedModules();
-        seedAdminUser();
+        seedUsers();
         themeService.seedDefaultTheme();
         settingService.seedDefaultSettings();
     }
@@ -112,21 +112,71 @@ public class DatabaseSeeder implements CommandLineRunner {
         log.info("✅ [DatabaseSeeder] 6 Módulos do Sistema cadastrados com sucesso.");
     }
 
-    private void seedAdminUser() {
-        if (userRepository.count() > 0) return;
+    private void seedUsers() {
+        log.info("👥 [DatabaseSeeder] Verificando e criando usuários padrão de cada Role...");
 
-        log.info("🌱 [DatabaseSeeder] Criando usuário Administrador (OWNER)...");
+        seedUserIfNotExists(
+                "OWNER",
+                "Proprietário",
+                "Master",
+                "admin@esporteclubepelotas.com.br",
+                "00000000001",
+                "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80"
+        );
 
-        Role ownerRole = roleRepository.findByName("OWNER")
-                .orElseThrow(() -> new IllegalStateException("Role OWNER não encontrada para associar ao admin"));
+        seedUserIfNotExists(
+                "ADMIN",
+                "Gestor",
+                "Administrativo",
+                "gestor@esporteclubepelotas.com.br",
+                "00000000002",
+                "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80"
+        );
 
-        User admin = User.builder()
-                .firstName("Administrador")
-                .lastName("Lobo")
-                .email("admin@esporteclubepelotas.com.br")
-                .cpf("00000000000")
+        seedUserIfNotExists(
+                "EDITOR",
+                "Editor",
+                "Notícias",
+                "editor@esporteclubepelotas.com.br",
+                "00000000003",
+                "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80"
+        );
+
+        seedUserIfNotExists(
+                "SOCIO",
+                "Sócio",
+                "Áureo-Cerúleo",
+                "socio@esporteclubepelotas.com.br",
+                "00000000004",
+                "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80"
+        );
+
+        seedUserIfNotExists(
+                "USER",
+                "Torcedor",
+                "Lobo",
+                "torcedor@esporteclubepelotas.com.br",
+                "00000000005",
+                "https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?w=150&auto=format&fit=crop&q=80"
+        );
+    }
+
+    private void seedUserIfNotExists(String roleName, String firstName, String lastName, String email, String cpf, String avatarUrl) {
+        if (userRepository.existsByEmail(email) || userRepository.existsByCpf(cpf)) {
+            return;
+        }
+
+        Role role = roleRepository.findByName(roleName)
+                .orElseThrow(() -> new IllegalStateException("Role " + roleName + " não encontrada para associar ao usuário " + email));
+
+        User user = User.builder()
+                .firstName(firstName)
+                .lastName(lastName)
+                .email(email)
+                .cpf(cpf)
                 .passwordHash(passwordEncoder.encode("admin123"))
-                .role(ownerRole)
+                .avatarUrl(avatarUrl)
+                .role(role)
                 .status(UserStatus.ACTIVE)
                 .isActive(true)
                 .emailVerified(true)
@@ -134,8 +184,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .birthDate(LocalDate.of(1908, 10, 11))
                 .build();
 
-        userRepository.save(admin);
-        log.info("✅ [DatabaseSeeder] Usuário Admin cadastrado: admin@esporteclubepelotas.com.br / CPF: 00000000000");
+        userRepository.save(user);
+        log.info("✅ [DatabaseSeeder] Usuário {} ({}) cadastrado: {} / Senha: admin123", firstName, roleName, email);
     }
 }
-

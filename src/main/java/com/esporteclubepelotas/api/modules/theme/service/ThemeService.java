@@ -63,20 +63,26 @@ public class ThemeService {
         ThemePalette light = dto.getLight();
         ThemePalette dark = dto.getDark();
 
-        // Se for campanha sazonal com cor semente e as paletas não foram enviadas manualmente
+        // Se for campanha sazonal com cor semente e as paletas não foram enviadas
+        // manualmente
         if (isCampaign && dto.getCampaignColor() != null && (light == null || dark == null)) {
-            PaletteGeneratorHelper.GeneratedPalettes generated =
-                    PaletteGeneratorHelper.generateCampaignPalettes(dto.getCampaignColor());
-            if (light == null) light = generated.getLight();
-            if (dark == null) dark = generated.getDark();
+            PaletteGeneratorHelper.GeneratedPalettes generated = PaletteGeneratorHelper
+                    .generateCampaignPalettes(dto.getCampaignColor());
+            if (light == null)
+                light = generated.getLight();
+            if (dark == null)
+                dark = generated.getDark();
         }
 
-        if (light == null) light = createDefaultLightPalette();
-        if (dark == null) dark = createDefaultDarkPalette();
+        if (light == null)
+            light = createDefaultLightPalette();
+        if (dark == null)
+            dark = createDefaultDarkPalette();
 
         boolean isActive = Boolean.TRUE.equals(dto.getIsActive());
 
-        // Se estiver ativando um tema regular (não-campanha), desativa os outros temas regulares
+        // Se estiver ativando um tema regular (não-campanha), desativa os outros temas
+        // regulares
         if (isActive && !isCampaign) {
             deactivateAllRegularThemes();
         }
@@ -116,17 +122,21 @@ public class ThemeService {
             theme.setCampaignColor(dto.getCampaignColor());
             // Se as paletas não forem passadas explicitamente, regera com base na nova cor
             if (theme.isCampaign() && dto.getLight() == null && dto.getDark() == null) {
-                PaletteGeneratorHelper.GeneratedPalettes gen =
-                        PaletteGeneratorHelper.generateCampaignPalettes(dto.getCampaignColor());
+                PaletteGeneratorHelper.GeneratedPalettes gen = PaletteGeneratorHelper
+                        .generateCampaignPalettes(dto.getCampaignColor());
                 theme.setLight(gen.getLight());
                 theme.setDark(gen.getDark());
             }
         }
 
-        if (dto.getStartDate() != null) theme.setStartDate(dto.getStartDate());
-        if (dto.getEndDate() != null) theme.setEndDate(dto.getEndDate());
-        if (dto.getLight() != null) theme.setLight(dto.getLight());
-        if (dto.getDark() != null) theme.setDark(dto.getDark());
+        if (dto.getStartDate() != null)
+            theme.setStartDate(dto.getStartDate());
+        if (dto.getEndDate() != null)
+            theme.setEndDate(dto.getEndDate());
+        if (dto.getLight() != null)
+            theme.setLight(dto.getLight());
+        if (dto.getDark() != null)
+            theme.setDark(dto.getDark());
 
         if (dto.getIsActive() != null) {
             boolean active = dto.getIsActive();
