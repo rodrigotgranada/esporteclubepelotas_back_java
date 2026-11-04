@@ -70,3 +70,4 @@ class JwtTokenProviderTest {
         assertEquals("user-456", jwtTokenProvider.getUserIdFromToken(refreshToken));
     }
 }
+

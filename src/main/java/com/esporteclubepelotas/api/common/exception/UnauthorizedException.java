@@ -7,3 +7,4 @@ public class UnauthorizedException extends BusinessException {
         super(message, HttpStatus.UNAUTHORIZED);
     }
 }
+

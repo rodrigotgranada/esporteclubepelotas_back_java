@@ -7,3 +7,4 @@ public class ForbiddenException extends BusinessException {
         super(message, HttpStatus.FORBIDDEN);
     }
 }
+

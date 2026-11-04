@@ -11,3 +11,4 @@ public class ResourceNotFoundException extends BusinessException {
         super(String.format("%s não encontrado com %s: '%s'", resourceName, fieldName, fieldValue), HttpStatus.NOT_FOUND);
     }
 }
+
