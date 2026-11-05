@@ -48,3 +48,4 @@ public class RabbitMQEmailProducer implements EmailService {
         }
     }
 }
+

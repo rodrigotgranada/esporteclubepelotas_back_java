@@ -89,7 +89,7 @@ public class User {
 
     private Instant verificationCodeExpires;
 
-    @Column(nullable = false)
+    @Column(name = "token_version", nullable = false, columnDefinition = "integer default 1")
     @Builder.Default
     private int tokenVersion = 1;
 

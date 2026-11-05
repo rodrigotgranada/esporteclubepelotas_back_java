@@ -17,3 +17,4 @@ public record EmailMessagePayload(
         return new EmailMessagePayload(to, subject, htmlContent, Instant.now());
     }
 }
+
