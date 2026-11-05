@@ -9,3 +9,4 @@ ALTER TABLE IF EXISTS public.users
 UPDATE public.users 
     SET token_version = 1 
     WHERE token_version IS NULL;
+
