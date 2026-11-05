@@ -2,7 +2,14 @@ package com.esporteclubepelotas.api.modules.auth.controller;
 
 import com.esporteclubepelotas.api.common.security.CurrentUser;
 import com.esporteclubepelotas.api.common.security.UserPrincipal;
-import com.esporteclubepelotas.api.modules.auth.dto.*;
+import com.esporteclubepelotas.api.modules.auth.dto.AuthResponseDto;
+import com.esporteclubepelotas.api.modules.auth.dto.ChangePasswordRequestDto;
+import com.esporteclubepelotas.api.modules.auth.dto.ForgotPasswordRequestDto;
+import com.esporteclubepelotas.api.modules.auth.dto.LoginRequestDto;
+import com.esporteclubepelotas.api.modules.auth.dto.RefreshTokenRequestDto;
+import com.esporteclubepelotas.api.modules.auth.dto.ResetPasswordRequestDto;
+import com.esporteclubepelotas.api.modules.auth.dto.UserSummaryDto;
+import com.esporteclubepelotas.api.modules.auth.dto.VerifyEmailRequestDto;
 import com.esporteclubepelotas.api.modules.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,7 +17,6 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -21,11 +27,14 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/auth")
-@RequiredArgsConstructor
 @Tag(name = "Auth", description = "Autenticação, Tokens e Recuperação de Acesso")
 public class AuthController {
 
     private final AuthService authService;
+
+    public AuthController(AuthService authService) {
+        this.authService = authService;
+    }
 
     @PostMapping("/login")
     @Operation(summary = "Autenticar usuário por CPF ou E-mail")
