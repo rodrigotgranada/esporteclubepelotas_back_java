@@ -68,6 +68,8 @@ public class SecurityConfig {
 
                         // 3. Rotas Administrativas restritas
                         .requestMatchers("/idols/admin/**").authenticated()
+                        .requestMatchers("/news/admin/**").authenticated()
+                        .requestMatchers("/news/*/my-reaction").authenticated()
                         .requestMatchers("/users/admin/**").authenticated()
 
                         // 4. Consultas Publicas (GET)

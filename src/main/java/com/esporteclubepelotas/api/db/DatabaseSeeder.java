@@ -2,6 +2,9 @@ package com.esporteclubepelotas.api.db;
 
 import com.esporteclubepelotas.api.modules.idol.entity.*;
 import com.esporteclubepelotas.api.modules.idol.repository.IdolRepository;
+import com.esporteclubepelotas.api.modules.news.entity.*;
+import com.esporteclubepelotas.api.modules.news.repository.NewsArticleRepository;
+import com.esporteclubepelotas.api.modules.news.repository.NewsCategoryRepository;
 import com.esporteclubepelotas.api.modules.role.entity.Role;
 import com.esporteclubepelotas.api.modules.role.repository.RoleRepository;
 import com.esporteclubepelotas.api.modules.setting.service.SettingService;
@@ -33,6 +36,8 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final SystemModuleRepository moduleRepository;
     private final UserRepository userRepository;
     private final IdolRepository idolRepository;
+    private final NewsCategoryRepository newsCategoryRepository;
+    private final NewsArticleRepository newsArticleRepository;
     private final PasswordEncoder passwordEncoder;
     private final ThemeService themeService;
     private final SettingService settingService;
@@ -43,6 +48,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         seedModules();
         seedUsers();
         seedIdols();
+        seedNews();
         themeService.seedDefaultTheme();
         settingService.seedDefaultSettings();
     }
@@ -346,5 +352,147 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         idolRepository.saveAll(List.of(flavio, winck, chico, carmen));
         log.info("✅ [DatabaseSeeder] 4 Ídolos Históricos cadastrados com sucesso no Memorial.");
+    }
+
+    private void seedNews() {
+        if (newsCategoryRepository.count() > 0) return;
+
+        log.info("🌱 [DatabaseSeeder] Criando Categorias e Matérias oficiais...");
+
+        NewsCategory futebol = NewsCategory.builder()
+                .name("Futebol Profissional")
+                .slug("futebol-profissional")
+                .description("Notícias sobre os jogos, treinos e elenco profissional do Lobo")
+                .displayOrder(1)
+                .isActive(true)
+                .build();
+
+        NewsCategory institucional = NewsCategory.builder()
+                .name("Institucional")
+                .slug("institucional")
+                .description("Comunicados oficiais, diretoria e ações institucionais do clube")
+                .displayOrder(2)
+                .isActive(true)
+                .build();
+
+        NewsCategory base = NewsCategory.builder()
+                .name("Categorias de Base")
+                .slug("categorias-de-base")
+                .description("O futuro do Lobo: formação de atletas do Sub-15 ao Sub-20")
+                .displayOrder(3)
+                .isActive(true)
+                .build();
+
+        NewsCategory social = NewsCategory.builder()
+                .name("Quadro Social")
+                .slug("quadro-social")
+                .description("Benefícios, planos e campanhas exclusivas para sócios áureo-cerúleos")
+                .displayOrder(4)
+                .isActive(true)
+                .build();
+
+        newsCategoryRepository.saveAll(List.of(futebol, institucional, base, social));
+
+        User author = userRepository.findByEmail("admin@esporteclubepelotas.com.br")
+                .or(() -> userRepository.findAll().stream().findFirst())
+                .orElse(null);
+
+        if (author == null) {
+            log.warn("⚠️ [DatabaseSeeder] Nenhum autor encontrado para seed de notícias.");
+            return;
+        }
+
+        java.time.Instant now = java.time.Instant.now();
+
+        java.util.Map<String, Object> tiptapDoc = java.util.Map.of(
+                "type", "doc",
+                "content", java.util.List.of(
+                        java.util.Map.of(
+                                "type", "paragraph",
+                                "content", java.util.List.of(
+                                        java.util.Map.of("type", "text", "text", "O Esporte Clube Pelotas conquistou uma grande vitória na tarde deste domingo na Boca do Lobo. Com apoio fervoroso da torcida áureo-cerúlea, o Lobo bateu o rival por 2 a 0 e assumiu a liderança.")
+                                )
+                        )
+                )
+        );
+
+        NewsArticle mainArticle = NewsArticle.builder()
+                .title("Pelotas vence o clássico Farroupilha por 2 a 0 na Boca do Lobo")
+                .subtitle("Com gols no segundo tempo, o Lobo garantiu os três pontos diante de um grande público na Avenida.")
+                .slug("pelotas-vence-o-classico-farroupilha-por-2-a-0-na-boca-do-lobo")
+                .previousSlugs(new ArrayList<>())
+                .coverImage("https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80")
+                .coverCaption("Torcida áureo-cerúlea lotou a Boca do Lobo na grande vitória. (Foto: Assessoria / E.C. Pelotas)")
+                .content(tiptapDoc)
+                .summary("Vitória expressiva em casa com grande apoio da torcida áureo-cerúlea garante a liderança na competição estadual.")
+                .category(futebol)
+                .tags(List.of("#Gauchão", "#Lobo", "#BocaDoLobo"))
+                .status(NewsStatus.PUBLISHED)
+                .isFeatured(true)
+                .featuredSlot(NewsFeaturedSlot.MAIN)
+                .isPinned(true)
+                .reporterName("Assessoria de Comunicação")
+                .photographerName("Lucas Silva / Foto Pelotas")
+                .author(author)
+                .publishedAt(now.minusSeconds(3600))
+                .gallery(List.of(
+                        "https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80",
+                        "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=800&q=80"
+                ))
+                .viewsCount(128L)
+                .allowReactions(true)
+                .allowComments(true)
+                .reactions(NewsReactionsCounter.builder().wolf(42).fire(18).clap(35).heart(64).build())
+                .isActive(true)
+                .build();
+
+        NewsArticle socialArticle = NewsArticle.builder()
+                .title("Quadro Social lança campanha de anuidade com benefícios exclusivos para sócios")
+                .subtitle("Sócios em dia terão prioridade na compra de ingressos e descontos oficiais na loja do clube.")
+                .slug("quadro-social-lanca-campanha-de-anuidade-com-beneficios-exclusivos")
+                .previousSlugs(new ArrayList<>())
+                .coverImage("https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=1200&q=80")
+                .content(tiptapDoc)
+                .summary("Campanha traz condições especiais para regularização e novos sócios áureo-cerúleos.")
+                .category(social)
+                .tags(List.of("#QuadroSocial", "#SócioLobo"))
+                .status(NewsStatus.PUBLISHED)
+                .isFeatured(true)
+                .featuredSlot(NewsFeaturedSlot.SECONDARY)
+                .isPinned(false)
+                .author(author)
+                .publishedAt(now.minusSeconds(7200))
+                .viewsCount(74L)
+                .allowReactions(true)
+                .allowComments(true)
+                .reactions(NewsReactionsCounter.builder().wolf(15).fire(5).clap(20).heart(33).build())
+                .isActive(true)
+                .build();
+
+        NewsArticle baseArticle = NewsArticle.builder()
+                .title("Categorias de base do Pelotas iniciam preparação para a Copa FGF Sub-20")
+                .subtitle("Comissão técnica seleciona novos talentos da região para integrar os elencos de formação.")
+                .slug("categorias-de-base-do-pelotas-iniciam-preparacao-para-copa-fgf-sub-20")
+                .previousSlugs(new ArrayList<>())
+                .coverImage("https://images.unsplash.com/photo-1518604666864-74239527e743?auto=format&fit=crop&w=1200&q=80")
+                .content(tiptapDoc)
+                .summary("A garotada do Lobo intensifica os treinamentos com foco no estadual de base.")
+                .category(base)
+                .tags(List.of("#BaseForte", "#Sub20", "#Lobo"))
+                .status(NewsStatus.PUBLISHED)
+                .isFeatured(true)
+                .featuredSlot(NewsFeaturedSlot.SECONDARY)
+                .isPinned(false)
+                .author(author)
+                .publishedAt(now.minusSeconds(14400))
+                .viewsCount(52L)
+                .allowReactions(true)
+                .allowComments(true)
+                .reactions(NewsReactionsCounter.builder().wolf(10).fire(8).clap(14).heart(19).build())
+                .isActive(true)
+                .build();
+
+        newsArticleRepository.saveAll(List.of(mainArticle, socialArticle, baseArticle));
+        log.info("✅ [DatabaseSeeder] Categorias e 3 Matérias oficiais cadastradas com sucesso (Manchetão e Secundários).");
     }
 }
