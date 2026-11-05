@@ -55,8 +55,8 @@ public class UserAdminService {
         int pageSize = limit > 0 ? limit : 15;
         Pageable pageable = PageRequest.of(pageIndex, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
 
-        String searchClean = (search != null && !search.isBlank()) ? search.trim() : null;
-        String roleClean = (role != null && !role.isBlank()) ? UserHierarchyHelper.normalizeRoleName(role.trim()) : null;
+        String searchClean = (search != null && !search.isBlank()) ? search.trim().toLowerCase() : null;
+        String roleClean = (role != null && !role.isBlank()) ? UserHierarchyHelper.normalizeRoleName(role.trim()).toUpperCase() : null;
 
         UserStatus userStatus = null;
         boolean includeInactive = false;

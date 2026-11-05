@@ -34,11 +34,11 @@ public interface UserRepository extends JpaRepository<User, String> {
     @Query("SELECT u FROM User u WHERE " +
             "(:includeInactive = true OR u.isActive = true) AND " +
             "(:status IS NULL OR u.status = :status) AND " +
-            "(:roleName IS NULL OR UPPER(u.role.name) = UPPER(:roleName)) AND " +
+            "(:roleName IS NULL OR u.role.name = :roleName) AND " +
             "(:search IS NULL OR " +
-            "LOWER(u.firstName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(u.lastName) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
-            "LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%')) OR " +
+            "LOWER(u.firstName) LIKE CONCAT('%', :search, '%') OR " +
+            "LOWER(u.lastName) LIKE CONCAT('%', :search, '%') OR " +
+            "LOWER(u.email) LIKE CONCAT('%', :search, '%') OR " +
             "u.cpf LIKE CONCAT('%', :search, '%'))")
     Page<User> findUsersWithFilters(
             @Param("search") String search,

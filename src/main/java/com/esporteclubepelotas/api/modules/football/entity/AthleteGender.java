@@ -4,3 +4,4 @@ public enum AthleteGender {
     MALE,
     FEMALE
 }
+

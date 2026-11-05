@@ -31,3 +31,4 @@ ALTER TABLE public.news_articles
     ADD COLUMN IF NOT EXISTS show_on_homepage boolean DEFAULT true NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_news_articles_home ON public.news_articles USING btree (is_active, status, show_on_homepage, published_at);
+

@@ -61,6 +61,14 @@ public class AthletesAdminService {
                 predicates.add(cb.equal(root.get("athleteType"), query.getAthleteType()));
             }
 
+            if (query.getGender() != null) {
+                predicates.add(cb.equal(root.get("gender"), query.getGender()));
+            }
+
+            if (query.getAthleteType() != null) {
+                predicates.add(cb.equal(root.get("athleteType"), query.getAthleteType()));
+            }
+
             if (query.getPosition() != null && !query.getPosition().isBlank()) {
                 String pos = query.getPosition().trim().toLowerCase();
                 predicates.add(cb.like(cb.lower(root.get("primaryPosition")), "%" + pos + "%"));
@@ -173,6 +181,22 @@ public class AthletesAdminService {
             athlete.setPhotoUrl(dto.getPhotoUrl());
         }
 
+        if (dto.getGender() != null) {
+            athlete.setGender(dto.getGender());
+        }
+
+        if (dto.getAthleteType() != null) {
+            athlete.setAthleteType(dto.getAthleteType());
+        }
+
+        if (dto.getYouthCategory() != null) {
+            athlete.setYouthCategory(dto.getYouthCategory());
+        }
+
+        if (dto.getEntryYear() != null) {
+            athlete.setEntryYear(dto.getEntryYear());
+        }
+
         if (dto.getBirthDate() != null) {
             if (dto.getBirthDate().isBlank()) {
                 athlete.setBirthDate(null);
@@ -226,7 +250,7 @@ public class AthletesAdminService {
     }
 
     @Transactional
-    public void remove(UUID id) {
+    public void delete(UUID id) {
         Athlete athlete = athleteRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Atleta não encontrado para exclusão."));
         athlete.setActive(false);
@@ -235,27 +259,19 @@ public class AthletesAdminService {
 
     @Transactional
     public Map<String, String> uploadPhoto(UUID id, MultipartFile file) {
+        Athlete athlete = athleteRepository.findById(id)
+                .orElseThrow(() -> new BusinessException("Atleta não encontrado para upload de foto."));
+
         if (file == null || file.isEmpty()) {
             throw new BusinessException("Nenhum arquivo enviado.");
         }
 
-        Athlete athlete = athleteRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Atleta não encontrado."));
+        String path = "athletes/" + id + "/" + System.currentTimeMillis() + "-" + file.getOriginalFilename();
+        String photoUrl = storageService.uploadFile(file, path);
 
-        String ext = getFileExtension(file.getOriginalFilename());
-        String fileName = "photo-" + System.currentTimeMillis() + "." + ext;
-        String folder = "athletes/" + id;
-
-        String photoUrl = storageService.uploadFile(file, folder, fileName);
         athlete.setPhotoUrl(photoUrl);
         athleteRepository.save(athlete);
 
         return Map.of("photoUrl", photoUrl);
     }
-
-    private String getFileExtension(String filename) {
-        if (filename == null || !filename.contains(".")) return "webp";
-        return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
-    }
 }
-

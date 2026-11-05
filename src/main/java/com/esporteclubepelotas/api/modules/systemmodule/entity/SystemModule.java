@@ -32,6 +32,7 @@ public class SystemModule {
     @Column(length = 255)
     private String description;
 
+    @com.fasterxml.jackson.annotation.JsonProperty("isActive")
     @Column(nullable = false)
     @Builder.Default
     private boolean isActive = true;
