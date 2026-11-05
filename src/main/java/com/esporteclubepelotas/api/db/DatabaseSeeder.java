@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.db;
 
+import com.esporteclubepelotas.api.modules.idol.entity.*;
+import com.esporteclubepelotas.api.modules.idol.repository.IdolRepository;
 import com.esporteclubepelotas.api.modules.role.entity.Role;
 import com.esporteclubepelotas.api.modules.role.repository.RoleRepository;
 import com.esporteclubepelotas.api.modules.setting.service.SettingService;
@@ -30,6 +32,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final SystemModuleRepository moduleRepository;
     private final UserRepository userRepository;
+    private final IdolRepository idolRepository;
     private final PasswordEncoder passwordEncoder;
     private final ThemeService themeService;
     private final SettingService settingService;
@@ -39,6 +42,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         seedRoles();
         seedModules();
         seedUsers();
+        seedIdols();
         themeService.seedDefaultTheme();
         settingService.seedDefaultSettings();
     }
@@ -220,5 +224,127 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         userRepository.save(user);
         log.info("✅ [DatabaseSeeder] Usuário {} ({}) cadastrado: {} / Senha: admin123", firstName, roleName, email);
+    }
+
+    private void seedIdols() {
+        if (idolRepository.count() > 0) return;
+
+        log.info("🏛️ [DatabaseSeeder] Cadastrando Ídolos Históricos do Memorial...");
+
+        // 1. Flávio Minuano (Jogador)
+        Idol flavio = Idol.builder()
+                .name("Flávio Almeida da Silva")
+                .nickname("Flávio Minuano")
+                .slug("flavio-minuano")
+                .category(IdolCategory.PLAYER)
+                .photoUrl("https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80")
+                .gallery(List.of(
+                        "https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80",
+                        "https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=800&q=80"
+                ))
+                .galleryItems(List.of(
+                        new IdolGalleryItem("https://images.unsplash.com/photo-1522778119026-d647f0596c20?auto=format&fit=crop&w=800&q=80", "Minuano comemorando na Boca do Lobo"),
+                        new IdolGalleryItem("https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=800&q=80", "Pelotas em campo na década de 60")
+                ))
+                .startYear(1961)
+                .endYear(1974)
+                .periods(List.of(new IdolPeriod(1961, 1974, "Primeira e Gloriosa Passagem")))
+                .isActiveInClub(false)
+                .birthDate(LocalDate.of(1944, 7, 9))
+                .deathDate(LocalDate.of(2020, 5, 18))
+                .birthPlace("Pelotas - RS")
+                .quote("A Boca do Lobo sempre foi o templo onde meu coração batia no ritmo da torcida áureo-cerúlea.")
+                .biography("Um dos maiores atacantes da história do futebol brasileiro. Revelado pelo Pelotas, Flávio Minuano encantou a torcida com sua potência física, cabeceio mortal e faro de gol inigualável. Disputou mais de 300 partidas com a camisa do Lobo e levou o nome de Pelotas para o cenário nacional.")
+                .playerStats(IdolPlayerStats.builder()
+                        .position("Centroavante")
+                        .preferredFoot("Destro")
+                        .historicJerseyNumber(9)
+                        .matchesCount(312)
+                        .goalsCount(148)
+                        .titles(List.of("Campeonato Citadino de Pelotas", "Copa Governador do Estado"))
+                        .memorableMatch("Pelotas 3x1 no clássico local em 1964 com 3 gols de Minuano na Boca do Lobo.")
+                        .build())
+                .isFeatured(true)
+                .displayOrder(1)
+                .isActive(true)
+                .build();
+
+        // 2. Luiz Carlos Winck (Treinador)
+        Idol winck = Idol.builder()
+                .name("Luiz Carlos Winck")
+                .nickname("Professor Winck")
+                .slug("luiz-carlos-winck")
+                .category(IdolCategory.COACH)
+                .photoUrl("https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80")
+                .gallery(List.of("https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=800&q=80"))
+                .galleryItems(List.of(new IdolGalleryItem("https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=800&q=80", "Winck levantando a taça na Boca do Lobo")))
+                .startYear(2018)
+                .endYear(2021)
+                .periods(List.of(new IdolPeriod(2018, 2021, "Era das Conquistas")))
+                .isActiveInClub(false)
+                .birthDate(LocalDate.of(1963, 1, 5))
+                .birthPlace("Portão - RS")
+                .quote("Comandar o Lobo na Boca do Lobo exige alma, entrega e garra do primeiro ao último minuto.")
+                .biography("Comandante de uma das eras mais vitoriosas e consistentes do Pelotas nos últimos anos. Luiz Carlos Winck montou equipes aguerridas, taticamente impecáveis e conquistou títulos que marcaram a memória recente do torcedor áureo-cerúleo.")
+                .coachStats(IdolCoachStats.builder()
+                        .matchesCount(86)
+                        .winsCount(44)
+                        .drawsCount(26)
+                        .lossesCount(16)
+                        .titles(List.of("Copa FGF - Troféu Seu Verardi 2019", "Recopa Gaúcha 2020"))
+                        .tacticalStyle("Transição rápida com compactação defensiva feroz e posse agressiva.")
+                        .build())
+                .isFeatured(true)
+                .displayOrder(2)
+                .isActive(true)
+                .build();
+
+        // 3. Seu Chico (Funcionário)
+        Idol chico = Idol.builder()
+                .name("Francisco Silveira")
+                .nickname("Seu Chico")
+                .slug("seu-chico")
+                .category(IdolCategory.STAFF)
+                .photoUrl("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=800&q=80")
+                .startYear(1985)
+                .isActiveInClub(true)
+                .birthDate(LocalDate.of(1956, 3, 22))
+                .birthPlace("Pelotas - RS")
+                .quote("As camisas do Pelotas não são tecido, são a segunda pele da nossa cidade.")
+                .biography("Mais de 35 anos dedicados diariamente ao vestiário do Esporte Clube Pelotas. Seu Chico é o guardião dos mantos sagrados, figura carismática amada por todas as gerações de atletas que passaram pela Boca do Lobo.")
+                .staffStats(IdolStaffStats.builder()
+                        .roleName("Roupeiro Histórico & Chefe de Vestiário")
+                        .yearsOfDedication("Mais de 38 anos ininterruptos no clube")
+                        .backstageStory("Lavou e preparou pessoalmente os uniformes das conquistas estaduais e copas do Lobo.")
+                        .build())
+                .isFeatured(true)
+                .displayOrder(3)
+                .isActive(true)
+                .build();
+
+        // 4. Dona Carmen da Charanga (Torcedora Símbolo)
+        Idol carmen = Idol.builder()
+                .name("Carmen Lúcia dos Santos")
+                .nickname("Dona Carmen da Charanga")
+                .slug("dona-carmen-da-charanga")
+                .category(IdolCategory.FAN)
+                .photoUrl("https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80")
+                .startYear(1970)
+                .isActiveInClub(true)
+                .birthDate(LocalDate.of(1948, 11, 12))
+                .birthPlace("Pelotas - RS")
+                .quote("Na chuva, no vento ou no sol escaldante, a Boca do Lobo é a minha casa e o Pelotas minha religião.")
+                .biography("Símbolo inconfundível da bancada áureo-cerúlea. Dona Carmen esteve presente em praticamente todas as partidas na Boca do Lobo e caravanas pelo Rio Grande do Sul, liderando a charanga e contagiando o estádio com sua paixão eterna.")
+                .fanStats(IdolFanStats.builder()
+                        .stadiumSector("Arquibancada Geral - Boca do Lobo")
+                        .trademark("Bumbo azul e amarelo e chapéu tradicional de feltro")
+                        .build())
+                .isFeatured(true)
+                .displayOrder(4)
+                .isActive(true)
+                .build();
+
+        idolRepository.saveAll(List.of(flavio, winck, chico, carmen));
+        log.info("✅ [DatabaseSeeder] 4 Ídolos Históricos cadastrados com sucesso no Memorial.");
     }
 }

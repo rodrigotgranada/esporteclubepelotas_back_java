@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping({"/admin/modules", "/system-modules"})
+@RequestMapping({ "/admin/modules", "/system-modules" })
 @RequiredArgsConstructor
 @Tag(name = "System Modules", description = "Controle de Feature Flags e Módulos do Sistema")
 public class SystemModuleController {
@@ -27,7 +27,7 @@ public class SystemModuleController {
         return ResponseEntity.ok(moduleRepository.findAllByOrderByCreatedAtAsc());
     }
 
-    @PatchMapping({"/{id}/status", "/{id}/toggle"})
+    @PatchMapping({ "/{id}/status", "/{id}/toggle" })
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     @Operation(summary = "Ativar ou desativar módulo (Feature Flag)")
     public ResponseEntity<SystemModule> updateModuleStatus(

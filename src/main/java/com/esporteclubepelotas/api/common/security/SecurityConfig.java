@@ -66,15 +66,19 @@ public class SecurityConfig {
                                 "/users/check-availability"
                         ).permitAll()
 
-                        // 3. Consultas Publicas (GET)
+                        // 3. Rotas Administrativas restritas
+                        .requestMatchers("/idols/admin/**").authenticated()
+                        .requestMatchers("/users/admin/**").authenticated()
+
+                        // 4. Consultas Publicas (GET)
+                        .requestMatchers(HttpMethod.GET, "/idols", "/idols/*", "/idols/*/prev-next", "/idols/featured").permitAll()
                         .requestMatchers(HttpMethod.GET, "/news/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/idols/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/squads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/athletes/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/settings", "/settings/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/themes/active", "/themes/active/**").permitAll()
 
-                        // 4. Todas as rotas administrativas e modificacoes exigem autenticacao
+                        // 5. Todas as rotas administrativas e modificacoes exigem autenticacao
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
