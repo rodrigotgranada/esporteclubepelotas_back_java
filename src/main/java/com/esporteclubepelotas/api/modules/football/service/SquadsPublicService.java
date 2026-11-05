@@ -21,9 +21,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -45,18 +43,30 @@ public class SquadsPublicService {
             return SquadSeasonsResponseDto.builder()
                     .years(Collections.emptyList())
                     .categories(Collections.emptyList())
+                    .categoriesByYear(Collections.emptyMap())
                     .isModuleActive(false)
                     .build();
         }
 
-        List<Integer> years = squadRepository.findDistinctYears();
-        List<String> categories = squadRepository.findDistinctCategories().stream()
-                .map(Enum::name)
-                .toList();
+        List<Object[]> rows = squadRepository.findActiveYearAndCategories();
+        Map<Integer, List<String>> categoriesByYear = new LinkedHashMap<>();
+        Set<String> allCategories = new LinkedHashSet<>();
+
+        for (Object[] row : rows) {
+            Integer year = (Integer) row[0];
+            SquadCategory cat = (SquadCategory) row[1];
+            String catName = cat.name();
+
+            categoriesByYear.computeIfAbsent(year, k -> new ArrayList<>()).add(catName);
+            allCategories.add(catName);
+        }
+
+        List<Integer> years = new ArrayList<>(categoriesByYear.keySet());
 
         return SquadSeasonsResponseDto.builder()
                 .years(years)
-                .categories(categories)
+                .categories(new ArrayList<>(allCategories))
+                .categoriesByYear(categoriesByYear)
                 .isModuleActive(true)
                 .build();
     }

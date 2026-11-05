@@ -22,6 +22,9 @@ public interface SquadRepository extends JpaRepository<Squad, UUID>, JpaSpecific
     @Query("SELECT DISTINCT s.category FROM Squad s WHERE s.isActive = true")
     List<SquadCategory> findDistinctCategories();
 
+    @Query("SELECT s.year, s.category FROM Squad s WHERE s.isActive = true ORDER BY s.year DESC")
+    List<Object[]> findActiveYearAndCategories();
+
     Optional<Squad> findFirstByCategoryAndIsCurrentTrueAndIsActiveTrue(SquadCategory category);
 
     Optional<Squad> findFirstByCategoryAndIsActiveTrueOrderByYearDescCreatedAtDesc(SquadCategory category);
@@ -36,4 +39,3 @@ public interface SquadRepository extends JpaRepository<Squad, UUID>, JpaSpecific
     @Query("UPDATE Squad s SET s.isCurrent = false WHERE s.category = :category")
     void clearAllCurrentSquads(@Param("category") SquadCategory category);
 }
-
