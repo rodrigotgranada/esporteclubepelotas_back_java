@@ -195,7 +195,7 @@ public class NewsIntegrationTest {
                 .subtitle("Atacante experiente assina contrato e já treina com o grupo áureo-cerúleo.")
                 .category(categoryId)
                 .content(Map.of("type", "doc", "content", List.of(Map.of("type", "paragraph"))))
-                .coverImage("https://images.unsplash.com/photo-1508098682722-e99c43a406b2")
+                .coverImage("https://images.unsplash.com/photo-1574629810360-7efbbe195018")
                 .summary("Reforço de peso chega para compor o ataque do Lobo.")
                 .tags(List.of("Reforço", "Lobo"))
                 .status(NewsStatus.DRAFT)

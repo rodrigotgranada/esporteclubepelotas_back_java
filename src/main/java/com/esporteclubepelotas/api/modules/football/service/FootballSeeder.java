@@ -126,7 +126,7 @@ public class FootballSeeder {
                         SquadStaffMember.builder().role("Auxiliar Técnico").name("Felipe Endres").build(),
                         SquadStaffMember.builder().role("Preparador Físico").name("Lucas Pereira").build()
                 ))
-                .coverUrl("https://images.unsplash.com/photo-1508098682722-e99c43a406b2?auto=format&fit=crop&w=1200&q=80")
+                .coverUrl("https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80")
                 .isCurrent(true)
                 .isActive(true)
                 .createdBy(author)
