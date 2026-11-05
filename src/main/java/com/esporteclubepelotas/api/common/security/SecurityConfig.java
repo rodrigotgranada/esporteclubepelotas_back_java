@@ -62,6 +62,7 @@ public class SecurityConfig {
                                 "/auth/resend-code",
                                 "/auth/forgot-password",
                                 "/auth/reset-password",
+                                "/auth/env-test",
                                 "/users/register",
                                 "/users/check-availability"
                         ).permitAll()

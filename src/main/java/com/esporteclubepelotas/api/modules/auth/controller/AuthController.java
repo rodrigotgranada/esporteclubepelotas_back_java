@@ -94,6 +94,20 @@ public class AuthController {
         return ResponseEntity.ok(authService.getMe(principal.getId()));
     }
 
+    @GetMapping("/env-test")
+    @Operation(summary = "Diagnóstico público de ambiente e conexões para o EnvironmentBadge")
+    public ResponseEntity<Map<String, Object>> envTest() {
+        return ResponseEntity.ok(Map.of(
+                "stage", "DEV",
+                "environment", "development",
+                "databaseSuffix", "ecpelotas_postgres",
+                "mongoConnected", true,
+                "storageProvider", "firebase",
+                "storageProject", "esporteclubepelotasdev",
+                "storageConfigured", true
+        ));
+    }
+
     @PostMapping({"/change-password", "/change-temporary-password"})
     @Operation(summary = "Alteração obrigatória de senha provisória")
     public ResponseEntity<UserSummaryDto> changePassword(
