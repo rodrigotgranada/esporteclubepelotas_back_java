@@ -22,6 +22,27 @@ services:
       retries: 5
 
   # ==========================================================
+  # Mensageria RabbitMQ Local (v3-management)
+  # ==========================================================
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: ecpelotas_rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"    # Porta AMQP
+      - "15672:15672"  # Dashboard Web (admin: http://localhost:15672)
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASS:-guest}
+    volumes:
+      - ecpelotas_rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================================
   # API Backend Java (Spring Boot 3 + Java 17)
   # ==========================================================
   backend:
@@ -33,6 +54,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     ports:
       # Mapeia a porta da API no host (7998 por padrão, ou APP_PORT se 7998 estiver ocupada)
       - "${APP_PORT:-7998}:7998"
@@ -41,7 +64,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ecpelotas_local}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-pelotas_user}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-pelotas_pass}
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_HIBERNATE_DDL_AUTO: validate
+      SPRING_FLYWAY_ENABLED: "true"
+      SPRING_RABBITMQ_ADDRESSES: ${SPRING_RABBITMQ_ADDRESSES:-amqp://guest:guest@rabbitmq:5672}
       JWT_SECRET: ${JWT_SECRET:-super-secret-jwt-key}
       JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1h}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:7999}
@@ -53,5 +78,7 @@ services:
 
 volumes:
   ecpelotas_pgdata:
+    driver: local
+  ecpelotas_rabbitmq_data:
     driver: local
 
