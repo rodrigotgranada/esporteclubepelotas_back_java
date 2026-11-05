@@ -1,5 +1,6 @@
 package com.esporteclubepelotas.api.db;
 
+import com.esporteclubepelotas.api.modules.football.service.FootballSeeder;
 import com.esporteclubepelotas.api.modules.idol.entity.*;
 import com.esporteclubepelotas.api.modules.idol.repository.IdolRepository;
 import com.esporteclubepelotas.api.modules.news.entity.*;
@@ -41,6 +42,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final ThemeService themeService;
     private final SettingService settingService;
+    private final FootballSeeder footballSeeder;
 
     @Override
     public void run(String... args) {
@@ -49,6 +51,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         seedUsers();
         seedIdols();
         seedNews();
+        footballSeeder.seedDefaultFootball();
         themeService.seedDefaultTheme();
         settingService.seedDefaultSettings();
     }

@@ -67,6 +67,8 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // 3. Rotas Administrativas restritas
+                        .requestMatchers("/athletes/admin/**").authenticated()
+                        .requestMatchers("/squads/admin/**").authenticated()
                         .requestMatchers("/idols/admin/**").authenticated()
                         .requestMatchers("/news/admin/**").authenticated()
                         .requestMatchers("/news/*/my-reaction").authenticated()
