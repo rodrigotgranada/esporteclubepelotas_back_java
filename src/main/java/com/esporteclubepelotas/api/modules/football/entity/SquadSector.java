@@ -4,6 +4,6 @@ public enum SquadSector {
     GOALKEEPER,
     DEFENDER,
     MIDFIELDER,
-    FORWARD
+    FORWARD,
+    STAFF
 }
-

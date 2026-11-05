@@ -5,7 +5,6 @@ import com.esporteclubepelotas.api.modules.football.entity.SquadSector;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -26,8 +25,6 @@ public class SquadMemberDto {
 
     private AthleteDto athlete;
 
-    @NotNull(message = "O número da camisa é obrigatório.")
-    @Min(value = 1, message = "O número da camisa deve ser no mínimo 1.")
     @Schema(description = "Número da camisa", example = "9")
     private Integer jerseyNumber;
 
@@ -39,9 +36,16 @@ public class SquadMemberDto {
     @Schema(description = "Papel do atleta no elenco", example = "STARTER")
     private SquadMemberRole role = SquadMemberRole.STARTER;
 
-    @Builder.Default
-    @JsonProperty("order")
-    @Schema(description = "Ordem de exibição visual", defaultValue = "0")
-    private Integer order = 0;
-}
+    @Schema(description = "Ordem de exibição no setor", example = "1")
+    private Integer order;
 
+    @JsonProperty("number")
+    public Integer getNumber() {
+        return jerseyNumber;
+    }
+
+    @JsonProperty("number")
+    public void setNumber(Integer number) {
+        this.jerseyNumber = number;
+    }
+}

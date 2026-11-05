@@ -35,7 +35,7 @@ public class UpdateAthleteDto {
     @Schema(description = "Gênero do atleta (MALE, FEMALE)")
     private AthleteGender gender;
 
-    @Schema(description = "Tipo de vínculo (PROFESSIONAL, YOUTH)")
+    @Schema(description = "Tipo de vínculo (PROFESSIONAL, YOUTH, STAFF)")
     private AthleteType athleteType;
 
     @Schema(description = "Categoria da base de formação")
@@ -43,6 +43,9 @@ public class UpdateAthleteDto {
 
     @Schema(description = "Ano de chegada às categorias de base")
     private Integer entryYear;
+
+    @Schema(description = "Papel/cargo na comissão técnica")
+    private String staffRole;
 
     @Schema(description = "Data de nascimento (ISO-8601)")
     private String birthDate;
@@ -61,7 +64,7 @@ public class UpdateAthleteDto {
     private PreferredFoot preferredFoot;
 
     @Size(max = 80, message = "A posição principal deve ter no máximo 80 caracteres.")
-    @Schema(description = "Posição principal de atuação")
+    @Schema(description = "Posição principal ou cargo")
     private String primaryPosition;
 
     @Schema(description = "Posições secundárias")

@@ -25,5 +25,7 @@ public class SquadSectorsDto {
 
     @Builder.Default
     private List<SquadMemberDto> forwards = new ArrayList<>();
-}
 
+    @Builder.Default
+    private List<SquadMemberDto> staff = new ArrayList<>();
+}

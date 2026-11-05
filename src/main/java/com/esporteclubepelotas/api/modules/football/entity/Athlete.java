@@ -60,6 +60,9 @@ public class Athlete {
     @Column(name = "entry_year")
     private Integer entryYear;
 
+    @Column(name = "staff_role", length = 100)
+    private String staffRole;
+
     private LocalDate birthDate;
 
     @Column(length = 150)
@@ -70,7 +73,7 @@ public class Athlete {
     private Integer weight; // em kg (ex: 78)
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     @Builder.Default
     private PreferredFoot preferredFoot = PreferredFoot.RIGHT;
 

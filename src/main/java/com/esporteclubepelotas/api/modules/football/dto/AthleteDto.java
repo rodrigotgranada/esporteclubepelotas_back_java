@@ -11,6 +11,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -33,6 +34,7 @@ public class AthleteDto {
     private AthleteType athleteType;
     private String youthCategory;
     private Integer entryYear;
+    private String staffRole;
     private String birthDate;
     private Integer age;
     private String birthPlace;
@@ -45,10 +47,11 @@ public class AthleteDto {
     private String biography;
     private String instagram;
 
+    @Builder.Default
+    private List<AthleteSeasonDto> seasons = new ArrayList<>();
+
     @JsonProperty("isActive")
     private boolean isActive;
-
-    private List<AthleteSeasonDto> seasons;
 
     private Instant createdAt;
     private Instant updatedAt;

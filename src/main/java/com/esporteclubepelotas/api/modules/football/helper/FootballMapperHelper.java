@@ -35,6 +35,7 @@ public final class FootballMapperHelper {
                 .athleteType(athlete.getAthleteType())
                 .youthCategory(athlete.getYouthCategory())
                 .entryYear(athlete.getEntryYear())
+                .staffRole(athlete.getStaffRole())
                 .birthDate(athlete.getBirthDate() != null ? athlete.getBirthDate().toString() : null)
                 .age(calculateAge(athlete.getBirthDate()))
                 .birthPlace(athlete.getBirthPlace())
@@ -117,16 +118,17 @@ public final class FootballMapperHelper {
         List<SquadMemberDto> defenders = allMembers.stream().filter(m -> m.getSector() == SquadSector.DEFENDER).toList();
         List<SquadMemberDto> midfielders = allMembers.stream().filter(m -> m.getSector() == SquadSector.MIDFIELDER).toList();
         List<SquadMemberDto> forwards = allMembers.stream().filter(m -> m.getSector() == SquadSector.FORWARD).toList();
+        List<SquadMemberDto> staffMembers = allMembers.stream().filter(m -> m.getSector() == SquadSector.STAFF).toList();
 
         SquadSectorsDto sectors = SquadSectorsDto.builder()
                 .goalkeepers(new ArrayList<>(goalkeepers))
                 .defenders(new ArrayList<>(defenders))
                 .midfielders(new ArrayList<>(midfielders))
                 .forwards(new ArrayList<>(forwards))
+                .staff(new ArrayList<>(staffMembers))
                 .build();
 
         dto.setSectors(sectors);
         return dto;
     }
 }
-

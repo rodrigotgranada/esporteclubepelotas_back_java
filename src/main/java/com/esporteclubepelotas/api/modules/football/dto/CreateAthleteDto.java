@@ -19,9 +19,9 @@ import java.util.List;
 @AllArgsConstructor
 public class CreateAthleteDto {
 
-    @NotBlank(message = "O nome completo do atleta é obrigatório.")
-    @Size(max = 150, message = "O nome do atleta deve ter no máximo 150 caracteres.")
-    @Schema(description = "Nome completo do atleta", example = "Walter Henrique de Oliveira")
+    @NotBlank(message = "O nome completo é obrigatório.")
+    @Size(max = 150, message = "O nome deve ter no máximo 150 caracteres.")
+    @Schema(description = "Nome completo do profissional", example = "Walter Henrique de Oliveira")
     private String name;
 
     @Size(max = 100, message = "O apelido deve ter no máximo 100 caracteres.")
@@ -31,15 +31,15 @@ public class CreateAthleteDto {
     @Schema(description = "Slug único (gerado automaticamente se omitido)", example = "walter")
     private String slug;
 
-    @Schema(description = "URL da foto oficial do atleta")
+    @Schema(description = "URL da foto oficial")
     private String photoUrl;
 
     @Builder.Default
-    @Schema(description = "Gênero do atleta (MALE, FEMALE)", example = "MALE")
+    @Schema(description = "Gênero (MALE, FEMALE)", example = "MALE")
     private AthleteGender gender = AthleteGender.MALE;
 
     @Builder.Default
-    @Schema(description = "Tipo de vínculo (PROFESSIONAL, YOUTH)", example = "PROFESSIONAL")
+    @Schema(description = "Tipo de vínculo (PROFESSIONAL, YOUTH, STAFF)", example = "PROFESSIONAL")
     private AthleteType athleteType = AthleteType.PROFESSIONAL;
 
     @Schema(description = "Categoria da base de formação", example = "SUB_20")
@@ -47,6 +47,9 @@ public class CreateAthleteDto {
 
     @Schema(description = "Ano de chegada às categorias de base do clube", example = "2024")
     private Integer entryYear;
+
+    @Schema(description = "Papel/cargo na comissão técnica", example = "Treinador")
+    private String staffRole;
 
     @Schema(description = "Data de nascimento (ISO-8601)", example = "1989-07-22")
     private String birthDate;
@@ -64,9 +67,8 @@ public class CreateAthleteDto {
     @Schema(description = "Pé preferencial", example = "RIGHT")
     private PreferredFoot preferredFoot;
 
-    @NotBlank(message = "A posição principal é obrigatória.")
     @Size(max = 80, message = "A posição principal deve ter no máximo 80 caracteres.")
-    @Schema(description = "Posição principal de atuação", example = "Centroavante")
+    @Schema(description = "Posição principal de atuação ou cargo", example = "Centroavante")
     private String primaryPosition;
 
     @Schema(description = "Posições secundárias", example = "[\"Segundo Atacante\"]")

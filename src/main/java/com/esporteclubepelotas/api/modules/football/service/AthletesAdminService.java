@@ -136,12 +136,13 @@ public class AthletesAdminService {
                 .athleteType(dto.getAthleteType() != null ? dto.getAthleteType() : AthleteType.PROFESSIONAL)
                 .youthCategory(dto.getYouthCategory())
                 .entryYear(dto.getEntryYear())
+                .staffRole(dto.getStaffRole() != null ? dto.getStaffRole().trim() : null)
                 .birthDate(birth)
                 .birthPlace(dto.getBirthPlace() != null ? dto.getBirthPlace().trim() : null)
                 .height(dto.getHeight())
                 .weight(dto.getWeight())
                 .preferredFoot(dto.getPreferredFoot() != null ? dto.getPreferredFoot() : PreferredFoot.RIGHT)
-                .primaryPosition(dto.getPrimaryPosition().trim())
+                .primaryPosition(dto.getPrimaryPosition() != null && !dto.getPrimaryPosition().isBlank() ? dto.getPrimaryPosition().trim() : (dto.getStaffRole() != null ? dto.getStaffRole().trim() : "Comissão Técnica"))
                 .secondaryPositions(dto.getSecondaryPositions() != null ? dto.getSecondaryPositions() : Collections.emptyList())
                 .pastClubs(dto.getPastClubs() != null ? dto.getPastClubs() : Collections.emptyList())
                 .biography(dto.getBiography())
@@ -195,6 +196,10 @@ public class AthletesAdminService {
 
         if (dto.getEntryYear() != null) {
             athlete.setEntryYear(dto.getEntryYear());
+        }
+
+        if (dto.getStaffRole() != null) {
+            athlete.setStaffRole(dto.getStaffRole().trim());
         }
 
         if (dto.getBirthDate() != null) {

@@ -31,7 +31,7 @@ public class SquadMember {
     @JoinColumn(name = "athlete_id", nullable = false)
     private Athlete athlete;
 
-    @Column(name = "jersey_number", nullable = false)
+    @Column(name = "jersey_number")
     private Integer jerseyNumber;
 
     @Enumerated(EnumType.STRING)

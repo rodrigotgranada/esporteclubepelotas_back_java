@@ -117,12 +117,8 @@ public class FootballSeeder {
             Squad squad2026 = Squad.builder()
                     .year(2026)
                     .category(SquadCategory.PROFESSIONAL)
-                    .seasonName("Temporada 2026 - Gauchão Série A")
+                    .seasonName("Gauchão Série A 2026")
                     .coachName("Leocir Dall’Astra")
-                    .staff(List.of(
-                            SquadStaffMember.builder().role("Auxiliar Técnico").name("Felipe Endres").build(),
-                            SquadStaffMember.builder().role("Preparador Físico").name("Lucas Pereira").build()
-                    ))
                     .coverUrl("https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80")
                     .isCurrent(true)
                     .isActive(true)
@@ -168,19 +164,16 @@ public class FootballSeeder {
                     .build();
 
             squadMemberRepository.saveAll(List.of(m1, m2, m3, m4));
-            log.info("✅ [FootballSeeder] 4 Atletas e Elenco 2026 com membros alocados nos 4 setores cadastrados.");
+            log.info("✅ [FootballSeeder] 4 Atletas e Elenco 2026 cadastrados.");
         }
 
-        // Sub-20 em 2026 (para demonstrar dropdown de Categorias de Base na temporada 2026)
+        // Sub-20 em 2026
         if (squadRepository.findByYearAndCategoryAndIsActiveTrue(2026, SquadCategory.SUB_20).isEmpty()) {
             Squad squad2026Sub20 = Squad.builder()
                     .year(2026)
                     .category(SquadCategory.SUB_20)
-                    .seasonName("Temporada 2026 - Copa FGF Sub-20")
+                    .seasonName("Copa FGF Sub-20 2026")
                     .coachName("Renan Rocha")
-                    .staff(List.of(
-                            SquadStaffMember.builder().role("Preparador Físico").name("Gabriel Silva").build()
-                    ))
                     .coverUrl("https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80")
                     .isCurrent(false)
                     .isActive(true)
@@ -190,16 +183,13 @@ public class FootballSeeder {
             log.info("✅ [FootballSeeder] Elenco 2026 Sub-20 cadastrado.");
         }
 
-        // Profissional em 2025 (para demonstrar temporada com apenas Profissional e sem base/feminino)
+        // Profissional em 2025
         if (squadRepository.findByYearAndCategoryAndIsActiveTrue(2025, SquadCategory.PROFESSIONAL).isEmpty()) {
             Squad squad2025 = Squad.builder()
                     .year(2025)
                     .category(SquadCategory.PROFESSIONAL)
-                    .seasonName("Temporada 2025 - Gauchão Série A2")
+                    .seasonName("Gauchão Série A2 2025")
                     .coachName("Paulo Porto")
-                    .staff(List.of(
-                            SquadStaffMember.builder().role("Auxiliar Técnico").name("Marcos Rosa").build()
-                    ))
                     .coverUrl("https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1200&q=80")
                     .isCurrent(false)
                     .isActive(true)
@@ -207,6 +197,86 @@ public class FootballSeeder {
                     .build();
             squadRepository.save(squad2025);
             log.info("✅ [FootballSeeder] Elenco 2025 Profissional cadastrado.");
+        }
+
+        // Seed Comissão Técnica como membros oficiais se ainda não existirem
+        seedStaffMembers(author);
+    }
+
+    private void seedStaffMembers(User author) {
+        if (athleteRepository.findBySlug("leocir-dall-astra").isEmpty()) {
+            log.info("🌱 [FootballSeeder] Criando membros da Comissão Técnica oficial...");
+
+            Athlete leocir = Athlete.builder()
+                    .name("Leocir Dall’Astra")
+                    .nickname("Leocir")
+                    .slug("leocir-dall-astra")
+                    .gender(AthleteGender.MALE)
+                    .athleteType(AthleteType.STAFF)
+                    .staffRole("Treinador")
+                    .primaryPosition("Treinador")
+                    .birthDate(LocalDate.of(1963, 6, 14))
+                    .birthPlace("Getúlio Vargas - RS")
+                    .photoUrl("https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80")
+                    .pastClubs(List.of("Ypiranga-RS", "Brasil de Pelotas", "Juventude", "Passo Fundo", "Treze-PB"))
+                    .biography("Treinador experiente e de perfil estrategista com vasta rodagem pelo futebol do Rio Grande do Sul e competições nacionais. Comandante técnico do Áureo-Cerúleo.")
+                    .isActive(true)
+                    .createdBy(author)
+                    .build();
+
+            Athlete felipe = Athlete.builder()
+                    .name("Felipe Endres")
+                    .nickname("Felipe")
+                    .slug("felipe-endres")
+                    .gender(AthleteGender.MALE)
+                    .athleteType(AthleteType.STAFF)
+                    .staffRole("Auxiliar Técnico")
+                    .primaryPosition("Auxiliar Técnico")
+                    .birthDate(LocalDate.of(1981, 10, 5))
+                    .birthPlace("Porto Alegre - RS")
+                    .photoUrl("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=600&q=80")
+                    .pastClubs(List.of("Grêmio", "Caxias"))
+                    .biography("Auxiliar técnico especializado em análise de desempenho e treinamentos táticos avançados.")
+                    .isActive(true)
+                    .createdBy(author)
+                    .build();
+
+            Athlete lucas = Athlete.builder()
+                    .name("Lucas Pereira")
+                    .nickname("Lucas")
+                    .slug("lucas-pereira")
+                    .gender(AthleteGender.MALE)
+                    .athleteType(AthleteType.STAFF)
+                    .staffRole("Preparador Físico")
+                    .primaryPosition("Preparador Físico")
+                    .birthDate(LocalDate.of(1988, 3, 19))
+                    .birthPlace("Pelotas - RS")
+                    .photoUrl("https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80")
+                    .pastClubs(List.of("Farroupilha", "São Paulo-RG"))
+                    .biography("Preparador físico com formação em fisiologia do exercício e periodização de força.")
+                    .isActive(true)
+                    .createdBy(author)
+                    .build();
+
+            List<Athlete> staffList = athleteRepository.saveAll(List.of(leocir, felipe, lucas));
+
+            // Alocar na temporada atual 2026 se existir
+            squadRepository.findByYearAndCategoryAndIsActiveTrue(2026, SquadCategory.PROFESSIONAL).ifPresent(squad -> {
+                int order = 10;
+                for (Athlete staff : staffList) {
+                    if (squadMemberRepository.findBySquadIdAndAthleteId(squad.getId(), staff.getId()).isEmpty()) {
+                        SquadMember sm = SquadMember.builder()
+                                .squad(squad)
+                                .athlete(staff)
+                                .sector(SquadSector.STAFF)
+                                .role(SquadMemberRole.STARTER)
+                                .displayOrder(order++)
+                                .build();
+                        squadMemberRepository.save(sm);
+                    }
+                }
+                log.info("✅ [FootballSeeder] Comissão técnica vinculada ao elenco 2026 no setor STAFF.");
+            });
         }
     }
 }
