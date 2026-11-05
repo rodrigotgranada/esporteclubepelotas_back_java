@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.football.dto;
 
+import com.esporteclubepelotas.api.modules.football.entity.AthleteGender;
+import com.esporteclubepelotas.api.modules.football.entity.AthleteType;
 import com.esporteclubepelotas.api.modules.football.entity.PreferredFoot;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -31,6 +33,20 @@ public class CreateAthleteDto {
 
     @Schema(description = "URL da foto oficial do atleta")
     private String photoUrl;
+
+    @Builder.Default
+    @Schema(description = "Gênero do atleta (MALE, FEMALE)", example = "MALE")
+    private AthleteGender gender = AthleteGender.MALE;
+
+    @Builder.Default
+    @Schema(description = "Tipo de vínculo (PROFESSIONAL, YOUTH)", example = "PROFESSIONAL")
+    private AthleteType athleteType = AthleteType.PROFESSIONAL;
+
+    @Schema(description = "Categoria da base de formação", example = "SUB_20")
+    private String youthCategory;
+
+    @Schema(description = "Ano de chegada às categorias de base do clube", example = "2024")
+    private Integer entryYear;
 
     @Schema(description = "Data de nascimento (ISO-8601)", example = "1989-07-22")
     private String birthDate;
@@ -70,4 +86,3 @@ public class CreateAthleteDto {
     @Schema(description = "Status ativo do atleta", example = "true")
     private Boolean isActive = true;
 }
-

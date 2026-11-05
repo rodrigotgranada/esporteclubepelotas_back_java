@@ -18,7 +18,8 @@ import java.util.UUID;
 @Table(name = "athletes", indexes = {
         @Index(name = "idx_athletes_slug", columnList = "slug", unique = true),
         @Index(name = "idx_athletes_active_name", columnList = "is_active, name"),
-        @Index(name = "idx_athletes_position", columnList = "primary_position")
+        @Index(name = "idx_athletes_position", columnList = "primary_position"),
+        @Index(name = "idx_athletes_gender_type", columnList = "is_active, gender, athlete_type")
 })
 @Getter
 @Setter
@@ -42,6 +43,22 @@ public class Athlete {
 
     @Column(length = 1000)
     private String photoUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private AthleteGender gender = AthleteGender.MALE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "athlete_type", nullable = false, length = 20)
+    @Builder.Default
+    private AthleteType athleteType = AthleteType.PROFESSIONAL;
+
+    @Column(name = "youth_category", length = 30)
+    private String youthCategory;
+
+    @Column(name = "entry_year")
+    private Integer entryYear;
 
     private LocalDate birthDate;
 
@@ -89,4 +106,3 @@ public class Athlete {
     @UpdateTimestamp
     private Instant updatedAt;
 }
-

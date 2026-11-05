@@ -8,6 +8,8 @@ import com.esporteclubepelotas.api.modules.football.dto.GetAthletesResponseDto;
 import com.esporteclubepelotas.api.modules.football.dto.QueryAthletesDto;
 import com.esporteclubepelotas.api.modules.football.dto.UpdateAthleteDto;
 import com.esporteclubepelotas.api.modules.football.entity.Athlete;
+import com.esporteclubepelotas.api.modules.football.entity.AthleteGender;
+import com.esporteclubepelotas.api.modules.football.entity.AthleteType;
 import com.esporteclubepelotas.api.modules.football.entity.PreferredFoot;
 import com.esporteclubepelotas.api.modules.football.helper.AthletesSlugHelper;
 import com.esporteclubepelotas.api.modules.football.helper.FootballMapperHelper;
@@ -51,6 +53,12 @@ public class AthletesAdminService {
 
             if (query.getIsActive() != null) {
                 predicates.add(cb.equal(root.get("isActive"), query.getIsActive()));
+            }
+            if (query.getGender() != null) {
+                predicates.add(cb.equal(root.get("gender"), query.getGender()));
+            }
+            if (query.getAthleteType() != null) {
+                predicates.add(cb.equal(root.get("athleteType"), query.getAthleteType()));
             }
 
             if (query.getPosition() != null && !query.getPosition().isBlank()) {
@@ -116,6 +124,10 @@ public class AthletesAdminService {
                 .nickname(dto.getNickname() != null ? dto.getNickname().trim() : null)
                 .slug(slug)
                 .photoUrl(dto.getPhotoUrl())
+                .gender(dto.getGender() != null ? dto.getGender() : AthleteGender.MALE)
+                .athleteType(dto.getAthleteType() != null ? dto.getAthleteType() : AthleteType.PROFESSIONAL)
+                .youthCategory(dto.getYouthCategory())
+                .entryYear(dto.getEntryYear())
                 .birthDate(birth)
                 .birthPlace(dto.getBirthPlace() != null ? dto.getBirthPlace().trim() : null)
                 .height(dto.getHeight())

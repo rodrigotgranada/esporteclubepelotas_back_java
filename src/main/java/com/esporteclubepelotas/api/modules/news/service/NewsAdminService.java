@@ -58,6 +58,7 @@ public class NewsAdminService {
 
             if (query.getIsPinned() != null) {
                 predicates.add(cb.equal(root.get("isPinned"), query.getIsPinned()));
+            if (query.getShowOnHomepage() != null) { predicates.add(cb.equal(root.get("showOnHomepage"), query.getShowOnHomepage())); }
             }
 
             if (query.getCategory() != null && !query.getCategory().isBlank()) {
@@ -165,6 +166,7 @@ public class NewsAdminService {
                 .isFeatured(isFeatured)
                 .featuredSlot(slot)
                 .isPinned(Boolean.TRUE.equals(dto.getIsPinned()))
+                .showOnHomepage(!Boolean.FALSE.equals(dto.getShowOnHomepage()))
                 .reporterName(dto.getReporterName() != null ? dto.getReporterName().trim() : null)
                 .photographerName(dto.getPhotographerName() != null ? dto.getPhotographerName().trim() : null)
                 .author(author)
@@ -239,7 +241,7 @@ public class NewsAdminService {
         }
 
         if (dto.getIsPinned() != null) {
-            article.setPinned(dto.getIsPinned());
+            article.setPinned(dto.getIsPinned()); } if (dto.getShowOnHomepage() != null) { article.setShowOnHomepage(dto.getShowOnHomepage());
         }
 
         if (dto.getReporterName() != null) {

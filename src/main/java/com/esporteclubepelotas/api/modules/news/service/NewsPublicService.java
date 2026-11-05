@@ -108,6 +108,7 @@ public class NewsPublicService {
 
             if (query.getIsPinned() != null) {
                 predicates.add(cb.equal(root.get("isPinned"), query.getIsPinned()));
+            if (query.getShowOnHomepage() != null) { predicates.add(cb.equal(root.get("showOnHomepage"), query.getShowOnHomepage())); }
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.football.dto;
 
+import com.esporteclubepelotas.api.modules.football.entity.AthleteGender;
+import com.esporteclubepelotas.api.modules.football.entity.AthleteType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,5 +30,10 @@ public class QueryAthletesDto {
 
     @Schema(description = "Filtrar por status ativo/inativo")
     private Boolean isActive;
-}
 
+    @Schema(description = "Filtrar por gênero (MALE, FEMALE)")
+    private AthleteGender gender;
+
+    @Schema(description = "Filtrar por tipo (PROFESSIONAL, YOUTH)")
+    private AthleteType athleteType;
+}

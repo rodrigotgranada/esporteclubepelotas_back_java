@@ -46,6 +46,9 @@ public class NewsArticleDto {
     @JsonProperty("isPinned")
     private boolean isPinned;
 
+    @JsonProperty("showOnHomepage")
+    private boolean showOnHomepage;
+
     private String reporterName;
     private String photographerName;
     private NewsArticleAuthorDto author;
@@ -72,4 +75,3 @@ public class NewsArticleDto {
     private Instant createdAt;
     private Instant updatedAt;
 }
-

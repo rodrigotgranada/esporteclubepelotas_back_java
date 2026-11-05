@@ -63,6 +63,7 @@ public final class NewsMapperHelper {
                 .isFeatured(article.isFeatured())
                 .featuredSlot(article.getFeaturedSlot())
                 .isPinned(article.isPinned())
+                .showOnHomepage(article.isShowOnHomepage())
                 .reporterName(article.getReporterName())
                 .photographerName(article.getPhotographerName())
                 .author(mapAuthor(article.getAuthor()))

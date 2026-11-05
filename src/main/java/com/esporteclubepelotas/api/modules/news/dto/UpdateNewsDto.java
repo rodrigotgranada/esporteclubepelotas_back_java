@@ -61,6 +61,9 @@ public class UpdateNewsDto {
     @Schema(description = "Fixar no topo do feed")
     private Boolean isPinned;
 
+    @Schema(description = "Exibir na página principal (Home do portal)")
+    private Boolean showOnHomepage;
+
     @Size(max = 120, message = "O nome do repórter deve ter no máximo 120 caracteres.")
     @Schema(description = "Nome do repórter / autor do texto")
     private String reporterName;
@@ -84,4 +87,3 @@ public class UpdateNewsDto {
     @Schema(description = "Permitir comentários dos torcedores")
     private Boolean allowComments;
 }
-

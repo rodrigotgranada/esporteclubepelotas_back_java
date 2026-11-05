@@ -19,7 +19,8 @@ import java.util.UUID;
 @Table(name = "news_articles", indexes = {
         @Index(name = "idx_news_articles_slug", columnList = "slug", unique = true),
         @Index(name = "idx_news_articles_feed", columnList = "is_active, status, is_pinned, published_at"),
-        @Index(name = "idx_news_articles_featured", columnList = "is_active, status, featured_slot, published_at")
+        @Index(name = "idx_news_articles_featured", columnList = "is_active, status, featured_slot, published_at"),
+        @Index(name = "idx_news_articles_home", columnList = "is_active, status, show_on_homepage, published_at")
 })
 @Getter
 @Setter
@@ -84,6 +85,10 @@ public class NewsArticle {
     @Builder.Default
     private boolean isPinned = false;
 
+    @Column(name = "show_on_homepage", nullable = false)
+    @Builder.Default
+    private boolean showOnHomepage = true;
+
     @Column(length = 120)
     private String reporterName;
 
@@ -134,4 +139,3 @@ public class NewsArticle {
     @UpdateTimestamp
     private Instant updatedAt;
 }
-

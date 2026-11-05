@@ -42,5 +42,7 @@ public class QueryNewsDto {
 
     @Schema(description = "Filtrar por matérias fixadas no topo")
     private Boolean isPinned;
-}
 
+    @Schema(description = "Filtrar por exibição na página principal")
+    private Boolean showOnHomepage;
+}

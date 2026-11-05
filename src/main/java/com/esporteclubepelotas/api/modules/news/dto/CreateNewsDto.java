@@ -63,6 +63,10 @@ public class CreateNewsDto {
     @Schema(description = "Fixar no topo do feed", example = "false")
     private Boolean isPinned;
 
+    @Builder.Default
+    @Schema(description = "Exibir na página principal (Home do portal)", example = "true")
+    private Boolean showOnHomepage = true;
+
     @Size(max = 120, message = "O nome do repórter deve ter no máximo 120 caracteres.")
     @Schema(description = "Nome do repórter / autor do texto", example = "Gustavo Freitas / Assessoria FGF")
     private String reporterName;
@@ -88,4 +92,3 @@ public class CreateNewsDto {
     @Schema(description = "Permitir comentários dos torcedores", example = "true")
     private Boolean allowComments = true;
 }
-

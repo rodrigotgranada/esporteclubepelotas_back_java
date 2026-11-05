@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.football.dto;
 
+import com.esporteclubepelotas.api.modules.football.entity.AthleteGender;
+import com.esporteclubepelotas.api.modules.football.entity.AthleteType;
 import com.esporteclubepelotas.api.modules.football.entity.PreferredFoot;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -27,6 +29,10 @@ public class AthleteDto {
     private String nickname;
     private String slug;
     private String photoUrl;
+    private AthleteGender gender;
+    private AthleteType athleteType;
+    private String youthCategory;
+    private Integer entryYear;
     private String birthDate;
     private Integer age;
     private String birthPlace;
@@ -47,4 +53,3 @@ public class AthleteDto {
     private Instant createdAt;
     private Instant updatedAt;
 }
-
