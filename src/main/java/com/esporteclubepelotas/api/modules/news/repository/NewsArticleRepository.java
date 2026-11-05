@@ -41,14 +41,14 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, UUID>,
     @Query("SELECT a FROM NewsArticle a WHERE a.isActive = true AND " +
             "((a.status = 'PUBLISHED' AND a.publishedAt <= :now) OR " +
             " (a.status = 'SCHEDULED' AND a.publishedAt <= :now)) AND " +
-            "a.featuredSlot = :slot " +
+            "a.featuredSlot = :slot AND a.showOnHomepage = true " +
             "ORDER BY a.publishedAt DESC")
     List<NewsArticle> findPublicBySlot(@Param("now") Instant now, @Param("slot") NewsFeaturedSlot slot, Pageable pageable);
 
     @Query("SELECT a FROM NewsArticle a WHERE a.isActive = true AND " +
             "((a.status = 'PUBLISHED' AND a.publishedAt <= :now) OR " +
             " (a.status = 'SCHEDULED' AND a.publishedAt <= :now)) AND " +
-            "a.isFeatured = true AND a.id NOT IN :excludedIds " +
+            "a.isFeatured = true AND a.showOnHomepage = true AND a.id NOT IN :excludedIds " +
             "ORDER BY a.publishedAt DESC")
     List<NewsArticle> findRemainingFeatured(
             @Param("now") Instant now,

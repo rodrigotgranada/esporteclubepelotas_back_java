@@ -18,3 +18,4 @@ ALTER TABLE public.squad_members ALTER COLUMN jersey_number DROP NOT NULL;
 ALTER TABLE public.squad_members DROP CONSTRAINT IF EXISTS squad_members_sector_check;
 ALTER TABLE public.squad_members ADD CONSTRAINT squad_members_sector_check
     CHECK (((sector)::text = ANY ((ARRAY['GOALKEEPER'::character varying, 'DEFENDER'::character varying, 'MIDFIELDER'::character varying, 'FORWARD'::character varying, 'STAFF'::character varying])::text[])));
+

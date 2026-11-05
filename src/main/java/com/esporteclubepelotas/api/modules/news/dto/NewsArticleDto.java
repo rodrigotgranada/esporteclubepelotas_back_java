@@ -49,6 +49,9 @@ public class NewsArticleDto {
     @JsonProperty("showOnHomepage")
     private boolean showOnHomepage;
 
+    @JsonProperty("isYouth")
+    private boolean isYouth;
+
     private String reporterName;
     private String photographerName;
     private NewsArticleAuthorDto author;

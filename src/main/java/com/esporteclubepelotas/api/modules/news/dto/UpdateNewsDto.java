@@ -64,6 +64,9 @@ public class UpdateNewsDto {
     @Schema(description = "Exibir na página principal (Home do portal)")
     private Boolean showOnHomepage;
 
+    @Schema(description = "Indica se a matéria pertence às Categorias de Base (Hub da Base)")
+    private Boolean isYouth;
+
     @Size(max = 120, message = "O nome do repórter deve ter no máximo 120 caracteres.")
     @Schema(description = "Nome do repórter / autor do texto")
     private String reporterName;

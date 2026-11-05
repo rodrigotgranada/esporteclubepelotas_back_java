@@ -108,7 +108,14 @@ public class NewsPublicService {
 
             if (query.getIsPinned() != null) {
                 predicates.add(cb.equal(root.get("isPinned"), query.getIsPinned()));
-            if (query.getShowOnHomepage() != null) { predicates.add(cb.equal(root.get("showOnHomepage"), query.getShowOnHomepage())); }
+            }
+
+            if (query.getShowOnHomepage() != null) {
+                predicates.add(cb.equal(root.get("showOnHomepage"), query.getShowOnHomepage()));
+            }
+
+            if (query.getIsYouth() != null) {
+                predicates.add(cb.equal(root.get("isYouth"), query.getIsYouth()));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

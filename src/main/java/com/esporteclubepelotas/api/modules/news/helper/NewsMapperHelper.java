@@ -64,6 +64,7 @@ public final class NewsMapperHelper {
                 .featuredSlot(article.getFeaturedSlot())
                 .isPinned(article.isPinned())
                 .showOnHomepage(article.isShowOnHomepage())
+                .isYouth(article.isYouth())
                 .reporterName(article.getReporterName())
                 .photographerName(article.getPhotographerName())
                 .author(mapAuthor(article.getAuthor()))

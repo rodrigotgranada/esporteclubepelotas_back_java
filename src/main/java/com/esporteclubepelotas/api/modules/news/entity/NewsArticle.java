@@ -89,6 +89,10 @@ public class NewsArticle {
     @Builder.Default
     private boolean showOnHomepage = true;
 
+    @Column(name = "is_youth", nullable = false)
+    @Builder.Default
+    private boolean isYouth = false;
+
     @Column(length = 120)
     private String reporterName;
 
