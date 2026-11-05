@@ -25,6 +25,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.Predicate;
+import java.util.ArrayList;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -73,7 +76,37 @@ public class UserAdminService {
             }
         }
 
-        Page<User> usersPage = userRepository.findUsersWithFilters(searchClean, roleClean, userStatus, includeInactive, pageable);
+        final boolean targetIncludeInactive = includeInactive;
+        final UserStatus targetStatus = userStatus;
+        final String targetRole = roleClean;
+        final String targetSearch = searchClean;
+
+        Specification<User> spec = (root, q, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (!targetIncludeInactive) {
+                predicates.add(cb.isTrue(root.get("isActive")));
+            }
+            if (targetStatus != null) {
+                predicates.add(cb.equal(root.get("status"), targetStatus));
+            }
+            if (targetRole != null) {
+                predicates.add(cb.equal(root.get("role").get("name"), targetRole));
+            }
+            if (targetSearch != null) {
+                String pattern = "%" + targetSearch + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("firstName")), pattern),
+                        cb.like(cb.lower(root.get("lastName")), pattern),
+                        cb.like(cb.lower(root.get("email")), pattern),
+                        cb.like(root.get("cpf"), pattern)
+                ));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<User> usersPage = userRepository.findAll(spec, pageable);
 
         List<UserSummaryDto> dtos = usersPage.getContent().stream()
                 .map(UserSummaryDto::fromEntity)

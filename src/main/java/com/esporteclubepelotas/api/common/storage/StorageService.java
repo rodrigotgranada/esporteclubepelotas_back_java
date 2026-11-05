@@ -6,6 +6,13 @@ public interface StorageService {
     String uploadFile(byte[] bytes, String fileName, String folder, String contentType);
     void deleteFile(String fileUrl);
 
+    default String uploadFile(MultipartFile file, String path) {
+        int idx = path.lastIndexOf('/');
+        String folder = idx > 0 ? path.substring(0, idx) : "uploads";
+        String fileName = idx > 0 ? path.substring(idx + 1) : path;
+        return uploadFile(file, folder, fileName);
+    }
+
     default String uploadFile(MultipartFile file, String folder, String fileName) {
         try {
             String contentType = file.getContentType() != null ? file.getContentType() : "image/jpeg";

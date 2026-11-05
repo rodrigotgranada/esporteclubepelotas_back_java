@@ -258,6 +258,11 @@ public class AthletesAdminService {
     }
 
     @Transactional
+    public void remove(UUID id) {
+        delete(id);
+    }
+
+    @Transactional
     public Map<String, String> uploadPhoto(UUID id, MultipartFile file) {
         Athlete athlete = athleteRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Atleta não encontrado para upload de foto."));
