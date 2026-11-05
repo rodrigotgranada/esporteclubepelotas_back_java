@@ -8,6 +8,7 @@ import com.esporteclubepelotas.api.modules.idol.entity.Idol;
 import com.esporteclubepelotas.api.modules.idol.entity.IdolCategory;
 import com.esporteclubepelotas.api.modules.idol.entity.IdolGalleryItem;
 import com.esporteclubepelotas.api.modules.idol.helper.IdolSlugHelper;
+import com.esporteclubepelotas.api.modules.idol.helper.IdolSpecifications;
 import com.esporteclubepelotas.api.modules.idol.repository.IdolRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,8 +43,11 @@ public class IdolAdminService {
         );
         Pageable pageable = PageRequest.of(pageIndex, pageSize, sort);
 
-        String searchClean = (search != null && !search.isBlank()) ? search.trim() : null;
-        Page<Idol> idolsPage = idolRepository.findWithFilters(searchClean, category, isFeatured, true, pageable);
+
+        Page<Idol> idolsPage = idolRepository.findAll(
+                IdolSpecifications.withFilters(search, category, isFeatured, true),
+                pageable
+        );
 
         List<IdolDto> dtos = idolsPage.getContent().stream()
                 .map(IdolDto::fromEntity)
