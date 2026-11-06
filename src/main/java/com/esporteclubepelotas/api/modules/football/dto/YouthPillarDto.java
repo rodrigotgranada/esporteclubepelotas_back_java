@@ -21,3 +21,4 @@ public class YouthPillarDto {
     @Size(max = 220, message = "O texto do pilar deve ter no máximo 220 caracteres.")
     private String description;
 }
+

@@ -36,3 +36,4 @@ public class YouthPortalConfigDto {
     @Size(max = 80, message = "O telefone/WhatsApp de contato deve ter no máximo 80 caracteres.")
     private String contactPhone;
 }
+
