@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.news.entity;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,14 +13,17 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class NewsReactionsCounter implements Serializable {
 
+    @JsonAlias({"wolf", "cheer"})
     @Builder.Default
     private int wolf = 0;
 
     @Builder.Default
     private int fire = 0;
 
+    @JsonAlias({"clap", "applause"})
     @Builder.Default
     private int clap = 0;
 
@@ -45,4 +50,3 @@ public class NewsReactionsCounter implements Serializable {
         }
     }
 }
-
