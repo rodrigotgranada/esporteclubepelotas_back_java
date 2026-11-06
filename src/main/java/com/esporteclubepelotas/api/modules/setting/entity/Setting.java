@@ -25,7 +25,7 @@ public class Setting {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "club_logo_url")
+    @Column(name = "club_logo_url", columnDefinition = "TEXT")
     private String clubLogoUrl;
 
     @Builder.Default
@@ -71,7 +71,7 @@ public class Setting {
     private String stadiumAddress = "Av. Bento Gonçalves esquina Parque Dom Antônio Zattera - Pelotas/RS, CEP 96015-140";
 
     @Builder.Default
-    @Column(name = "google_maps_embed_url", length = 1000)
+    @Column(name = "google_maps_embed_url", columnDefinition = "TEXT")
     private String googleMapsEmbedUrl = "https://maps.google.com/maps?q=Est%C3%A1dio+Boca+do+Lobo,+Pelotas+-+RS&t=&z=16&ie=UTF8&iwloc=&output=embed";
 
     @Builder.Default

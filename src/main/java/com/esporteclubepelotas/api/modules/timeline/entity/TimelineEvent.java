@@ -42,7 +42,7 @@ public class TimelineEvent {
     @Column(name = "category", length = 50)
     private String categoryLegacy;
 
-    @Column(name = "image_url", length = 1000)
+    @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
     @Column(name = "event_date")

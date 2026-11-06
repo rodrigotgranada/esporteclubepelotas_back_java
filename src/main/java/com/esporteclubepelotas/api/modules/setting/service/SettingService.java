@@ -36,6 +36,23 @@ public class SettingService {
         Setting setting = settingRepository.findFirstByOrderByIdAsc()
                 .orElseGet(this::createDefaultSettings);
 
+        if (dto != null) {
+            if (dto.getClubName() != null) setting.setClubName(dto.getClubName());
+            if (dto.getClubLogoUrl() != null) setting.setClubLogoUrl(dto.getClubLogoUrl());
+            if (dto.getClubLogoGallery() != null) setting.setClubLogoGallery(new ArrayList<>(dto.getClubLogoGallery()));
+            if (dto.getSocialLinks() != null) setting.setSocialLinks(new ArrayList<>(dto.getSocialLinks()));
+            if (dto.getContactPhones() != null) setting.setContactPhones(new ArrayList<>(dto.getContactPhones()));
+            if (dto.getContactEmails() != null) setting.setContactEmails(new ArrayList<>(dto.getContactEmails()));
+            if (dto.getOpeningHours() != null) setting.setOpeningHours(new ArrayList<>(dto.getOpeningHours()));
+            if (dto.getFooterNavigationLinks() != null) setting.setFooterNavigationLinks(new ArrayList<>(dto.getFooterNavigationLinks()));
+            if (dto.getStadiumName() != null) setting.setStadiumName(dto.getStadiumName());
+            if (dto.getStadiumAddress() != null) setting.setStadiumAddress(dto.getStadiumAddress());
+            if (dto.getGoogleMapsEmbedUrl() != null) setting.setGoogleMapsEmbedUrl(dto.getGoogleMapsEmbedUrl());
+            if (dto.getCopyrightText() != null) setting.setCopyrightText(dto.getCopyrightText());
+            if (dto.getYouthPillars() != null) setting.setYouthPillars(new ArrayList<>(dto.getYouthPillars()));
+            if (dto.getYouthTryouts() != null) setting.setYouthTryouts(dto.getYouthTryouts());
+        }
+
         if (logoFile != null && !logoFile.isEmpty()) {
             try {
                 String originalFilename = logoFile.getOriginalFilename() != null ? logoFile.getOriginalFilename() : "logo.png";
@@ -58,23 +75,6 @@ public class SettingService {
                 log.error("Erro ao ler bytes do arquivo de logo: {}", e.getMessage(), e);
                 throw new RuntimeException("Falha ao processar arquivo de logo", e);
             }
-        }
-
-        if (dto != null) {
-            if (dto.getClubName() != null) setting.setClubName(dto.getClubName());
-            if (dto.getClubLogoUrl() != null) setting.setClubLogoUrl(dto.getClubLogoUrl());
-            if (dto.getClubLogoGallery() != null) setting.setClubLogoGallery(new ArrayList<>(dto.getClubLogoGallery()));
-            if (dto.getSocialLinks() != null) setting.setSocialLinks(new ArrayList<>(dto.getSocialLinks()));
-            if (dto.getContactPhones() != null) setting.setContactPhones(new ArrayList<>(dto.getContactPhones()));
-            if (dto.getContactEmails() != null) setting.setContactEmails(new ArrayList<>(dto.getContactEmails()));
-            if (dto.getOpeningHours() != null) setting.setOpeningHours(new ArrayList<>(dto.getOpeningHours()));
-            if (dto.getFooterNavigationLinks() != null) setting.setFooterNavigationLinks(new ArrayList<>(dto.getFooterNavigationLinks()));
-            if (dto.getStadiumName() != null) setting.setStadiumName(dto.getStadiumName());
-            if (dto.getStadiumAddress() != null) setting.setStadiumAddress(dto.getStadiumAddress());
-            if (dto.getGoogleMapsEmbedUrl() != null) setting.setGoogleMapsEmbedUrl(dto.getGoogleMapsEmbedUrl());
-            if (dto.getCopyrightText() != null) setting.setCopyrightText(dto.getCopyrightText());
-            if (dto.getYouthPillars() != null) setting.setYouthPillars(new ArrayList<>(dto.getYouthPillars()));
-            if (dto.getYouthTryouts() != null) setting.setYouthTryouts(dto.getYouthTryouts());
         }
 
         Setting saved = settingRepository.save(setting);
@@ -138,4 +138,3 @@ public class SettingService {
         return settingRepository.save(setting);
     }
 }
-

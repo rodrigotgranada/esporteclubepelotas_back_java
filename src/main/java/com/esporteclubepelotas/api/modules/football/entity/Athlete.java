@@ -42,7 +42,7 @@ public class Athlete {
     @Column(nullable = false, unique = true, length = 150)
     private String slug;
 
-    @Column(length = 1000)
+    @Column(name = "photo_url", columnDefinition = "TEXT")
     private String photoUrl;
 
     @Enumerated(EnumType.STRING)

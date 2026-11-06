@@ -42,7 +42,7 @@ public class Idol {
     @Builder.Default
     private IdolCategory category = IdolCategory.PLAYER;
 
-    @Column(length = 500)
+    @Column(name = "photo_url", columnDefinition = "TEXT")
     private String photoUrl;
 
     @JdbcTypeCode(SqlTypes.JSON)
@@ -130,4 +130,3 @@ public class Idol {
         }
     }
 }
-

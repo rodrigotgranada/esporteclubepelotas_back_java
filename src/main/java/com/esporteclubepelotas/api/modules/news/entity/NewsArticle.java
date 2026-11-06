@@ -46,7 +46,7 @@ public class NewsArticle {
     @Builder.Default
     private List<String> previousSlugs = new ArrayList<>();
 
-    @Column(nullable = true, length = 1000)
+    @Column(name = "cover_image", nullable = true, columnDefinition = "TEXT")
     private String coverImage;
 
     @Column(length = 150)
@@ -109,7 +109,7 @@ public class NewsArticle {
     @Builder.Default
     private List<String> gallery = new ArrayList<>();
 
-    @Column(length = 500)
+    @Column(name = "youtube_video_url", columnDefinition = "TEXT")
     private String youtubeVideoUrl;
 
     @Column(nullable = false)

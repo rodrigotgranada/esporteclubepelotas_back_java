@@ -46,7 +46,7 @@ public class Squad {
     @Builder.Default
     private List<SquadStaffMember> staff = new ArrayList<>();
 
-    @Column(name = "cover_url", length = 1000)
+    @Column(name = "cover_url", columnDefinition = "TEXT")
     private String coverUrl;
 
     @Column(name = "is_current", nullable = false)
