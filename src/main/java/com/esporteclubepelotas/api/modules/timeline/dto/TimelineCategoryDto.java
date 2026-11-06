@@ -24,3 +24,4 @@ public class TimelineCategoryDto {
     private Instant createdAt;
     private Instant updatedAt;
 }
+

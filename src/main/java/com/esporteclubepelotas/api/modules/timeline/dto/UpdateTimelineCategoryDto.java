@@ -18,3 +18,4 @@ public class UpdateTimelineCategoryDto {
     private Integer displayOrder;
     private Boolean isActive;
 }
+

@@ -156,3 +156,4 @@ public class TimelineCategoryService {
         return slug.toLowerCase(Locale.ENGLISH).replaceAll("-+", "-").replaceAll("^-|-$", "");
     }
 }
+

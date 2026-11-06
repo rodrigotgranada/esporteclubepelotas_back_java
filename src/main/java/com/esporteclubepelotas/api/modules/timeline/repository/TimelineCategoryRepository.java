@@ -25,3 +25,4 @@ public interface TimelineCategoryRepository extends JpaRepository<TimelineCatego
     @Query("SELECT COUNT(e) FROM TimelineEvent e WHERE e.category.id = :categoryId AND e.isActive = true")
     long countEventsByCategoryId(UUID categoryId);
 }
+

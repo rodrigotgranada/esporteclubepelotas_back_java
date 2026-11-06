@@ -28,3 +28,4 @@ public class CreateTimelineCategoryDto {
     @Builder.Default
     private Boolean isActive = true;
 }
+
