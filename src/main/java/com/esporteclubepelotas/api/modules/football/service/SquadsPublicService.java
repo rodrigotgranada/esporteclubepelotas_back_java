@@ -158,4 +158,16 @@ public class SquadsPublicService {
 
         return FootballMapperHelper.organizeSquadSectors(squad);
     }
+
+    @Transactional(readOnly = true)
+    public SquadDto getById(UUID id) {
+        if (!isModuleActive()) {
+            throw new BusinessException("Módulo de Futebol está temporariamente desativado.");
+        }
+
+        Squad squad = squadRepository.findByIdAndIsActiveTrue(id)
+                .orElseThrow(() -> new BusinessException("Elenco não encontrado."));
+
+        return FootballMapperHelper.organizeSquadSectors(squad);
+    }
 }

@@ -73,6 +73,8 @@ public class SettingService {
             if (dto.getStadiumAddress() != null) setting.setStadiumAddress(dto.getStadiumAddress());
             if (dto.getGoogleMapsEmbedUrl() != null) setting.setGoogleMapsEmbedUrl(dto.getGoogleMapsEmbedUrl());
             if (dto.getCopyrightText() != null) setting.setCopyrightText(dto.getCopyrightText());
+            if (dto.getYouthPillars() != null) setting.setYouthPillars(new ArrayList<>(dto.getYouthPillars()));
+            if (dto.getYouthTryouts() != null) setting.setYouthTryouts(dto.getYouthTryouts());
         }
 
         Setting saved = settingRepository.save(setting);

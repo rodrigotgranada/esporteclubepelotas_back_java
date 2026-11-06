@@ -16,6 +16,8 @@ import java.util.UUID;
 @Repository
 public interface SquadRepository extends JpaRepository<Squad, UUID>, JpaSpecificationExecutor<Squad> {
 
+    Optional<Squad> findByIdAndIsActiveTrue(UUID id);
+
     @Query("SELECT DISTINCT s.year FROM Squad s WHERE s.isActive = true ORDER BY s.year DESC")
     List<Integer> findDistinctYears();
 

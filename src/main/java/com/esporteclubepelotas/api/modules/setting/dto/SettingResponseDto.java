@@ -32,6 +32,8 @@ public class SettingResponseDto {
     private String stadiumAddress;
     private String googleMapsEmbedUrl;
     private String copyrightText;
+    private List<YouthPillarItem> youthPillars;
+    private YouthTryoutsConfig youthTryouts;
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -53,6 +55,8 @@ public class SettingResponseDto {
                 .stadiumAddress(setting.getStadiumAddress())
                 .googleMapsEmbedUrl(setting.getGoogleMapsEmbedUrl())
                 .copyrightText(setting.getCopyrightText())
+                .youthPillars(setting.getYouthPillars())
+                .youthTryouts(setting.getYouthTryouts())
                 .createdAt(setting.getCreatedAt())
                 .updatedAt(setting.getUpdatedAt())
                 .build();

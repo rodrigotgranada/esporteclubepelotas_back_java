@@ -12,6 +12,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/squads")
 @RequiredArgsConstructor
@@ -32,6 +34,12 @@ public class SquadsPublicController {
         return ResponseEntity.ok(squadsPublicService.getCurrent(category));
     }
 
+    @GetMapping("/detail/{id}")
+    @Operation(summary = "Obter elenco público por ID com setores organizados")
+    public ResponseEntity<SquadDto> getById(@PathVariable UUID id) {
+        return ResponseEntity.ok(squadsPublicService.getById(id));
+    }
+
     @GetMapping("/{year}/{category}")
     @Operation(summary = "Obter elenco de um ano e categoria específicos organizado por setores")
     public ResponseEntity<SquadDto> getByYearAndCategory(
@@ -47,4 +55,3 @@ public class SquadsPublicController {
         return ResponseEntity.ok(squadsPublicService.findAll(query));
     }
 }
-

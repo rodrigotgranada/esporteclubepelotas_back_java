@@ -24,5 +24,7 @@ public class SettingUpdateDto {
     private String stadiumAddress;
     private String googleMapsEmbedUrl;
     private String copyrightText;
+    private List<YouthPillarItem> youthPillars;
+    private YouthTryoutsConfig youthTryouts;
 }
 

@@ -78,6 +78,16 @@ public class Setting {
     @Column(name = "copyright_text")
     private String copyrightText = "© 2026 Esporte Clube Pelotas. Todos os direitos reservados.";
 
+    @Builder.Default
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "youth_pillars")
+    private List<YouthPillarItem> youthPillars = new ArrayList<>();
+
+    @Builder.Default
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "youth_tryouts")
+    private YouthTryoutsConfig youthTryouts = new YouthTryoutsConfig();
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
