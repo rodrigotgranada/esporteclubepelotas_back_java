@@ -31,6 +31,9 @@ public class QueryAthletesDto {
     @Schema(description = "Filtrar por status ativo/inativo")
     private Boolean isActive;
 
+    @Schema(description = "Filtrar por atletas aposentados ou fora de atividade (true/false)")
+    private Boolean isRetired;
+
     @Schema(description = "Filtrar por gênero (MALE, FEMALE)")
     private AthleteGender gender;
 

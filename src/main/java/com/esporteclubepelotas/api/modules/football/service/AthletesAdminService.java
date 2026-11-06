@@ -46,7 +46,7 @@ public class AthletesAdminService {
     @Transactional(readOnly = true)
     public GetAthletesResponseDto findAll(QueryAthletesDto query) {
         int page = query.getPage() != null && query.getPage() > 0 ? query.getPage() : 1;
-        int limit = query.getLimit() != null && query.getLimit() > 0 ? Math.min(50, query.getLimit()) : 20;
+        int limit = query.getLimit() != null && query.getLimit() > 0 ? Math.min(500, query.getLimit()) : 20;
 
         Specification<Athlete> spec = (root, q, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -54,17 +54,12 @@ public class AthletesAdminService {
             if (query.getIsActive() != null) {
                 predicates.add(cb.equal(root.get("isActive"), query.getIsActive()));
             }
+            if (query.getIsRetired() != null) {
+                predicates.add(cb.equal(root.get("isRetired"), query.getIsRetired()));
+            }
             if (query.getGender() != null) {
                 predicates.add(cb.equal(root.get("gender"), query.getGender()));
             }
-            if (query.getAthleteType() != null) {
-                predicates.add(cb.equal(root.get("athleteType"), query.getAthleteType()));
-            }
-
-            if (query.getGender() != null) {
-                predicates.add(cb.equal(root.get("gender"), query.getGender()));
-            }
-
             if (query.getAthleteType() != null) {
                 predicates.add(cb.equal(root.get("athleteType"), query.getAthleteType()));
             }
@@ -88,7 +83,7 @@ public class AthletesAdminService {
 
         Page<Athlete> paged = athleteRepository.findAll(
                 spec,
-                PageRequest.of(page - 1, limit, Sort.by(Sort.Direction.ASC, "name"))
+                PageRequest.of(page - 1, limit, Sort.by(Sort.Direction.DESC, "createdAt"))
         );
 
         List<AthleteDto> dtos = paged.getContent().stream()
@@ -148,6 +143,7 @@ public class AthletesAdminService {
                 .biography(dto.getBiography())
                 .instagram(dto.getInstagram() != null ? dto.getInstagram().trim() : null)
                 .isActive(dto.getIsActive() == null || dto.getIsActive())
+                .isRetired(Boolean.TRUE.equals(dto.getIsRetired()))
                 .createdBy(creator)
                 .build();
 
@@ -248,6 +244,10 @@ public class AthletesAdminService {
 
         if (dto.getIsActive() != null) {
             athlete.setActive(dto.getIsActive());
+        }
+
+        if (dto.getIsRetired() != null) {
+            athlete.setRetired(dto.getIsRetired());
         }
 
         Athlete saved = athleteRepository.save(athlete);

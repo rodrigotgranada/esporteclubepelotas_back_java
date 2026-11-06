@@ -2,6 +2,7 @@ package com.esporteclubepelotas.api.common.storage;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Bucket;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
@@ -16,6 +17,8 @@ import java.io.InputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Collections;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -66,16 +69,24 @@ public class FirebaseStorageService implements StorageService {
 
         if (!initialized) {
             log.info("Mock upload realizado para {} (tamanho: {} bytes)", fullPath, bytes.length);
-            return "https://storage.googleapis.com/" + (storageBucket != null ? storageBucket : "mock-bucket") + "/" + fullPath;
+            String mime = contentType != null && !contentType.isBlank() ? contentType : "image/png";
+            return "data:" + mime + ";base64," + Base64.getEncoder().encodeToString(bytes);
         }
 
         try {
             Bucket bucket = StorageClient.getInstance().bucket();
-            Blob blob = bucket.create(fullPath, bytes, contentType != null ? contentType : "application/octet-stream");
+            String downloadToken = UUID.randomUUID().toString();
+            Map<String, String> metadata = Collections.singletonMap("firebaseStorageDownloadTokens", downloadToken);
+            BlobInfo blobInfo = BlobInfo.newBuilder(bucket.getName(), fullPath)
+                    .setContentType(contentType != null ? contentType : "application/octet-stream")
+                    .setMetadata(metadata)
+                    .build();
+            bucket.getStorage().create(blobInfo, bytes);
 
-            // URL pública do Firebase Storage
-            String encodedPath = URLEncoder.encode(fullPath, StandardCharsets.UTF_8);
-            return String.format("https://firebasestorage.googleapis.com/v0/b/%s/o/%s?alt=media", bucket.getName(), encodedPath);
+            // URL pública do Firebase Storage compatível com console e clientes
+            String encodedPath = URLEncoder.encode(fullPath, StandardCharsets.UTF_8).replace("+", "%20");
+            return String.format("https://firebasestorage.googleapis.com/v0/b/%s/o/%s?alt=media&token=%s",
+                    bucket.getName(), encodedPath, downloadToken);
         } catch (Exception e) {
             log.error("Erro ao fazer upload para o Firebase Storage: {}", e.getMessage(), e);
             throw new RuntimeException("Erro ao processar upload do arquivo", e);

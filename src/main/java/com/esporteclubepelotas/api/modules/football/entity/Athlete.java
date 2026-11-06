@@ -19,7 +19,8 @@ import java.util.UUID;
         @Index(name = "idx_athletes_slug", columnList = "slug", unique = true),
         @Index(name = "idx_athletes_active_name", columnList = "is_active, name"),
         @Index(name = "idx_athletes_position", columnList = "primary_position"),
-        @Index(name = "idx_athletes_gender_type", columnList = "is_active, gender, athlete_type")
+        @Index(name = "idx_athletes_gender_type", columnList = "is_active, gender, athlete_type"),
+        @Index(name = "idx_athletes_retired", columnList = "is_active, is_retired")
 })
 @Getter
 @Setter
@@ -97,6 +98,10 @@ public class Athlete {
     @Column(name = "is_active", nullable = false)
     @Builder.Default
     private boolean isActive = true;
+
+    @Column(name = "is_retired", nullable = false)
+    @Builder.Default
+    private boolean isRetired = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_id")

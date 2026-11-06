@@ -53,6 +53,9 @@ public class AthleteDto {
     @JsonProperty("isActive")
     private boolean isActive;
 
+    @JsonProperty("isRetired")
+    private boolean isRetired;
+
     private Instant createdAt;
     private Instant updatedAt;
 }

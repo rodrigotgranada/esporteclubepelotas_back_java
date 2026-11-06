@@ -87,4 +87,8 @@ public class CreateAthleteDto {
     @Builder.Default
     @Schema(description = "Status ativo do atleta", example = "true")
     private Boolean isActive = true;
+
+    @Builder.Default
+    @Schema(description = "Atleta aposentado ou fora de atividade", example = "false")
+    private Boolean isRetired = false;
 }

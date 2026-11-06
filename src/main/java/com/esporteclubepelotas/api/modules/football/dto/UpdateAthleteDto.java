@@ -82,4 +82,7 @@ public class UpdateAthleteDto {
 
     @Schema(description = "Status ativo do atleta")
     private Boolean isActive;
+
+    @Schema(description = "Atleta aposentado ou fora de atividade")
+    private Boolean isRetired;
 }

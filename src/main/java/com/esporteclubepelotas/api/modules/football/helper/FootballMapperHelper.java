@@ -48,6 +48,7 @@ public final class FootballMapperHelper {
                 .biography(athlete.getBiography())
                 .instagram(athlete.getInstagram())
                 .isActive(athlete.isActive())
+                .isRetired(athlete.isRetired())
                 .createdAt(athlete.getCreatedAt())
                 .updatedAt(athlete.getUpdatedAt())
                 .build();
