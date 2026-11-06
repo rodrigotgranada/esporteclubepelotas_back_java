@@ -18,3 +18,4 @@ public class GetTimelineResponseDto {
     private int limit;
     private int totalPages;
 }
+

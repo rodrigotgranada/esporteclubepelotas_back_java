@@ -1,6 +1,8 @@
 package com.esporteclubepelotas.api.modules.timeline.controller;
 
 import com.esporteclubepelotas.api.modules.timeline.dto.GetTimelineResponseDto;
+import com.esporteclubepelotas.api.modules.timeline.dto.TimelineCategoryDto;
+import com.esporteclubepelotas.api.modules.timeline.service.TimelineCategoryService;
 import com.esporteclubepelotas.api.modules.timeline.service.TimelinePublicService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -10,6 +12,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/timeline")
 @RequiredArgsConstructor
@@ -17,10 +21,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class TimelinePublicController {
 
     private final TimelinePublicService timelinePublicService;
+    private final TimelineCategoryService timelineCategoryService;
 
     @GetMapping
     @Operation(summary = "Obter todos os marcos da linha do tempo ordenados cronologicamente")
     public ResponseEntity<GetTimelineResponseDto> getTimeline() {
         return ResponseEntity.ok(timelinePublicService.getPublicTimeline());
+    }
+
+    @GetMapping("/categories")
+    @Operation(summary = "Obter todas as categorias ativas da linha do tempo")
+    public ResponseEntity<List<TimelineCategoryDto>> getCategories() {
+        return ResponseEntity.ok(timelineCategoryService.findAllPublic());
     }
 }

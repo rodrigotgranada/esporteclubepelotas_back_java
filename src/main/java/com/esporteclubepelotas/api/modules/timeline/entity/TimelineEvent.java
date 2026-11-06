@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -34,13 +35,18 @@ public class TimelineEvent {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String description;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 30)
-    @Builder.Default
-    private TimelineCategory category = TimelineCategory.MILESTONE;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "category_id")
+    private TimelineCategory category;
+
+    @Column(name = "category", length = 50)
+    private String categoryLegacy;
 
     @Column(name = "image_url", length = 1000)
     private String imageUrl;
+
+    @Column(name = "event_date")
+    private LocalDate eventDate;
 
     @Column(name = "date_formatted", length = 100)
     private String dateFormatted;

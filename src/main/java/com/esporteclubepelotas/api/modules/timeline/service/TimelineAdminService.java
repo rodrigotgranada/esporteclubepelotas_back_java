@@ -3,6 +3,7 @@ package com.esporteclubepelotas.api.modules.timeline.service;
 import com.esporteclubepelotas.api.common.exception.ResourceNotFoundException;
 import com.esporteclubepelotas.api.common.storage.StorageService;
 import com.esporteclubepelotas.api.modules.timeline.dto.*;
+import com.esporteclubepelotas.api.modules.timeline.entity.TimelineCategory;
 import com.esporteclubepelotas.api.modules.timeline.entity.TimelineEvent;
 import com.esporteclubepelotas.api.modules.timeline.helper.TimelineMapperHelper;
 import com.esporteclubepelotas.api.modules.timeline.repository.TimelineEventRepository;
@@ -20,8 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Slf4j
@@ -32,6 +35,9 @@ public class TimelineAdminService {
     private final TimelineEventRepository timelineEventRepository;
     private final UserRepository userRepository;
     private final StorageService storageService;
+    private final TimelineCategoryService timelineCategoryService;
+
+    private static final DateTimeFormatter PT_BR_DATE_FORMATTER = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", new Locale("pt", "BR"));
 
     @Transactional(readOnly = true)
     public GetTimelineResponseDto findAll(QueryTimelineDto query) {
@@ -49,8 +55,17 @@ public class TimelineAdminService {
                 predicates.add(cb.equal(root.get("year"), query.getYear()));
             }
 
-            if (query.getCategory() != null) {
-                predicates.add(cb.equal(root.get("category"), query.getCategory()));
+            if (query.getCategory() != null && !query.getCategory().isBlank()) {
+                String catParam = query.getCategory().trim().toLowerCase();
+                try {
+                    UUID catUuid = UUID.fromString(catParam);
+                    predicates.add(cb.equal(root.get("category").get("id"), catUuid));
+                } catch (IllegalArgumentException e) {
+                    predicates.add(cb.or(
+                            cb.equal(cb.lower(root.get("category").get("slug")), catParam),
+                            cb.equal(cb.lower(cb.coalesce(root.get("categoryLegacy"), "")), catParam)
+                    ));
+                }
             }
 
             if (query.getIsHighlighted() != null) {
@@ -119,13 +134,26 @@ public class TimelineAdminService {
             }
         }
 
+        TimelineCategory resolvedCategory = timelineCategoryService.resolveCategory(dto.getCategory(), dto.getCategoryId());
+
+        String dateFormatted = dto.getDateFormatted() != null && !dto.getDateFormatted().isBlank()
+                ? dto.getDateFormatted().trim()
+                : (dto.getEventDate() != null ? dto.getEventDate().format(PT_BR_DATE_FORMATTER) : null);
+
+        int year = dto.getYear();
+        if (year <= 0 && dto.getEventDate() != null) {
+            year = dto.getEventDate().getYear();
+        }
+
         TimelineEvent event = TimelineEvent.builder()
-                .year(dto.getYear())
+                .year(year)
                 .title(dto.getTitle().trim())
                 .description(dto.getDescription().trim())
-                .category(dto.getCategory())
+                .category(resolvedCategory)
+                .categoryLegacy(resolvedCategory != null ? resolvedCategory.getSlug() : (dto.getCategory() != null ? dto.getCategory().trim() : null))
                 .imageUrl(imageUrl)
-                .dateFormatted(dto.getDateFormatted() != null ? dto.getDateFormatted().trim() : null)
+                .eventDate(dto.getEventDate())
+                .dateFormatted(dateFormatted)
                 .displayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : 0)
                 .isHighlighted(Boolean.TRUE.equals(dto.getIsHighlighted()))
                 .isActive(dto.getIsActive() == null || dto.getIsActive())
@@ -164,7 +192,22 @@ public class TimelineAdminService {
             if (dto.getYear() != null) event.setYear(dto.getYear());
             if (dto.getTitle() != null && !dto.getTitle().isBlank()) event.setTitle(dto.getTitle().trim());
             if (dto.getDescription() != null && !dto.getDescription().isBlank()) event.setDescription(dto.getDescription().trim());
-            if (dto.getCategory() != null) event.setCategory(dto.getCategory());
+
+            if (dto.getCategoryId() != null || (dto.getCategory() != null && !dto.getCategory().isBlank())) {
+                TimelineCategory resolved = timelineCategoryService.resolveCategory(dto.getCategory(), dto.getCategoryId());
+                if (resolved != null) {
+                    event.setCategory(resolved);
+                    event.setCategoryLegacy(resolved.getSlug());
+                }
+            }
+
+            if (dto.getEventDate() != null) {
+                event.setEventDate(dto.getEventDate());
+                if (dto.getDateFormatted() == null || dto.getDateFormatted().isBlank()) {
+                    event.setDateFormatted(dto.getEventDate().format(PT_BR_DATE_FORMATTER));
+                }
+            }
+
             if (dto.getDateFormatted() != null) event.setDateFormatted(dto.getDateFormatted().trim());
             if (dto.getDisplayOrder() != null) event.setDisplayOrder(dto.getDisplayOrder());
             if (dto.getIsHighlighted() != null) event.setHighlighted(dto.getIsHighlighted());

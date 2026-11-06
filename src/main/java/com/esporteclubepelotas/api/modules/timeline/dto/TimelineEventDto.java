@@ -1,12 +1,12 @@
 package com.esporteclubepelotas.api.modules.timeline.dto;
 
-import com.esporteclubepelotas.api.modules.timeline.entity.TimelineCategory;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -19,8 +19,12 @@ public class TimelineEventDto {
     private Integer year;
     private String title;
     private String description;
-    private TimelineCategory category;
+    private UUID categoryId;
+    private String category;
+    private String categoryName;
+    private String categoryIcon;
     private String imageUrl;
+    private LocalDate eventDate;
     private String dateFormatted;
     private Integer displayOrder;
     private Boolean isHighlighted;

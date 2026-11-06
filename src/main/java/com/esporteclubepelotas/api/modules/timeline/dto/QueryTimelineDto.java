@@ -1,6 +1,5 @@
 package com.esporteclubepelotas.api.modules.timeline.dto;
 
-import com.esporteclubepelotas.api.modules.timeline.entity.TimelineCategory;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,8 +26,8 @@ public class QueryTimelineDto {
     @Schema(description = "Filtrar por ano específico")
     private Integer year;
 
-    @Schema(description = "Filtrar por categoria")
-    private TimelineCategory category;
+    @Schema(description = "Filtrar por slug ou ID de categoria")
+    private String category;
 
     @Schema(description = "Filtrar por destaque")
     private Boolean isHighlighted;

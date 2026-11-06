@@ -13,3 +13,4 @@ public interface TimelineEventRepository extends JpaRepository<TimelineEvent, UU
 
     List<TimelineEvent> findByIsActiveTrueOrderByYearAscDisplayOrderAscCreatedAtAsc();
 }
+

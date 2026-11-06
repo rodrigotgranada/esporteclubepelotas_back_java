@@ -1,12 +1,14 @@
 package com.esporteclubepelotas.api.modules.timeline.dto;
 
-import com.esporteclubepelotas.api.modules.timeline.entity.TimelineCategory;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDate;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -23,8 +25,11 @@ public class CreateTimelineEventDto {
     @NotBlank(message = "A descrição do marco é obrigatória")
     private String description;
 
-    @NotNull(message = "A categoria do marco é obrigatória")
-    private TimelineCategory category;
+    private String category;
+
+    private UUID categoryId;
+
+    private LocalDate eventDate;
 
     private String imageUrl;
 
