@@ -1,6 +1,6 @@
 -- V6: Atualiza as paletas dos temas padrão para identidade 100% Áureo-Cerúlea
--- O tema escuro passa a utilizar Azul Marinho Noite Profundo (#070e1c / #0d192f) em vez de preto puro
--- O tema claro passa a utilizar off-white elegante (#f8fafc)
+-- O tema escuro passa a utilizar Azul Marinho Noite Profundo (#0b1a32 / #112344) em vez de preto
+-- O tema claro passa a utilizar Amarelo bem clarinho / Creme Marfim (#fefdf0) em vez de branco/cinza
 
 UPDATE public.themes
 SET 
@@ -8,15 +8,15 @@ SET
         'primary', '#fbbf24',
         'secondary', '#1e3a8a',
         'buttonSecondary', '#1e3a8a',
-        'background', '#070e1c',
-        'surface', '#0d192f',
-        'header', '#091427',
-        'card', '#0d192f',
-        'drawer', '#091325',
-        'table', '#0d192f',
+        'background', '#0b1a32',
+        'surface', '#112344',
+        'header', '#0d1e3a',
+        'card', '#112344',
+        'drawer', '#0d1e3a',
+        'table', '#112344',
         'textPrimary', '#f8fafc',
         'textSecondary', '#94a3b8',
-        'border', '#1c2b48',
+        'border', '#1c355f',
         'success', '#22c55e',
         'error', '#ea580c',
         'warning', '#f59e0b'
@@ -25,7 +25,7 @@ SET
         'primary', '#fbbf24',
         'secondary', '#1e3a8a',
         'buttonSecondary', '#1e3a8a',
-        'background', '#f8fafc',
+        'background', '#fefdf0',
         'surface', '#ffffff',
         'header', '#1e3a8a',
         'card', '#ffffff',
@@ -33,7 +33,7 @@ SET
         'table', '#ffffff',
         'textPrimary', '#0f172a',
         'textSecondary', '#475569',
-        'border', '#e2e8f0',
+        'border', '#fef08a',
         'success', '#22c55e',
         'error', '#ea580c',
         'warning', '#f59e0b'

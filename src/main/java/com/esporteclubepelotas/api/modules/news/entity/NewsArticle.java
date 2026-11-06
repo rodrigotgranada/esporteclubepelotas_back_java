@@ -46,7 +46,7 @@ public class NewsArticle {
     @Builder.Default
     private List<String> previousSlugs = new ArrayList<>();
 
-    @Column(nullable = false, length = 1000)
+    @Column(nullable = true, length = 1000)
     private String coverImage;
 
     @Column(length = 150)
