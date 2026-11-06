@@ -42,9 +42,9 @@ public final class IdolSpecifications {
             if (searchClean != null) {
                 String pattern = "%" + searchClean + "%";
                 predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("name")), pattern),
-                        cb.like(cb.lower(root.get("nickname")), pattern),
-                        cb.like(cb.lower(root.get("quote")), pattern)
+                        cb.like(cb.lower(cb.coalesce(root.get("name"), "")), pattern),
+                        cb.like(cb.lower(cb.coalesce(root.get("nickname"), "")), pattern),
+                        cb.like(cb.lower(cb.coalesce(root.get("quote"), "")), pattern)
                 ));
             }
 

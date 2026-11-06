@@ -50,6 +50,14 @@ public class SquadsAdminService {
                 predicates.add(cb.equal(root.get("category"), query.getCategory()));
             }
 
+            if (query.getSearch() != null && !query.getSearch().isBlank()) {
+                String pattern = "%" + query.getSearch().trim().toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(cb.coalesce(root.get("seasonName"), "")), pattern),
+                        cb.like(cb.lower(cb.coalesce(root.get("coachName"), "")), pattern)
+                ));
+            }
+
             if (query.getIsCurrent() != null) {
                 predicates.add(cb.equal(root.get("isCurrent"), query.getIsCurrent()));
             }

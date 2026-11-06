@@ -72,9 +72,9 @@ public class AthletesAdminService {
             if (query.getSearch() != null && !query.getSearch().isBlank()) {
                 String pattern = "%" + query.getSearch().trim().toLowerCase() + "%";
                 predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("name")), pattern),
-                        cb.like(cb.lower(root.get("nickname")), pattern),
-                        cb.like(cb.lower(root.get("primaryPosition")), pattern)
+                        cb.like(cb.lower(cb.coalesce(root.get("name"), "")), pattern),
+                        cb.like(cb.lower(cb.coalesce(root.get("nickname"), "")), pattern),
+                        cb.like(cb.lower(cb.coalesce(root.get("primaryPosition"), "")), pattern)
                 ));
             }
 

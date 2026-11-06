@@ -81,9 +81,9 @@ public class NewsAdminService {
             if (query.getSearch() != null && !query.getSearch().isBlank()) {
                 String pattern = "%" + query.getSearch().trim().toLowerCase() + "%";
                 predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("title")), pattern),
-                        cb.like(cb.lower(root.get("subtitle")), pattern),
-                        cb.like(cb.lower(root.get("summary")), pattern)
+                        cb.like(cb.lower(cb.coalesce(root.get("title"), "")), pattern),
+                        cb.like(cb.lower(cb.coalesce(root.get("subtitle"), "")), pattern),
+                        cb.like(cb.lower(cb.coalesce(root.get("summary"), "")), pattern)
                 ));
             }
 

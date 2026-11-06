@@ -96,10 +96,11 @@ public class UserAdminService {
             if (targetSearch != null) {
                 String pattern = "%" + targetSearch + "%";
                 predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("firstName")), pattern),
-                        cb.like(cb.lower(root.get("lastName")), pattern),
-                        cb.like(cb.lower(root.get("email")), pattern),
-                        cb.like(root.get("cpf"), pattern)
+                        cb.like(cb.lower(cb.coalesce(root.get("firstName"), "")), pattern),
+                        cb.like(cb.lower(cb.coalesce(root.get("lastName"), "")), pattern),
+                        cb.like(cb.lower(cb.concat(cb.concat(cb.coalesce(root.get("firstName"), ""), " "), cb.coalesce(root.get("lastName"), ""))), pattern),
+                        cb.like(cb.lower(cb.coalesce(root.get("email"), "")), pattern),
+                        cb.like(cb.coalesce(root.get("cpf"), ""), pattern)
                 ));
             }
 

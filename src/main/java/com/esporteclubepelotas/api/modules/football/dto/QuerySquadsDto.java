@@ -21,6 +21,9 @@ public class QuerySquadsDto {
     @Schema(description = "Limite por página", defaultValue = "20")
     private Integer limit = 20;
 
+    @Schema(description = "Termo de busca por competição ou comissão/treinador")
+    private String search;
+
     @Schema(description = "Filtrar por ano da temporada")
     private Integer year;
 
