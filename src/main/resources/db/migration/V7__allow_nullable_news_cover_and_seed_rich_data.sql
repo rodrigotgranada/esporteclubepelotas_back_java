@@ -39,7 +39,7 @@ INSERT INTO public.news_articles (
     id, title, subtitle, slug, summary, content, cover_image, cover_caption,
     reporter_name, photographer_name, status, featured_slot, is_featured, is_pinned,
     is_youth, show_on_homepage, allow_comments, allow_reactions, views_count,
-    tags, gallery, reactions, author_id, category_id, published_at, created_at, updated_at
+    tags, gallery, reactions, author_id, category_id, is_active, published_at, created_at, updated_at
 )
 VALUES (
     'cf05ecc0-b3f5-477d-ae9e-85957bb9982c', 'Pelotas vence clássico Farroupilha por 2 a 0 na Boca do Lobo e assume liderança', 'Com grande apoio da torcida na Avenida Bento Gonçalves, o Lobo dominou as ações e garantiu vitória convincente no segundo tempo.', 'pelotas-vence-classico-farroupilha-por-2-a-0-na-boca-do-lobo',
@@ -49,6 +49,7 @@ VALUES (
     '["Gauchão","ClássicoFarroupilha","BocaDoLobo","Liderança"]'::jsonb, '[]'::jsonb, '{"cheer": 15, "fire": 22, "applause": 18, "heart": 40}'::jsonb,
     (SELECT id FROM public.users LIMIT 1),
     (SELECT id FROM public.news_categories WHERE slug = 'futebol-profissional' LIMIT 1),
+    true,
     NOW() - INTERVAL '0 hours', NOW() - INTERVAL '0 hours', NOW()
 )
 ON CONFLICT (slug) DO NOTHING;
@@ -57,7 +58,7 @@ INSERT INTO public.news_articles (
     id, title, subtitle, slug, summary, content, cover_image, cover_caption,
     reporter_name, photographer_name, status, featured_slot, is_featured, is_pinned,
     is_youth, show_on_homepage, allow_comments, allow_reactions, views_count,
-    tags, gallery, reactions, author_id, category_id, published_at, created_at, updated_at
+    tags, gallery, reactions, author_id, category_id, is_active, published_at, created_at, updated_at
 )
 VALUES (
     '0f8d87e3-a1c6-4229-a719-3d90d8b4a383', 'Quadro Social lança campanha de anuidade com benefícios exclusivos para sócios', 'Torcedores que quitarem a anuidade antecipada garantem camisa oficial comemorativa e acesso livre a todos os jogos de 2026.', 'quadro-social-lanca-campanha-de-anuidade-com-beneficios-exclusivos',
@@ -67,6 +68,7 @@ VALUES (
     '["QuadroSocial","SejaSócio","Alcatéia","BocaDoLobo"]'::jsonb, '[]'::jsonb, '{"cheer": 15, "fire": 22, "applause": 18, "heart": 40}'::jsonb,
     (SELECT id FROM public.users LIMIT 1),
     (SELECT id FROM public.news_categories WHERE slug = 'quadro-social' LIMIT 1),
+    true,
     NOW() - INTERVAL '6 hours', NOW() - INTERVAL '6 hours', NOW()
 )
 ON CONFLICT (slug) DO NOTHING;
@@ -75,7 +77,7 @@ INSERT INTO public.news_articles (
     id, title, subtitle, slug, summary, content, cover_image, cover_caption,
     reporter_name, photographer_name, status, featured_slot, is_featured, is_pinned,
     is_youth, show_on_homepage, allow_comments, allow_reactions, views_count,
-    tags, gallery, reactions, author_id, category_id, published_at, created_at, updated_at
+    tags, gallery, reactions, author_id, category_id, is_active, published_at, created_at, updated_at
 )
 VALUES (
     'bdde64ba-775d-4a38-afa3-5e9d3168d101', 'Crias da Boca: Sub-20 do Pelotas goleia em clássico regional pela Copa FGF', 'Com atuação brilhante no segundo tempo, jovens talentos áureo-cerúleos aplicaram 4 a 1 e asseguraram classificação antecipada.', 'crias-da-boca-sub-20-do-pelotas-goleia-em-classico-regional',
@@ -85,6 +87,7 @@ VALUES (
     '["CategoriasDeBase","Sub20","CriasDaBoca","CopaFGF"]'::jsonb, '[]'::jsonb, '{"cheer": 15, "fire": 22, "applause": 18, "heart": 40}'::jsonb,
     (SELECT id FROM public.users LIMIT 1),
     (SELECT id FROM public.news_categories WHERE slug = 'categorias-de-base' LIMIT 1),
+    true,
     NOW() - INTERVAL '12 hours', NOW() - INTERVAL '12 hours', NOW()
 )
 ON CONFLICT (slug) DO NOTHING;
@@ -93,7 +96,7 @@ INSERT INTO public.news_articles (
     id, title, subtitle, slug, summary, content, cover_image, cover_caption,
     reporter_name, photographer_name, status, featured_slot, is_featured, is_pinned,
     is_youth, show_on_homepage, allow_comments, allow_reactions, views_count,
-    tags, gallery, reactions, author_id, category_id, published_at, created_at, updated_at
+    tags, gallery, reactions, author_id, category_id, is_active, published_at, created_at, updated_at
 )
 VALUES (
     '45a72663-8d6f-429a-af89-dc58db640192', 'Departamento de Formação abre inscrições para peneiras oficiais do Sub-17 e Sub-15', 'Testes ocorrem no Paráque Lobo ao longo da próxima semana. Atletas nascidos entre 2009 e 2012 podem se inscrever gratuitamente.', 'departamento-de-formacao-abre-inscricoes-para-peneiras-oficiais',
@@ -103,6 +106,7 @@ VALUES (
     '["Peneiras","Testes","Base","Sub17","Sub15"]'::jsonb, '[]'::jsonb, '{"cheer": 15, "fire": 22, "applause": 18, "heart": 40}'::jsonb,
     (SELECT id FROM public.users LIMIT 1),
     (SELECT id FROM public.news_categories WHERE slug = 'categorias-de-base' LIMIT 1),
+    true,
     NOW() - INTERVAL '18 hours', NOW() - INTERVAL '18 hours', NOW()
 )
 ON CONFLICT (slug) DO NOTHING;
@@ -111,7 +115,7 @@ INSERT INTO public.news_articles (
     id, title, subtitle, slug, summary, content, cover_image, cover_caption,
     reporter_name, photographer_name, status, featured_slot, is_featured, is_pinned,
     is_youth, show_on_homepage, allow_comments, allow_reactions, views_count,
-    tags, gallery, reactions, author_id, category_id, published_at, created_at, updated_at
+    tags, gallery, reactions, author_id, category_id, is_active, published_at, created_at, updated_at
 )
 VALUES (
     '0560747d-7282-4373-aabb-10f4a976df61', 'Metodologia Áureo-Cerúlea: Coordenador detalha os 4 pilares de formação dos jovens atletas', 'Trabalho foca em intensidade tática, disciplina comportamental, preparação física progressiva e identificação com as cores do clube.', 'metodologia-aureo-cerulea-coordenador-detalha-4-pilares-de-formacao',
@@ -121,6 +125,7 @@ VALUES (
     '["Metodologia","Formação","DNAAzulEAmarelo","Base"]'::jsonb, '[]'::jsonb, '{"cheer": 15, "fire": 22, "applause": 18, "heart": 40}'::jsonb,
     (SELECT id FROM public.users LIMIT 1),
     (SELECT id FROM public.news_categories WHERE slug = 'categorias-de-base' LIMIT 1),
+    true,
     NOW() - INTERVAL '24 hours', NOW() - INTERVAL '24 hours', NOW()
 )
 ON CONFLICT (slug) DO NOTHING;
@@ -129,7 +134,7 @@ INSERT INTO public.news_articles (
     id, title, subtitle, slug, summary, content, cover_image, cover_caption,
     reporter_name, photographer_name, status, featured_slot, is_featured, is_pinned,
     is_youth, show_on_homepage, allow_comments, allow_reactions, views_count,
-    tags, gallery, reactions, author_id, category_id, published_at, created_at, updated_at
+    tags, gallery, reactions, author_id, category_id, is_active, published_at, created_at, updated_at
 )
 VALUES (
     '2a72d00c-b9c6-4883-a071-2452ac6c7f57', 'Joia do Sub-20 assina primeiro contrato profissional e integra pré-temporada principal', 'Meio-campista Matheusinho, destaque da Copa FGF Sub-20, firma vínculo de três anos com multa rescisória e integração ao elenco profissional.', 'joia-do-sub-20-assina-primeiro-contrato-profissional-com-o-pelotas',
@@ -139,6 +144,7 @@ VALUES (
     '["CriasDaBoca","ContratoProfissional","Futuro","Sub20"]'::jsonb, '[]'::jsonb, '{"cheer": 15, "fire": 22, "applause": 18, "heart": 40}'::jsonb,
     (SELECT id FROM public.users LIMIT 1),
     (SELECT id FROM public.news_categories WHERE slug = 'categorias-de-base' LIMIT 1),
+    true,
     NOW() - INTERVAL '30 hours', NOW() - INTERVAL '30 hours', NOW()
 )
 ON CONFLICT (slug) DO NOTHING;
@@ -147,7 +153,7 @@ INSERT INTO public.news_articles (
     id, title, subtitle, slug, summary, content, cover_image, cover_caption,
     reporter_name, photographer_name, status, featured_slot, is_featured, is_pinned,
     is_youth, show_on_homepage, allow_comments, allow_reactions, views_count,
-    tags, gallery, reactions, author_id, category_id, published_at, created_at, updated_at
+    tags, gallery, reactions, author_id, category_id, is_active, published_at, created_at, updated_at
 )
 VALUES (
     '1d0d0ae1-6987-4750-af66-f4c914515ec3', 'Nota Oficial: Esporte Clube Pelotas se manifesta sobre obras nas arquibancadas da Boca do Lobo', 'Diretoria Executiva detalha cronograma de melhorias estruturais, pintura e novos acessos para o conforto dos torcedores.', 'nota-oficial-reformas-e-melhorias-nas-arquibancadas-da-boca-do-lobo',
@@ -157,6 +163,7 @@ VALUES (
     '["NotaOficial","BocaDoLobo","Patrimônio","Estádio"]'::jsonb, '[]'::jsonb, '{"cheer": 15, "fire": 22, "applause": 18, "heart": 40}'::jsonb,
     (SELECT id FROM public.users LIMIT 1),
     (SELECT id FROM public.news_categories WHERE slug = 'institucional' LIMIT 1),
+    true,
     NOW() - INTERVAL '36 hours', NOW() - INTERVAL '36 hours', NOW()
 )
 ON CONFLICT (slug) DO NOTHING;
@@ -165,7 +172,7 @@ INSERT INTO public.news_articles (
     id, title, subtitle, slug, summary, content, cover_image, cover_caption,
     reporter_name, photographer_name, status, featured_slot, is_featured, is_pinned,
     is_youth, show_on_homepage, allow_comments, allow_reactions, views_count,
-    tags, gallery, reactions, author_id, category_id, published_at, created_at, updated_at
+    tags, gallery, reactions, author_id, category_id, is_active, published_at, created_at, updated_at
 )
 VALUES (
     'fed1678f-46f0-4957-a9d1-2154f39c164e', 'Comunicado da Diretoria: Horários de atendimento e funcionamento da Secretaria durante o feriado', 'Atendimento presencial e entrega de carteirinhas de sócio terão horários especiais nesta sexta-feira e sábado.', 'comunicado-horarios-de-atendimento-secretaria-durante-feriado',
@@ -175,6 +182,7 @@ VALUES (
     '["Comunicado","Secretaria","Atendimento","Sócios"]'::jsonb, '[]'::jsonb, '{"cheer": 15, "fire": 22, "applause": 18, "heart": 40}'::jsonb,
     (SELECT id FROM public.users LIMIT 1),
     (SELECT id FROM public.news_categories WHERE slug = 'institucional' LIMIT 1),
+    true,
     NOW() - INTERVAL '42 hours', NOW() - INTERVAL '42 hours', NOW()
 )
 ON CONFLICT (slug) DO NOTHING;
@@ -183,7 +191,7 @@ INSERT INTO public.news_articles (
     id, title, subtitle, slug, summary, content, cover_image, cover_caption,
     reporter_name, photographer_name, status, featured_slot, is_featured, is_pinned,
     is_youth, show_on_homepage, allow_comments, allow_reactions, views_count,
-    tags, gallery, reactions, author_id, category_id, published_at, created_at, updated_at
+    tags, gallery, reactions, author_id, category_id, is_active, published_at, created_at, updated_at
 )
 VALUES (
     'b47af209-cf6d-4c92-adb4-d64245aa9230', 'Comandante Leocir Dall''Astra projeta estreia no Gauchão Série A: "Foco total na intensidade"', 'Técnico áureo-cerúleo elogia entrega do plantel durante os trabalhos com bola e confirma time base para o confronto de abertura.', 'comandante-leocir-dall-astra-projeta-estreia-no-gauchao-serie-a',
@@ -193,6 +201,7 @@ VALUES (
     '["LeocirDallAstra","Gauchão","Treinador","Futebol"]'::jsonb, '[]'::jsonb, '{"cheer": 15, "fire": 22, "applause": 18, "heart": 40}'::jsonb,
     (SELECT id FROM public.users LIMIT 1),
     (SELECT id FROM public.news_categories WHERE slug = 'futebol-profissional' LIMIT 1),
+    true,
     NOW() - INTERVAL '48 hours', NOW() - INTERVAL '48 hours', NOW()
 )
 ON CONFLICT (slug) DO NOTHING;
@@ -201,7 +210,7 @@ INSERT INTO public.news_articles (
     id, title, subtitle, slug, summary, content, cover_image, cover_caption,
     reporter_name, photographer_name, status, featured_slot, is_featured, is_pinned,
     is_youth, show_on_homepage, allow_comments, allow_reactions, views_count,
-    tags, gallery, reactions, author_id, category_id, published_at, created_at, updated_at
+    tags, gallery, reactions, author_id, category_id, is_active, published_at, created_at, updated_at
 )
 VALUES (
     '1e4bd82e-cf4c-4070-a61d-0710f64e5ad0', 'Lobo anuncia pacote de reforços para a disputa do Campeonato Brasileiro Série D', 'Zagueiro com bagagem na Série B e volante com passagens pela elite do futebol paulista chegam para encorpar o elenco.', 'lobo-anuncia-pacote-de-reforcos-para-campeonato-brasileiro-serie-d',
@@ -211,6 +220,7 @@ VALUES (
     '["Reforços","SérieD","MercadoDaBola","Futebol"]'::jsonb, '[]'::jsonb, '{"cheer": 15, "fire": 22, "applause": 18, "heart": 40}'::jsonb,
     (SELECT id FROM public.users LIMIT 1),
     (SELECT id FROM public.news_categories WHERE slug = 'futebol-profissional' LIMIT 1),
+    true,
     NOW() - INTERVAL '54 hours', NOW() - INTERVAL '54 hours', NOW()
 )
 ON CONFLICT (slug) DO NOTHING;
@@ -219,7 +229,7 @@ INSERT INTO public.news_articles (
     id, title, subtitle, slug, summary, content, cover_image, cover_caption,
     reporter_name, photographer_name, status, featured_slot, is_featured, is_pinned,
     is_youth, show_on_homepage, allow_comments, allow_reactions, views_count,
-    tags, gallery, reactions, author_id, category_id, published_at, created_at, updated_at
+    tags, gallery, reactions, author_id, category_id, is_active, published_at, created_at, updated_at
 )
 VALUES (
     'a16ebec7-6202-46ae-aa6a-99ad259d5635', 'Léobas da Boca iniciam pré-temporada visando o Gauchão Feminino 2026', 'Equipe feminina do Pelotas realizou avaliações biométricas e primeiros treinamentos no gramado principal com novo comando técnico.', 'lobas-da-boca-iniciam-pre-temporada-visando-o-gauchao-feminino-2026',
@@ -229,6 +239,7 @@ VALUES (
     '["FutebolFeminino","LéobasDaBoca","GauchãoFeminino","ElasNoFutebol"]'::jsonb, '[]'::jsonb, '{"cheer": 15, "fire": 22, "applause": 18, "heart": 40}'::jsonb,
     (SELECT id FROM public.users LIMIT 1),
     (SELECT id FROM public.news_categories WHERE slug = 'futebol-profissional' LIMIT 1),
+    true,
     NOW() - INTERVAL '60 hours', NOW() - INTERVAL '60 hours', NOW()
 )
 ON CONFLICT (slug) DO NOTHING;
@@ -237,7 +248,7 @@ INSERT INTO public.news_articles (
     id, title, subtitle, slug, summary, content, cover_image, cover_caption,
     reporter_name, photographer_name, status, featured_slot, is_featured, is_pinned,
     is_youth, show_on_homepage, allow_comments, allow_reactions, views_count,
-    tags, gallery, reactions, author_id, category_id, published_at, created_at, updated_at
+    tags, gallery, reactions, author_id, category_id, is_active, published_at, created_at, updated_at
 )
 VALUES (
     'c32c774e-bb79-4133-ac50-07c36209a03e', 'Memorial Áureo-Cerúleo recebe visita especial de escolas municipais de Pelotas', 'Mais de 120 crianças conheceram a sala de troféus, o túnel de acesso e a rica história centenária do Lobo da Boca do Lobo.', 'memorial-aureo-ceruleo-recebe-visita-especial-de-escolas-municipais',
@@ -247,6 +258,7 @@ VALUES (
     '["Memorial","História","Educação","PelotasParáaTodos"]'::jsonb, '[]'::jsonb, '{"cheer": 15, "fire": 22, "applause": 18, "heart": 40}'::jsonb,
     (SELECT id FROM public.users LIMIT 1),
     (SELECT id FROM public.news_categories WHERE slug = 'institucional' LIMIT 1),
+    true,
     NOW() - INTERVAL '66 hours', NOW() - INTERVAL '66 hours', NOW()
 )
 ON CONFLICT (slug) DO NOTHING;

@@ -29,7 +29,11 @@ public interface SquadRepository extends JpaRepository<Squad, UUID>, JpaSpecific
 
     Optional<Squad> findFirstByCategoryAndIsActiveTrueOrderByYearDescCreatedAtDesc(SquadCategory category);
 
-    Optional<Squad> findByYearAndCategoryAndIsActiveTrue(Integer year, SquadCategory category);
+    Optional<Squad> findFirstByYearAndCategoryAndIsActiveTrueOrderByCreatedAtDesc(Integer year, SquadCategory category);
+
+    default Optional<Squad> findByYearAndCategoryAndIsActiveTrue(Integer year, SquadCategory category) {
+        return findFirstByYearAndCategoryAndIsActiveTrueOrderByCreatedAtDesc(year, category);
+    }
 
     @Modifying
     @Query("UPDATE Squad s SET s.isCurrent = false WHERE s.category = :category AND s.id != :exceptId")
