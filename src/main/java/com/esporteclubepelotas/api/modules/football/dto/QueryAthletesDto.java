@@ -37,6 +37,9 @@ public class QueryAthletesDto {
     @Schema(description = "Filtrar por gênero (MALE, FEMALE)")
     private AthleteGender gender;
 
-    @Schema(description = "Filtrar por tipo (PROFESSIONAL, YOUTH)")
+    @Schema(description = "Filtrar por tipo (PROFESSIONAL, YOUTH, STAFF)")
     private AthleteType athleteType;
+
+    @Schema(description = "Escopo de gestão (PROFESSIONAL inclui Profissionais + Comissão; YOUTH inclui Base + Comissão)")
+    private String scope;
 }

@@ -51,14 +51,17 @@ public class AthletesAdminService {
         Specification<Athlete> spec = (root, q, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if (query.getIsActive() != null) {
-                predicates.add(cb.equal(root.get("isActive"), query.getIsActive()));
-            }
+            predicates.add(cb.equal(root.get("isActive"), query.getIsActive() != null ? query.getIsActive() : true));
             if (query.getIsRetired() != null) {
                 predicates.add(cb.equal(root.get("isRetired"), query.getIsRetired()));
             }
             if (query.getGender() != null) {
                 predicates.add(cb.equal(root.get("gender"), query.getGender()));
+            }
+            if ("PROFESSIONAL".equalsIgnoreCase(query.getScope()) && query.getAthleteType() == null) {
+                predicates.add(root.get("athleteType").in(AthleteType.PROFESSIONAL, AthleteType.STAFF));
+            } else if ("YOUTH".equalsIgnoreCase(query.getScope()) && query.getAthleteType() == null) {
+                predicates.add(root.get("athleteType").in(AthleteType.YOUTH, AthleteType.STAFF));
             }
             if (query.getAthleteType() != null) {
                 predicates.add(cb.equal(root.get("athleteType"), query.getAthleteType()));

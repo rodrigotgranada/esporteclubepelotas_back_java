@@ -41,11 +41,17 @@ public class SquadsAdminService {
 
         Specification<Squad> spec = (root, q, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.isTrue(root.get("isActive")));
 
             if (query.getYear() != null) {
                 predicates.add(cb.equal(root.get("year"), query.getYear()));
             }
 
+            if ("PROFESSIONAL".equalsIgnoreCase(query.getScope()) && query.getCategory() == null) {
+                predicates.add(root.get("category").in(SquadCategory.PROFESSIONAL, SquadCategory.FEMININE));
+            } else if ("YOUTH".equalsIgnoreCase(query.getScope()) && query.getCategory() == null) {
+                predicates.add(root.get("category").in(SquadCategory.SUB_20, SquadCategory.SUB_17, SquadCategory.SUB_15));
+            }
             if (query.getCategory() != null) {
                 predicates.add(cb.equal(root.get("category"), query.getCategory()));
             }

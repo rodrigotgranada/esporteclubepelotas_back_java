@@ -30,7 +30,9 @@ public class QuerySquadsDto {
     @Schema(description = "Filtrar por categoria do elenco")
     private SquadCategory category;
 
+    @Schema(description = "Escopo de gestão (PROFESSIONAL para Profissional/Feminino; YOUTH para Sub-20/Sub-17/Sub-15)")
+    private String scope;
+
     @Schema(description = "Filtrar se é o elenco ativo atual")
     private Boolean isCurrent;
 }
-
