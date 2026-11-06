@@ -39,4 +39,3 @@ UPDATE public.timeline_events SET category_id = '11111111-1111-1111-1111-1111111
 -- Popula event_date nas datas conhecidas
 UPDATE public.timeline_events SET event_date = '1908-10-11' WHERE "year" = 1908;
 UPDATE public.timeline_events SET event_date = '2008-10-11' WHERE "year" = 2008;
-
