@@ -85,7 +85,7 @@ public class SquadsPublicService {
         }
 
         int page = query.getPage() != null && query.getPage() > 0 ? query.getPage() : 1;
-        int limit = query.getLimit() != null && query.getLimit() > 0 ? Math.min(50, query.getLimit()) : 20;
+        int limit = query.getLimit() != null && query.getLimit() > 0 ? Math.min(100, query.getLimit()) : 20;
 
         Specification<Squad> spec = (root, q, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -115,7 +115,7 @@ public class SquadsPublicService {
         Page<Squad> paged = squadRepository.findAll(spec, PageRequest.of(page - 1, limit, sort));
 
         List<SquadDto> dtos = paged.getContent().stream()
-                .map(FootballMapperHelper::mapSquad)
+                .map(FootballMapperHelper::organizeSquadSectors)
                 .toList();
 
         return GetSquadsResponseDto.builder()
@@ -148,6 +148,19 @@ public class SquadsPublicService {
     }
 
     @Transactional(readOnly = true)
+    public SquadDto getById(UUID id) {
+        if (!isModuleActive()) {
+            throw new BusinessException("Módulo de Futebol está temporariamente desativado.");
+        }
+
+        Squad squad = squadRepository.findById(id)
+                .filter(Squad::isActive)
+                .orElseThrow(() -> new BusinessException("Elenco não encontrado."));
+
+        return FootballMapperHelper.organizeSquadSectors(squad);
+    }
+
+    @Transactional(readOnly = true)
     public SquadDto getByYearAndCategory(int year, SquadCategory category) {
         if (!isModuleActive()) {
             throw new BusinessException("Módulo de Futebol está temporariamente desativado.");
@@ -155,18 +168,6 @@ public class SquadsPublicService {
 
         Squad squad = squadRepository.findByYearAndCategoryAndIsActiveTrue(year, category)
                 .orElseThrow(() -> new BusinessException("Elenco de " + year + " (" + category + ") não encontrado."));
-
-        return FootballMapperHelper.organizeSquadSectors(squad);
-    }
-
-    @Transactional(readOnly = true)
-    public SquadDto getById(UUID id) {
-        if (!isModuleActive()) {
-            throw new BusinessException("Módulo de Futebol está temporariamente desativado.");
-        }
-
-        Squad squad = squadRepository.findByIdAndIsActiveTrue(id)
-                .orElseThrow(() -> new BusinessException("Elenco não encontrado."));
 
         return FootballMapperHelper.organizeSquadSectors(squad);
     }

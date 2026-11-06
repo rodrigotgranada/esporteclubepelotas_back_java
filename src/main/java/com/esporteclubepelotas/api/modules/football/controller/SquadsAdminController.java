@@ -3,6 +3,7 @@ package com.esporteclubepelotas.api.modules.football.controller;
 import com.esporteclubepelotas.api.common.security.UserPrincipal;
 import com.esporteclubepelotas.api.modules.football.dto.*;
 import com.esporteclubepelotas.api.modules.football.service.SquadsAdminService;
+import com.esporteclubepelotas.api.modules.football.service.YouthPortalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -24,10 +25,25 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasAuthority('football.manage') or hasRole('ADMIN') or hasRole('OWNER') or hasRole('EDITOR')")
-@Tag(name = "Futebol: Elencos (Gestão Administrativa)", description = "CRUD de elencos por temporada, montagem e membros")
+@Tag(name = "Futebol: Elencos (Gestão Administrativa)", description = "CRUD de elencos por temporada, montagem, membros e portal da base")
 public class SquadsAdminController {
 
     private final SquadsAdminService squadsAdminService;
+    private final YouthPortalService youthPortalService;
+
+    @GetMapping("/youth-config")
+    @Operation(summary = "Obter configurações administrativas do Portal da Base")
+    public ResponseEntity<YouthPortalConfigDto> getYouthConfig() {
+        return ResponseEntity.ok(youthPortalService.getConfig());
+    }
+
+    @PutMapping("/youth-config")
+    @Operation(summary = "Atualizar pilares, critérios de peneiras e contato do Portal da Base")
+    public ResponseEntity<YouthPortalConfigDto> updateYouthConfig(
+            @RequestBody @Valid YouthPortalConfigDto dto
+    ) {
+        return ResponseEntity.ok(youthPortalService.updateConfig(dto));
+    }
 
     @GetMapping
     @Operation(summary = "Listar elencos cadastrados com filtros e paginação")
@@ -103,4 +119,3 @@ public class SquadsAdminController {
         return ResponseEntity.ok(squadsAdminService.uploadCover(id, file));
     }
 }
-

@@ -4,8 +4,10 @@ import com.esporteclubepelotas.api.modules.football.dto.GetSquadsResponseDto;
 import com.esporteclubepelotas.api.modules.football.dto.QuerySquadsDto;
 import com.esporteclubepelotas.api.modules.football.dto.SquadDto;
 import com.esporteclubepelotas.api.modules.football.dto.SquadSeasonsResponseDto;
+import com.esporteclubepelotas.api.modules.football.dto.YouthPortalConfigDto;
 import com.esporteclubepelotas.api.modules.football.entity.SquadCategory;
 import com.esporteclubepelotas.api.modules.football.service.SquadsPublicService;
+import com.esporteclubepelotas.api.modules.football.service.YouthPortalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -17,15 +19,22 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/squads")
 @RequiredArgsConstructor
-@Tag(name = "Futebol: Elencos & Temporadas (Portal Público)", description = "Consulta pública de elencos, temporadas e setores táticos")
+@Tag(name = "Futebol: Elencos & Temporadas (Portal Público)", description = "Consulta pública de elencos, temporadas, setores táticos e portal da base")
 public class SquadsPublicController {
 
     private final SquadsPublicService squadsPublicService;
+    private final YouthPortalService youthPortalService;
 
     @GetMapping("/seasons")
     @Operation(summary = "Listar temporadas e categorias disponíveis para filtros no portal")
     public ResponseEntity<SquadSeasonsResponseDto> getSeasons() {
         return ResponseEntity.ok(squadsPublicService.getSeasons());
+    }
+
+    @GetMapping("/youth-config")
+    @Operation(summary = "Obter configurações dinâmicas do Portal da Base (Pilares, Critérios de Peneiras e Contatos)")
+    public ResponseEntity<YouthPortalConfigDto> getYouthConfig() {
+        return ResponseEntity.ok(youthPortalService.getConfig());
     }
 
     @GetMapping("/current")
@@ -34,8 +43,8 @@ public class SquadsPublicController {
         return ResponseEntity.ok(squadsPublicService.getCurrent(category));
     }
 
-    @GetMapping("/detail/{id}")
-    @Operation(summary = "Obter elenco público por ID com setores organizados")
+    @GetMapping({"/id/{id}", "/detail/{id}"})
+    @Operation(summary = "Obter elenco específico por ID organizado por setores táticos")
     public ResponseEntity<SquadDto> getById(@PathVariable UUID id) {
         return ResponseEntity.ok(squadsPublicService.getById(id));
     }
