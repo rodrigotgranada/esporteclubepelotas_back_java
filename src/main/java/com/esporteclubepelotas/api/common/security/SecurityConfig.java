@@ -68,6 +68,7 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // 3. Rotas Administrativas restritas
+                        .requestMatchers("/timeline/admin/**").authenticated()
                         .requestMatchers("/athletes/admin/**").authenticated()
                         .requestMatchers("/squads/admin/**").authenticated()
                         .requestMatchers("/idols/admin/**").authenticated()
@@ -80,6 +81,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/news/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/squads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/athletes/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/timeline", "/timeline/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/settings", "/settings/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/themes/active", "/themes/active/**").permitAll()
 
