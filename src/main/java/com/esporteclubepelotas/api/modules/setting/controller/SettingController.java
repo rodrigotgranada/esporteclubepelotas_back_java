@@ -15,6 +15,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
+
 @Slf4j
 @RestController
 @RequestMapping("/settings")
@@ -32,9 +34,23 @@ public class SettingController {
     }
 
     @GetMapping("/public")
-    @Operation(summary = "Alias público para as configurações globais")
+    @Operation(summary = "Alias público para as configurações globais com cache")
     public ResponseEntity<SettingResponseDto> getSettingsPublic() {
-        return ResponseEntity.ok(settingService.getSettings());
+        return ResponseEntity.ok()
+                .cacheControl(org.springframework.http.CacheControl.maxAge(60, java.util.concurrent.TimeUnit.SECONDS)
+                        .cachePublic()
+                        .staleWhileRevalidate(120, java.util.concurrent.TimeUnit.SECONDS))
+                .body(settingService.getSettings());
+    }
+
+    @PostMapping(value = "/upload-logo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasAnyAuthority('settings.manage', 'users.manage', 'ROLE_ADMIN', 'ROLE_OWNER')")
+    @Operation(summary = "Upload prévio do escudo/logotipo antes da gravação das configurações (Admin)")
+    public ResponseEntity<Map<String, String>> uploadStandaloneLogo(
+            @RequestParam("file") MultipartFile file
+    ) {
+        return ResponseEntity.ok(settingService.uploadStandaloneLogo(file));
     }
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

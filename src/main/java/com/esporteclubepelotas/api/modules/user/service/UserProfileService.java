@@ -4,7 +4,9 @@ import com.esporteclubepelotas.api.common.email.EmailService;
 import com.esporteclubepelotas.api.common.email.EmailTemplateHelper;
 import com.esporteclubepelotas.api.common.exception.BusinessException;
 import com.esporteclubepelotas.api.common.exception.ResourceNotFoundException;
+import com.esporteclubepelotas.api.common.storage.MediaUploadSanitizer;
 import com.esporteclubepelotas.api.common.storage.StorageService;
+import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
 import com.esporteclubepelotas.api.modules.auth.dto.UserSummaryDto;
 import com.esporteclubepelotas.api.modules.user.dto.UpdateMeDto;
 import com.esporteclubepelotas.api.modules.user.entity.PendingChangeItem;
@@ -35,6 +37,7 @@ public class UserProfileService {
     private final PasswordEncoder passwordEncoder;
     private final StorageService storageService;
     private final EmailService emailService;
+    private final PortalWebSocketHandler webSocketHandler;
 
     @Transactional(readOnly = true)
     public UserSummaryDto getMe(String userId) {
@@ -57,8 +60,8 @@ public class UserProfileService {
         if (dto.getBirthDate() != null) {
             user.setBirthDate(dto.getBirthDate());
         }
-        if (dto.getAvatarUrl() != null) {
-            user.setAvatarUrl(dto.getAvatarUrl());
+        if (dto.getAvatarUrl() != null && !MediaUploadSanitizer.isBlobUrl(dto.getAvatarUrl())) {
+            user.setAvatarUrl(MediaUploadSanitizer.sanitizeNullableUrl(dto.getAvatarUrl()));
         }
 
         if (dto.getAddresses() != null) {
@@ -79,7 +82,9 @@ public class UserProfileService {
             user.setPreferences(dto.getPreferences());
         }
 
-        return UserSummaryDto.fromEntity(userRepository.save(user));
+        User saved = userRepository.save(user);
+        webSocketHandler.broadcastAfterCommit("users", "UPDATED", saved.getId(), null);
+        return UserSummaryDto.fromEntity(saved);
     }
 
     @Transactional
@@ -87,9 +92,16 @@ public class UserProfileService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário", "id", userId));
 
-        String url = storageService.uploadFile(file, "users/" + user.getId(), "_profile.jpg");
+        String url = MediaUploadSanitizer.uploadAndVerify(
+                file,
+                "users/" + user.getId(),
+                "_profile.jpg",
+                storageService,
+                "Falha ao enviar foto de perfil."
+        );
         user.setAvatarUrl(url);
         userRepository.save(user);
+        webSocketHandler.broadcastAfterCommit("users", "UPDATED", user.getId(), null);
 
         return Map.of("url", url);
     }
@@ -100,7 +112,9 @@ public class UserProfileService {
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário", "id", userId));
 
         user.setAvatarUrl(null);
-        return UserSummaryDto.fromEntity(userRepository.save(user));
+        User saved = userRepository.save(user);
+        webSocketHandler.broadcastAfterCommit("users", "UPDATED", saved.getId(), null);
+        return UserSummaryDto.fromEntity(saved);
     }
 
     @Transactional
@@ -120,6 +134,7 @@ public class UserProfileService {
         user.setStatus(UserStatus.INACTIVE);
         user.setTokenVersion(user.getTokenVersion() + 1);
         userRepository.save(user);
+        webSocketHandler.broadcastAfterCommit("users", "DEACTIVATED", userId, null);
     }
 
     @Transactional
@@ -237,7 +252,8 @@ public class UserProfileService {
         changes.remove(matched);
         user.setPendingChanges(changes);
 
-        return UserSummaryDto.fromEntity(userRepository.save(user));
+        User saved = userRepository.save(user);
+        webSocketHandler.broadcastAfterCommit("users", "UPDATED", saved.getId(), null);
+        return UserSummaryDto.fromEntity(saved);
     }
 }
-

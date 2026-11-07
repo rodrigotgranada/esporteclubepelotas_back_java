@@ -1,5 +1,6 @@
 package com.esporteclubepelotas.api.modules.news.helper;
 
+import com.esporteclubepelotas.api.common.exception.BusinessException;
 import com.esporteclubepelotas.api.common.storage.StorageService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -67,6 +68,7 @@ public final class NewsContentProcessorHelper {
                         }
                     } catch (Exception ex) {
                         log.error("Falha ao converter imagem base64 no conteúdo da matéria: {}", ex.getMessage());
+                        throw new BusinessException("Falha ao fazer upload de uma imagem inserida no texto da matéria.");
                     }
                 }
             }
@@ -81,4 +83,3 @@ public final class NewsContentProcessorHelper {
         return result;
     }
 }
-

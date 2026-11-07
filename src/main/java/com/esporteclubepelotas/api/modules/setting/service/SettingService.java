@@ -1,5 +1,6 @@
 package com.esporteclubepelotas.api.modules.setting.service;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
 import com.esporteclubepelotas.api.common.storage.StorageService;
 import com.esporteclubepelotas.api.modules.setting.dto.SettingResponseDto;
 import com.esporteclubepelotas.api.modules.setting.dto.SettingUpdateDto;
@@ -8,6 +9,8 @@ import com.esporteclubepelotas.api.modules.setting.model.*;
 import com.esporteclubepelotas.api.modules.setting.repository.SettingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -24,13 +28,35 @@ public class SettingService {
     private final SettingRepository settingRepository;
     private final StorageService storageService;
 
-    @Transactional
+    @Cacheable(value = "publicSettings")
+    @Transactional(readOnly = true)
     public SettingResponseDto getSettings() {
         Setting setting = settingRepository.findFirstByOrderByIdAsc()
                 .orElseGet(this::createDefaultSettings);
         return SettingResponseDto.fromEntity(setting);
     }
 
+    public Map<String, String> uploadStandaloneLogo(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Nenhum arquivo enviado.");
+        }
+        try {
+            String originalFilename = file.getOriginalFilename() != null ? file.getOriginalFilename() : "logo.png";
+            String logoUrl = storageService.uploadFile(
+                    file.getBytes(),
+                    "club-logo-" + System.currentTimeMillis() + "-" + originalFilename,
+                    "settings",
+                    file.getContentType()
+            );
+            return Map.of("url", logoUrl);
+        } catch (IOException e) {
+            log.error("Erro ao ler bytes do arquivo de logo: {}", e.getMessage(), e);
+            throw new RuntimeException("Falha ao processar arquivo de logo", e);
+        }
+    }
+
+    @CacheEvict(value = "publicSettings", allEntries = true)
+    @AuditLog(module = "SETTINGS", action = "UPDATE", description = "Atualização de Configurações Globais")
     @Transactional
     public SettingResponseDto updateSettings(SettingUpdateDto dto, MultipartFile logoFile) {
         Setting setting = settingRepository.findFirstByOrderByIdAsc()

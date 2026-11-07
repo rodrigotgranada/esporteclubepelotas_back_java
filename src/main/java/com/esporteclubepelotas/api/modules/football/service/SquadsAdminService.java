@@ -286,6 +286,19 @@ public class SquadsAdminService {
         return Map.of("coverUrl", coverUrl);
     }
 
+    public Map<String, String> uploadStandaloneCover(MultipartFile file, String folderId) {
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("Nenhum arquivo enviado.");
+        }
+        String targetFolder = (folderId != null && !folderId.isBlank()) ? folderId.trim() : UUID.randomUUID().toString();
+        String ext = getFileExtension(file.getOriginalFilename());
+        String fileName = "cover-" + System.currentTimeMillis() + "." + ext;
+        String folder = "squads/" + targetFolder;
+
+        String coverUrl = storageService.uploadFile(file, folder, fileName);
+        return Map.of("url", coverUrl, "coverUrl", coverUrl);
+    }
+
     private List<SquadMember> buildMemberList(Squad squad, List<SquadMemberDto> memberDtos) {
         List<SquadMember> members = new ArrayList<>();
         if (memberDtos == null) return members;
@@ -315,4 +328,3 @@ public class SquadsAdminService {
         return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
     }
 }
-

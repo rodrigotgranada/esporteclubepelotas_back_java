@@ -40,10 +40,10 @@ public class CreateUserDto {
     private LocalDate birthDate;
     private String phone;
     private String role;
+    private String avatarUrl;
     private Boolean mustChangePassword;
 
     private List<PhoneItem> phones;
     private List<AddressItem> addresses;
     private UserPreferences preferences;
 }
-

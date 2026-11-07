@@ -45,6 +45,15 @@ public class SquadsAdminController {
         return ResponseEntity.ok(youthPortalService.updateConfig(dto));
     }
 
+    @PostMapping(value = "/upload-cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload prévio de capa de elenco antes da persistência no banco")
+    public ResponseEntity<Map<String, String>> uploadStandaloneCover(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "folderId", required = false) String folderId
+    ) {
+        return ResponseEntity.ok(squadsAdminService.uploadStandaloneCover(file, folderId));
+    }
+
     @GetMapping
     @Operation(summary = "Listar elencos cadastrados com filtros e paginação")
     public ResponseEntity<GetSquadsResponseDto> findAll(@ModelAttribute QuerySquadsDto query) {

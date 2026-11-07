@@ -44,7 +44,7 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
                         // 1. Health Checks, Raiz & Documentacao Swagger OpenAPI
-                        .requestMatchers("/", "/health", "/actuator/**").permitAll()
+                        .requestMatchers("/", "/health", "/actuator/**", "/ws/**").permitAll()
                         .requestMatchers(
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
@@ -84,6 +84,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/timeline", "/timeline/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/settings", "/settings/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/themes/active", "/themes/active/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/stadium", "/stadium/**").permitAll()
 
                         // 5. Todas as rotas administrativas e modificacoes exigem autenticacao
                         .anyRequest().authenticated()

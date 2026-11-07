@@ -1,5 +1,6 @@
 package com.esporteclubepelotas.api.modules.news.service;
 
+import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
 import com.esporteclubepelotas.api.modules.news.repository.NewsArticleRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,7 @@ import java.time.Instant;
 public class NewsSchedulerService {
 
     private final NewsArticleRepository articleRepository;
+    private final PortalWebSocketHandler webSocketHandler;
 
     @Scheduled(cron = "0 * * * * *")
     @Transactional
@@ -24,10 +26,10 @@ public class NewsSchedulerService {
             int publishedCount = articleRepository.publishScheduledArticles(now);
             if (publishedCount > 0) {
                 log.info("[NewsScheduler] Publicadas {} matéria(s) agendada(s) automaticamente.", publishedCount);
+                webSocketHandler.broadcastAfterCommit("news", "SCHEDULED_PUBLISHED", null, null);
             }
         } catch (Exception ex) {
             log.error("[NewsScheduler] Erro ao reconciliar matérias agendadas: {}", ex.getMessage(), ex);
         }
     }
 }
-

@@ -5,7 +5,9 @@ import com.esporteclubepelotas.api.common.email.EmailService;
 import com.esporteclubepelotas.api.common.email.EmailTemplateHelper;
 import com.esporteclubepelotas.api.common.exception.BusinessException;
 import com.esporteclubepelotas.api.common.exception.ResourceNotFoundException;
+import com.esporteclubepelotas.api.common.storage.MediaUploadSanitizer;
 import com.esporteclubepelotas.api.common.storage.StorageService;
+import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
 import com.esporteclubepelotas.api.modules.auth.dto.UserSummaryDto;
 import com.esporteclubepelotas.api.modules.role.entity.Role;
 import com.esporteclubepelotas.api.modules.role.repository.RoleRepository;
@@ -16,6 +18,7 @@ import com.esporteclubepelotas.api.modules.user.entity.User;
 import com.esporteclubepelotas.api.modules.user.entity.UserStatus;
 import com.esporteclubepelotas.api.modules.user.helper.UserHierarchyHelper;
 import com.esporteclubepelotas.api.modules.user.repository.UserRepository;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,17 +26,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.data.jpa.domain.Specification;
-import jakarta.persistence.criteria.Predicate;
-import java.util.ArrayList;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.SecureRandom;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -48,6 +50,7 @@ public class UserAdminService {
     private final PasswordEncoder passwordEncoder;
     private final StorageService storageService;
     private final EmailService emailService;
+    private final PortalWebSocketHandler webSocketHandler;
 
     @Value("${frontend.url:https://esporte-clube-pelotas-dev.vercel.app}")
     private String frontendUrl;
@@ -59,7 +62,9 @@ public class UserAdminService {
         Pageable pageable = PageRequest.of(pageIndex, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
 
         String searchClean = (search != null && !search.isBlank()) ? search.trim().toLowerCase() : null;
-        String roleClean = (role != null && !role.isBlank()) ? UserHierarchyHelper.normalizeRoleName(role.trim()).toUpperCase() : null;
+        String roleClean = (role != null && !role.isBlank())
+                ? UserHierarchyHelper.normalizeRoleName(role.trim()).toUpperCase()
+                : null;
 
         UserStatus userStatus = null;
         boolean includeInactive = false;
@@ -98,10 +103,10 @@ public class UserAdminService {
                 predicates.add(cb.or(
                         cb.like(cb.lower(cb.coalesce(root.get("firstName"), "")), pattern),
                         cb.like(cb.lower(cb.coalesce(root.get("lastName"), "")), pattern),
-                        cb.like(cb.lower(cb.concat(cb.concat(cb.coalesce(root.get("firstName"), ""), " "), cb.coalesce(root.get("lastName"), ""))), pattern),
+                        cb.like(cb.lower(cb.concat(cb.concat(cb.coalesce(root.get("firstName"), ""), " "),
+                                cb.coalesce(root.get("lastName"), ""))), pattern),
                         cb.like(cb.lower(cb.coalesce(root.get("email"), "")), pattern),
-                        cb.like(cb.coalesce(root.get("cpf"), ""), pattern)
-                ));
+                        cb.like(cb.coalesce(root.get("cpf"), ""), pattern)));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));
@@ -123,6 +128,19 @@ public class UserAdminService {
         return UserSummaryDto.fromEntity(user);
     }
 
+    public Map<String, String> uploadStandaloneAvatar(MultipartFile file, String folderId) {
+        String safeFolder = MediaUploadSanitizer.sanitizeFolderId(folderId);
+        String ext = MediaUploadSanitizer.extractSafeExtension(file != null ? file.getOriginalFilename() : null, "jpg");
+        String fileName = "avatar_" + System.currentTimeMillis() + "." + ext;
+        String url = MediaUploadSanitizer.uploadAndVerify(
+                file,
+                "users/" + safeFolder,
+                fileName,
+                storageService,
+                "Falha ao enviar foto de perfil para o provedor de mídia.");
+        return Map.of("url", url);
+    }
+
     @Transactional
     public UserSummaryDto adminCreate(CreateUserDto dto, MultipartFile avatar) {
         String cleanEmail = dto.getEmail().trim().toLowerCase();
@@ -142,6 +160,17 @@ public class UserAdminService {
         Role role = roleRepository.findByName(targetRoleName)
                 .orElseThrow(() -> new ResourceNotFoundException("Cargo", "name", targetRoleName));
 
+        // Fase 1: Upload prévio verificado ANTES de inserir o registro no banco
+        String resolvedAvatarUrl = MediaUploadSanitizer.sanitizeNullableUrl(dto.getAvatarUrl());
+        if (avatar != null && !avatar.isEmpty()) {
+            resolvedAvatarUrl = MediaUploadSanitizer.uploadAndVerify(
+                    avatar,
+                    "users/" + UUID.randomUUID(),
+                    "_profile.jpg",
+                    storageService,
+                    "Falha ao enviar foto de perfil do usuário.");
+        }
+
         User user = User.builder()
                 .firstName(dto.getFirstName().trim())
                 .lastName(dto.getLastName().trim())
@@ -150,6 +179,7 @@ public class UserAdminService {
                 .passwordHash(passwordEncoder.encode(dto.getPassword()))
                 .birthDate(dto.getBirthDate())
                 .phone(dto.getPhone())
+                .avatarUrl(resolvedAvatarUrl)
                 .role(role)
                 .status(UserStatus.ACTIVE)
                 .isActive(true)
@@ -161,13 +191,7 @@ public class UserAdminService {
                 .build();
 
         User savedUser = userRepository.save(user);
-
-        if (avatar != null && !avatar.isEmpty()) {
-            String avatarUrl = storageService.uploadFile(avatar, "users/" + savedUser.getId(), "_profile.jpg");
-            savedUser.setAvatarUrl(avatarUrl);
-            savedUser = userRepository.save(savedUser);
-        }
-
+        webSocketHandler.broadcastAfterCommit("users", "CREATED", savedUser.getId(), null);
         return UserSummaryDto.fromEntity(savedUser);
     }
 
@@ -210,10 +234,14 @@ public class UserAdminService {
             }
         }
 
-        if (dto.getFirstName() != null) user.setFirstName(dto.getFirstName().trim());
-        if (dto.getLastName() != null) user.setLastName(dto.getLastName().trim());
-        if (dto.getBirthDate() != null) user.setBirthDate(dto.getBirthDate());
-        if (dto.getPhone() != null) user.setPhone(dto.getPhone().trim());
+        if (dto.getFirstName() != null)
+            user.setFirstName(dto.getFirstName().trim());
+        if (dto.getLastName() != null)
+            user.setLastName(dto.getLastName().trim());
+        if (dto.getBirthDate() != null)
+            user.setBirthDate(dto.getBirthDate());
+        if (dto.getPhone() != null)
+            user.setPhone(dto.getPhone().trim());
         if (dto.getStatus() != null) {
             user.setStatus(dto.getStatus());
             if (dto.getStatus() == UserStatus.ACTIVE) {
@@ -221,10 +249,15 @@ public class UserAdminService {
                 user.setLockoutUntil(null);
             }
         }
-        if (dto.getAvatarUrl() != null) user.setAvatarUrl(dto.getAvatarUrl());
-        if (dto.getPhones() != null) user.setPhones(dto.getPhones());
-        if (dto.getAddresses() != null) user.setAddresses(dto.getAddresses());
-        if (dto.getPreferences() != null) user.setPreferences(dto.getPreferences());
+        if (dto.getAvatarUrl() != null && !MediaUploadSanitizer.isBlobUrl(dto.getAvatarUrl())) {
+            user.setAvatarUrl(MediaUploadSanitizer.sanitizeNullableUrl(dto.getAvatarUrl()));
+        }
+        if (dto.getPhones() != null)
+            user.setPhones(dto.getPhones());
+        if (dto.getAddresses() != null)
+            user.setAddresses(dto.getAddresses());
+        if (dto.getPreferences() != null)
+            user.setPreferences(dto.getPreferences());
 
         if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
             user.setPasswordHash(passwordEncoder.encode(dto.getPassword()));
@@ -234,7 +267,9 @@ public class UserAdminService {
             user.setMustChangePassword(dto.getMustChangePassword());
         }
 
-        return UserSummaryDto.fromEntity(userRepository.save(user));
+        User saved = userRepository.save(user);
+        webSocketHandler.broadcastAfterCommit("users", "UPDATED", saved.getId(), null);
+        return UserSummaryDto.fromEntity(saved);
     }
 
     @Transactional
@@ -245,9 +280,15 @@ public class UserAdminService {
         String targetRole = user.getRole() != null ? user.getRole().getName() : "USER";
         UserHierarchyHelper.checkHierarchy(actorRole, targetRole, "edit");
 
-        String avatarUrl = storageService.uploadFile(file, "users/" + user.getId(), "_profile.jpg");
+        String avatarUrl = MediaUploadSanitizer.uploadAndVerify(
+                file,
+                "users/" + user.getId(),
+                "_profile.jpg",
+                storageService,
+                "Falha ao enviar foto de perfil do usuário.");
         user.setAvatarUrl(avatarUrl);
         userRepository.save(user);
+        webSocketHandler.broadcastAfterCommit("users", "UPDATED", user.getId(), null);
 
         return Map.of("url", avatarUrl);
     }
@@ -261,7 +302,9 @@ public class UserAdminService {
         UserHierarchyHelper.checkHierarchy(actorRole, targetRole, "edit");
 
         user.setAvatarUrl(null);
-        return UserSummaryDto.fromEntity(userRepository.save(user));
+        User saved = userRepository.save(user);
+        webSocketHandler.broadcastAfterCommit("users", "UPDATED", saved.getId(), null);
+        return UserSummaryDto.fromEntity(saved);
     }
 
     @Transactional
@@ -279,7 +322,9 @@ public class UserAdminService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cargo", "name", normalizedNewRole));
 
         user.setRole(role);
-        return UserSummaryDto.fromEntity(userRepository.save(user));
+        User saved = userRepository.save(user);
+        webSocketHandler.broadcastAfterCommit("users", "UPDATED", saved.getId(), null);
+        return UserSummaryDto.fromEntity(saved);
     }
 
     @Transactional
@@ -299,7 +344,9 @@ public class UserAdminService {
                 user.setFailedLoginAttempts(0);
                 user.setLockoutUntil(null);
             }
-            return UserSummaryDto.fromEntity(userRepository.save(user));
+            User saved = userRepository.save(user);
+            webSocketHandler.broadcastAfterCommit("users", "UPDATED", saved.getId(), null);
+            return UserSummaryDto.fromEntity(saved);
         } catch (IllegalArgumentException e) {
             throw new BusinessException("Status inválido: " + statusStr);
         }
@@ -317,6 +364,7 @@ public class UserAdminService {
         user.setStatus(UserStatus.INACTIVE);
         user.setTokenVersion(user.getTokenVersion() + 1);
         userRepository.save(user);
+        webSocketHandler.broadcastAfterCommit("users", "DELETED", userId, null);
     }
 
     @Transactional
@@ -354,7 +402,8 @@ public class UserAdminService {
         userRepository.save(user);
 
         String emailHtml = EmailTemplateHelper.getResetPasswordEmail(frontendUrl, token);
-        emailService.sendHtmlEmail(user.getEmail(), "Redefinição de Senha Solicitada pelo Administrador - E.C. Pelotas", emailHtml);
+        emailService.sendHtmlEmail(user.getEmail(), "Redefinição de Senha Solicitada pelo Administrador - E.C. Pelotas",
+                emailHtml);
     }
 
     @Transactional(readOnly = true)

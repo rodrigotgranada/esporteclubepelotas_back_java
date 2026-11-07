@@ -55,6 +55,24 @@ public class NewsAdminController {
         return ResponseEntity.ok(newsAdminService.uploadContentImage(file));
     }
 
+    @PostMapping(value = "/upload-cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload prévio da imagem de capa antes da persistência da matéria")
+    public ResponseEntity<Map<String, String>> uploadStandaloneCover(
+            @RequestParam("cover") MultipartFile file,
+            @RequestParam(value = "folderId", required = false) String folderId
+    ) {
+        return ResponseEntity.ok(newsAdminService.uploadStandaloneCover(file, folderId));
+    }
+
+    @PostMapping(value = "/upload-gallery", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload prévio de fotos da galeria antes da persistência da matéria")
+    public ResponseEntity<Map<String, List<String>>> uploadStandaloneGallery(
+            @RequestParam("gallery") List<MultipartFile> files,
+            @RequestParam(value = "folderId", required = false) String folderId
+    ) {
+        return ResponseEntity.ok(newsAdminService.uploadStandaloneGallery(files, folderId));
+    }
+
     @GetMapping("/comments")
     @Operation(summary = "Listar comentários de todas as matérias para moderação")
     public ResponseEntity<GetNewsCommentsResponseDto> adminFindComments(

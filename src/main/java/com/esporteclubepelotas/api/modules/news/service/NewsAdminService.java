@@ -2,6 +2,7 @@ package com.esporteclubepelotas.api.modules.news.service;
 
 import com.esporteclubepelotas.api.common.exception.BusinessException;
 import com.esporteclubepelotas.api.common.storage.StorageService;
+import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
 import com.esporteclubepelotas.api.modules.news.dto.*;
 import com.esporteclubepelotas.api.modules.news.entity.*;
 import com.esporteclubepelotas.api.modules.news.helper.*;
@@ -34,6 +35,7 @@ public class NewsAdminService {
     private final NewsCommentRepository commentRepository;
     private final UserRepository userRepository;
     private final StorageService storageService;
+    private final PortalWebSocketHandler webSocketHandler;
 
     @Transactional(readOnly = true)
     public GetNewsResponseDto adminFindAll(QueryNewsDto query) {
@@ -47,23 +49,18 @@ public class NewsAdminService {
             if (query.getStatus() != null) {
                 predicates.add(cb.equal(root.get("status"), query.getStatus()));
             }
-
             if (query.getIsFeatured() != null) {
                 predicates.add(cb.equal(root.get("isFeatured"), query.getIsFeatured()));
             }
-
             if (query.getFeaturedSlot() != null) {
                 predicates.add(cb.equal(root.get("featuredSlot"), query.getFeaturedSlot()));
             }
-
             if (query.getIsPinned() != null) {
                 predicates.add(cb.equal(root.get("isPinned"), query.getIsPinned()));
             }
-
             if (query.getShowOnHomepage() != null) {
                 predicates.add(cb.equal(root.get("showOnHomepage"), query.getShowOnHomepage()));
             }
-
             if (query.getIsYouth() != null) {
                 predicates.add(cb.equal(root.get("isYouth"), query.getIsYouth()));
             }
@@ -97,7 +94,6 @@ public class NewsAdminService {
         );
 
         Page<NewsArticle> paged = articleRepository.findAll(spec, PageRequest.of(page - 1, limit, sort));
-
         List<NewsArticleDto> dtos = paged.getContent().stream()
                 .map(NewsMapperHelper::mapArticle)
                 .toList();
@@ -127,8 +123,8 @@ public class NewsAdminService {
                 .orElseThrow(() -> new BusinessException("Autor não encontrado."));
 
         NewsCategory category = resolveCategory(dto.getCategory());
-
-        String slug = NewsSlugHelper.generateUniqueArticleSlug(dto.getTitle(), articleRepository, null);
+        String slugSeed = (dto.getSlug() != null && !dto.getSlug().isBlank()) ? dto.getSlug() : dto.getTitle();
+        String slug = NewsSlugHelper.generateUniqueArticleSlug(slugSeed, articleRepository, null);
 
         Instant publishedAt = null;
         if (dto.getStatus() == NewsStatus.PUBLISHED) {
@@ -158,12 +154,16 @@ public class NewsAdminService {
             articleRepository.clearAllMainSlots();
         }
 
+        String sanitizedCover = dto.getCoverImage() != null && !dto.getCoverImage().startsWith("blob:")
+                ? dto.getCoverImage()
+                : "";
+
         NewsArticle article = NewsArticle.builder()
                 .title(dto.getTitle().trim())
                 .subtitle(dto.getSubtitle() != null ? dto.getSubtitle().trim() : null)
                 .slug(slug)
                 .previousSlugs(new ArrayList<>())
-                .coverImage(dto.getCoverImage() != null ? dto.getCoverImage() : "")
+                .coverImage(sanitizedCover)
                 .coverCaption(dto.getCoverCaption() != null ? dto.getCoverCaption().trim() : null)
                 .content(content)
                 .summary(dto.getSummary() != null ? dto.getSummary().trim() : null)
@@ -179,7 +179,7 @@ public class NewsAdminService {
                 .photographerName(dto.getPhotographerName() != null ? dto.getPhotographerName().trim() : null)
                 .author(author)
                 .publishedAt(publishedAt)
-                .gallery(dto.getGallery() != null ? dto.getGallery() : new ArrayList<>())
+                .gallery(dto.getGallery() != null ? new ArrayList<>(dto.getGallery().stream().filter(u -> u != null && !u.isBlank() && !u.startsWith("blob:")).toList()) : new ArrayList<>())
                 .youtubeVideoUrl(dto.getYoutubeVideoUrl() != null ? dto.getYoutubeVideoUrl().trim() : null)
                 .viewsCount(0L)
                 .allowReactions(!Boolean.FALSE.equals(dto.getAllowReactions()))
@@ -189,6 +189,7 @@ public class NewsAdminService {
                 .build();
 
         NewsArticle saved = articleRepository.save(article);
+        webSocketHandler.broadcastAfterCommit("news", "CREATED", saved.getId().toString(), saved.isYouth());
         return NewsMapperHelper.mapArticle(saved);
     }
 
@@ -205,27 +206,21 @@ public class NewsAdminService {
         if (dto.getCategory() != null) {
             article.setCategory(resolveCategory(dto.getCategory()));
         }
-
         if (dto.getTitle() != null && !dto.getTitle().isBlank()) {
             article.setTitle(dto.getTitle().trim());
         }
-
         if (dto.getSubtitle() != null) {
             article.setSubtitle(dto.getSubtitle().trim());
         }
-
-        if (dto.getCoverImage() != null) {
+        if (dto.getCoverImage() != null && !dto.getCoverImage().startsWith("blob:")) {
             article.setCoverImage(dto.getCoverImage());
         }
-
         if (dto.getCoverCaption() != null) {
             article.setCoverCaption(dto.getCoverCaption().trim());
         }
-
         if (dto.getSummary() != null) {
             article.setSummary(dto.getSummary().trim());
         }
-
         if (dto.getContent() != null) {
             article.setContent(NewsContentProcessorHelper.processContentBase64Images(dto.getContent(), storageService));
         }
@@ -241,7 +236,6 @@ public class NewsAdminService {
         if (dto.getStatus() != null) {
             article.setStatus(dto.getStatus());
         }
-
         if (dto.getPublishedAt() != null) {
             article.setPublishedAt(Instant.parse(dto.getPublishedAt()));
         } else if (dto.getStatus() == NewsStatus.PUBLISHED && article.getPublishedAt() == null) {
@@ -251,40 +245,31 @@ public class NewsAdminService {
         if (dto.getIsPinned() != null) {
             article.setPinned(dto.getIsPinned());
         }
-
         if (dto.getShowOnHomepage() != null) {
             article.setShowOnHomepage(dto.getShowOnHomepage());
         }
-
         if (dto.getIsYouth() != null) {
             article.setYouth(dto.getIsYouth());
         }
-
         if (dto.getReporterName() != null) {
             article.setReporterName(dto.getReporterName().trim());
         }
-
         if (dto.getPhotographerName() != null) {
             article.setPhotographerName(dto.getPhotographerName().trim());
         }
-
         if (dto.getGallery() != null) {
-            article.setGallery(dto.getGallery());
+            article.setGallery(new ArrayList<>(dto.getGallery().stream().filter(u -> u != null && !u.isBlank() && !u.startsWith("blob:")).toList()));
         }
-
         if (dto.getYoutubeVideoUrl() != null) {
             article.setYoutubeVideoUrl(dto.getYoutubeVideoUrl().trim());
         }
-
         if (dto.getAllowReactions() != null) {
             article.setAllowReactions(dto.getAllowReactions());
         }
-
         if (dto.getAllowComments() != null) {
             article.setAllowComments(dto.getAllowComments());
         }
 
-        // Slug management
         if (dto.getSlug() != null && !dto.getSlug().trim().equalsIgnoreCase(article.getSlug())) {
             String newSlug = NewsSlugHelper.generateUniqueArticleSlug(dto.getSlug(), articleRepository, article.getId());
             if (!article.getPreviousSlugs().contains(article.getSlug())) {
@@ -296,7 +281,6 @@ public class NewsAdminService {
             article.setSlug(regenerated);
         }
 
-        // Slot management
         if (dto.getFeaturedSlot() != null) {
             if (dto.getFeaturedSlot() == NewsFeaturedSlot.MAIN) {
                 article.setFeatured(true);
@@ -320,6 +304,7 @@ public class NewsAdminService {
         }
 
         NewsArticle saved = articleRepository.save(article);
+        webSocketHandler.broadcastAfterCommit("news", "UPDATED", saved.getId().toString(), saved.isYouth());
         return NewsMapperHelper.mapArticle(saved);
     }
 
@@ -329,65 +314,46 @@ public class NewsAdminService {
                 .orElseThrow(() -> new BusinessException("Matéria não encontrada."));
         article.setActive(false);
         articleRepository.save(article);
+        webSocketHandler.broadcastAfterCommit("news", "DELETED", article.getId().toString(), article.isYouth());
+    }
+
+    public Map<String, String> uploadStandaloneCover(MultipartFile file, String folderId) {
+        String url = NewsMediaUploadHelper.uploadCoverFile(file, folderId, storageService);
+        return Map.of("url", url);
+    }
+
+    public Map<String, List<String>> uploadStandaloneGallery(List<MultipartFile> files, String folderId) {
+        List<String> urls = NewsMediaUploadHelper.uploadGalleryFiles(files, folderId, storageService);
+        return Map.of("urls", urls);
     }
 
     @Transactional
     public Map<String, String> uploadCover(UUID id, MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new BusinessException("Nenhum arquivo enviado.");
-        }
         NewsArticle article = articleRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Matéria não encontrada."));
-
-        String ext = getFileExtension(file.getOriginalFilename());
-        String fileName = "cover-" + System.currentTimeMillis() + "." + ext;
-        String folder = "news/" + id;
-
-        String url = storageService.uploadFile(file, folder, fileName);
+        String url = NewsMediaUploadHelper.uploadCoverFile(file, id.toString(), storageService);
         article.setCoverImage(url);
         articleRepository.save(article);
-
+        webSocketHandler.broadcastAfterCommit("news", "UPDATED", article.getId().toString(), article.isYouth());
         return Map.of("url", url);
     }
 
     @Transactional
     public Map<String, List<String>> uploadGallery(UUID id, List<MultipartFile> files) {
-        if (files == null || files.isEmpty()) {
-            throw new BusinessException("Nenhum arquivo enviado.");
-        }
         NewsArticle article = articleRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Matéria não encontrada."));
-
-        List<String> urls = new ArrayList<>();
-        String folder = "news/" + id + "/gallery";
-
-        for (MultipartFile file : files) {
-            if (file == null || file.isEmpty()) continue;
-            String ext = getFileExtension(file.getOriginalFilename());
-            String fileName = "photo-" + System.currentTimeMillis() + "-" + (int) (Math.random() * 100000) + "." + ext;
-            String url = storageService.uploadFile(file, folder, fileName);
-            urls.add(url);
-        }
-
+        List<String> urls = NewsMediaUploadHelper.uploadGalleryFiles(files, id.toString(), storageService);
         if (article.getGallery() == null) {
             article.setGallery(new ArrayList<>());
         }
         article.getGallery().addAll(urls);
         articleRepository.save(article);
-
+        webSocketHandler.broadcastAfterCommit("news", "UPDATED", article.getId().toString(), article.isYouth());
         return Map.of("urls", urls);
     }
 
     public Map<String, String> uploadContentImage(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new BusinessException("Nenhum arquivo enviado.");
-        }
-        String ext = getFileExtension(file.getOriginalFilename());
-        String fileName = "content-" + System.currentTimeMillis() + "-" + (int) (Math.random() * 100000) + "." + ext;
-        String folder = "news/content";
-
-        String url = storageService.uploadFile(file, folder, fileName);
-        return Map.of("url", url);
+        return NewsMediaUploadHelper.uploadContentImage(file, storageService);
     }
 
     @Transactional
@@ -450,6 +416,8 @@ public class NewsAdminService {
                 .isFeatured(false)
                 .featuredSlot(NewsFeaturedSlot.NONE)
                 .isPinned(false)
+                .showOnHomepage(original.isShowOnHomepage())
+                .isYouth(original.isYouth())
                 .reporterName(original.getReporterName())
                 .photographerName(original.getPhotographerName())
                 .author(user)
@@ -465,10 +433,10 @@ public class NewsAdminService {
                 .build();
 
         NewsArticle saved = articleRepository.save(duplicated);
+        webSocketHandler.broadcastAfterCommit("news", "DUPLICATED", saved.getId().toString(), saved.isYouth());
         return NewsMapperHelper.mapArticle(saved);
     }
 
-    // Comentários Admin
     @Transactional(readOnly = true)
     public GetNewsCommentsResponseDto adminFindComments(Integer page, Integer limit, NewsCommentStatus status, String search, String articleId) {
         return NewsCommentsAdminHelper.adminFindComments(commentRepository, page, limit, status, search, articleId);
@@ -484,7 +452,6 @@ public class NewsAdminService {
         NewsCommentsAdminHelper.adminDeleteComment(commentRepository, commentId);
     }
 
-    // Vitrine (Showcase)
     @Transactional(readOnly = true)
     public ShowcaseResponseDto getShowcase() {
         return NewsShowcaseHelper.getShowcase(articleRepository);
@@ -493,6 +460,7 @@ public class NewsAdminService {
     @Transactional
     public void updateShowcase(UpdateShowcaseDto dto) {
         NewsShowcaseHelper.updateShowcase(articleRepository, dto);
+        webSocketHandler.broadcastAfterCommit("news", "SHOWCASE_UPDATED", null, null);
     }
 
     @Transactional(readOnly = true)
@@ -500,7 +468,6 @@ public class NewsAdminService {
         return NewsShowcaseHelper.getCurrentMain(articleRepository);
     }
 
-    // Matérias Agendadas
     @Transactional(readOnly = true)
     public Map<String, Object> getScheduledArticles() {
         return NewsScheduledHelper.getScheduledArticles(articleRepository);
@@ -508,7 +475,9 @@ public class NewsAdminService {
 
     @Transactional
     public NewsArticleDto publishNow(UUID id) {
-        return NewsScheduledHelper.publishNow(articleRepository, id);
+        NewsArticleDto dto = NewsScheduledHelper.publishNow(articleRepository, id);
+        webSocketHandler.broadcastAfterCommit("news", "PUBLISHED", id.toString(), dto.isYouth());
+        return dto;
     }
 
     private NewsCategory resolveCategory(String categoryParam) {
@@ -523,10 +492,5 @@ public class NewsAdminService {
             return categoryRepository.findBySlug(categoryParam.trim().toLowerCase())
                     .orElseThrow(() -> new BusinessException("Categoria não encontrada pelo slug: " + categoryParam));
         }
-    }
-
-    private String getFileExtension(String filename) {
-        if (filename == null || !filename.contains(".")) return "jpg";
-        return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
     }
 }

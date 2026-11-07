@@ -29,6 +29,9 @@ public class CreateNewsDto {
     @Schema(description = "Subtítulo / Linha fina da matéria", example = "Com gols no segundo tempo, o Lobo garantiu os três pontos na Boca do Lobo.")
     private String subtitle;
 
+    @Schema(description = "Slug personalizado opcional")
+    private String slug;
+
     @Schema(description = "URL da imagem de capa", example = "https://firebasestorage.../cover.jpg")
     private String coverImage;
 

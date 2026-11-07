@@ -77,6 +77,17 @@ public class UserController {
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(dto, avatar));
     }
 
+    @PostMapping(value = "/admin/upload-avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    @Operation(summary = "Upload prévio de foto de perfil antes de persistir os dados cadastrais do usuário")
+    public ResponseEntity<Map<String, String>> uploadStandaloneAvatar(
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar,
+            @RequestParam(value = "folderId", required = false) String folderId) {
+        MultipartFile targetFile = file != null ? file : avatar;
+        return ResponseEntity.ok(userAdminService.uploadStandaloneAvatar(targetFile, folderId));
+    }
+
     @PostMapping(value = "/admin/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     @Operation(summary = "Criação direta de usuário pelo Painel Administrativo")
