@@ -5,6 +5,8 @@ import com.esporteclubepelotas.api.modules.timeline.dto.TimelineEventDto;
 import com.esporteclubepelotas.api.modules.timeline.entity.TimelineCategory;
 import com.esporteclubepelotas.api.modules.timeline.entity.TimelineEvent;
 
+import java.util.ArrayList;
+
 public final class TimelineMapperHelper {
 
     private TimelineMapperHelper() {
@@ -45,6 +47,7 @@ public final class TimelineMapperHelper {
                 .categoryName(catName)
                 .categoryIcon(catIcon)
                 .imageUrl(event.getImageUrl())
+                .galleryUrls(event.getGalleryUrls() != null ? event.getGalleryUrls() : new ArrayList<>())
                 .eventDate(event.getEventDate())
                 .dateFormatted(event.getDateFormatted())
                 .displayOrder(event.getDisplayOrder())

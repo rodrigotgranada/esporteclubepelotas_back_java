@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -24,6 +26,8 @@ public class TimelineEventDto {
     private String categoryName;
     private String categoryIcon;
     private String imageUrl;
+    @Builder.Default
+    private List<String> galleryUrls = new ArrayList<>();
     private LocalDate eventDate;
     private String dateFormatted;
     private Integer displayOrder;

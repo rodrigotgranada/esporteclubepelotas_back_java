@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -21,6 +22,7 @@ public class UpdateTimelineEventDto {
     private UUID categoryId;
     private LocalDate eventDate;
     private String imageUrl;
+    private List<String> galleryUrls;
     private String dateFormatted;
     private Integer displayOrder;
     private Boolean isHighlighted;

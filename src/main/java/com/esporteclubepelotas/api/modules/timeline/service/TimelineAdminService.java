@@ -152,6 +152,7 @@ public class TimelineAdminService {
                 .category(resolvedCategory)
                 .categoryLegacy(resolvedCategory != null ? resolvedCategory.getSlug() : (dto.getCategory() != null ? dto.getCategory().trim() : null))
                 .imageUrl(imageUrl)
+                .galleryUrls(dto.getGalleryUrls() != null ? dto.getGalleryUrls() : new ArrayList<>())
                 .eventDate(dto.getEventDate())
                 .dateFormatted(dateFormatted)
                 .displayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : 0)
@@ -209,6 +210,7 @@ public class TimelineAdminService {
             }
 
             if (dto.getDateFormatted() != null) event.setDateFormatted(dto.getDateFormatted().trim());
+            if (dto.getGalleryUrls() != null) event.setGalleryUrls(dto.getGalleryUrls());
             if (dto.getDisplayOrder() != null) event.setDisplayOrder(dto.getDisplayOrder());
             if (dto.getIsHighlighted() != null) event.setHighlighted(dto.getIsHighlighted());
             if (dto.getIsActive() != null) event.setActive(dto.getIsActive());
