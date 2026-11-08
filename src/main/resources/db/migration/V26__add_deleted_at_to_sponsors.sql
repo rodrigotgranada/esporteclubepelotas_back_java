@@ -2,3 +2,4 @@
 ALTER TABLE sponsors ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE NULL;
 
 CREATE INDEX IF NOT EXISTS idx_sponsors_deleted_at ON sponsors (deleted_at);
+

@@ -24,3 +24,4 @@ public class SponsorReorderItemDto {
     @JsonAlias({"display_order", "order"})
     private Integer displayOrder;
 }
+
