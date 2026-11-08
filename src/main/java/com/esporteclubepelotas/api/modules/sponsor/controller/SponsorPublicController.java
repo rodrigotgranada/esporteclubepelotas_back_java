@@ -39,3 +39,4 @@ public class SponsorPublicController {
         return ResponseEntity.ok(Map.of("success", true));
     }
 }
+

@@ -19,3 +19,4 @@ public class GetSponsorsResponseDto {
     private int limit;
     private int totalPages;
 }
+

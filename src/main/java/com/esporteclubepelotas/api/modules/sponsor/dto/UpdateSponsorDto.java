@@ -22,3 +22,4 @@ public class UpdateSponsorDto {
     private LocalDate contractStartDate;
     private LocalDate contractEndDate;
 }
+

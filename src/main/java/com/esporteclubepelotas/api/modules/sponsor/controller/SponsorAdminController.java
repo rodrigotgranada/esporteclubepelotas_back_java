@@ -89,3 +89,4 @@ public class SponsorAdminController {
         return ResponseEntity.ok(sponsorService.uploadLogo(target));
     }
 }
+

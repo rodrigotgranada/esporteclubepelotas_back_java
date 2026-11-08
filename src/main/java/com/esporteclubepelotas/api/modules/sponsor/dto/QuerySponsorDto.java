@@ -20,3 +20,4 @@ public class QuerySponsorDto {
     @Builder.Default
     private Integer limit = 20;
 }
+

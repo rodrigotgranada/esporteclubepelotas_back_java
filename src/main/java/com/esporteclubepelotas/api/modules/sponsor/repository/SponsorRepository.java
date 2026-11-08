@@ -38,3 +38,4 @@ public interface SponsorRepository extends JpaRepository<Sponsor, UUID>, JpaSpec
     @Query("UPDATE Sponsor s SET s.clicksCount = s.clicksCount + 1 WHERE s.id = :id")
     void incrementClicksCount(@Param("id") UUID id);
 }
+

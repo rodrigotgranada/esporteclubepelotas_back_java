@@ -31,3 +31,4 @@ VALUES
     ('a0000000-0000-0000-0000-000000000005', 'Postos Buffon', 'https://buffon.com.br/wp-content/uploads/2021/04/logo-buffon.png', 'https://buffon.com.br', false, true, 5, CURRENT_DATE - INTERVAL '45 days', CURRENT_DATE + INTERVAL '200 days', 290),
     ('a0000000-0000-0000-0000-000000000006', 'Kappesberg', 'https://www.kappesberg.com.br/assets/images/logo.svg', 'https://www.kappesberg.com.br', false, true, 6, CURRENT_DATE - INTERVAL '10 days', CURRENT_DATE + INTERVAL '120 days', 185)
 ON CONFLICT (id) DO NOTHING;
+

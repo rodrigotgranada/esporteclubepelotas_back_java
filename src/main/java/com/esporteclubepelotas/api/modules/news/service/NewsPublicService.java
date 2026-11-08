@@ -245,16 +245,19 @@ public class NewsPublicService {
                 .build();
     }
 
+
     @Transactional(readOnly = true)
     public Map<String, Object> getUserReaction(String slug, String userId) {
-        if (userId == null) {
-            return Map.of("userReaction", Optional.empty());
+        Map<String, Object> response = new HashMap<>();
+        if (userId == null || userId.isBlank()) {
+            response.put("userReaction", null);
+            return response;
         }
         NewsArticle article = findActiveArticleBySlugOrId(slug);
         Optional<NewsReaction> reactionOpt = reactionRepository.findByArticleIdAndUserId(article.getId(), userId);
-        return Map.of("userReaction", reactionOpt.map(r -> r.getType().getValue()).orElse(null));
+        response.put("userReaction", reactionOpt.map(r -> r.getType().getValue()).orElse(null));
+        return response;
     }
-
     @Transactional
     public ReactNewsResponseDto reactToArticle(String slug, String userId, NewsReactionType type) {
         User user = validateActiveUser(userId);

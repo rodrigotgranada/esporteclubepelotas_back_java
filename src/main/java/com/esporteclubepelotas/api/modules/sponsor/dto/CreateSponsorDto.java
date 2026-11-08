@@ -34,3 +34,4 @@ public class CreateSponsorDto {
     private LocalDate contractStartDate;
     private LocalDate contractEndDate;
 }
+

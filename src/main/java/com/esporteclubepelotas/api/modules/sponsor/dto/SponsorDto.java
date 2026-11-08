@@ -29,3 +29,4 @@ public class SponsorDto {
     private Instant createdAt;
     private Instant updatedAt;
 }
+
