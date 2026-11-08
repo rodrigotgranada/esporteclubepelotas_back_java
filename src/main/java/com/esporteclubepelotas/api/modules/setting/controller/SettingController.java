@@ -48,9 +48,14 @@ public class SettingController {
     @PreAuthorize("hasAnyAuthority('settings.manage', 'users.manage', 'ROLE_ADMIN', 'ROLE_OWNER')")
     @Operation(summary = "Upload prévio do escudo/logotipo antes da gravação das configurações (Admin)")
     public ResponseEntity<Map<String, String>> uploadStandaloneLogo(
-            @RequestParam("file") MultipartFile file
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "logo", required = false) MultipartFile logo
     ) {
-        return ResponseEntity.ok(settingService.uploadStandaloneLogo(file));
+        MultipartFile target = file != null ? file : logo;
+        if (target == null || target.isEmpty()) {
+            throw new IllegalArgumentException("O arquivo de logotipo é obrigatório.");
+        }
+        return ResponseEntity.ok(settingService.uploadStandaloneLogo(target));
     }
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
