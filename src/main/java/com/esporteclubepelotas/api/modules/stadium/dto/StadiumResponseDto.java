@@ -23,6 +23,8 @@ public class StadiumResponseDto {
     private String address;
     private String mapsDirectUrl;
     private String mapsEmbedUrl;
+    private String storyTitle;
+    private String storySubtitle;
     private String contentHtml;
     private List<StadiumGalleryImageDto> gallery;
     private List<StadiumFactDto> facts;

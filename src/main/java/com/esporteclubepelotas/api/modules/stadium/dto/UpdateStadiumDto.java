@@ -39,6 +39,12 @@ public class UpdateStadiumDto {
     private String mapsDirectUrl;
     private String mapsEmbedUrl;
 
+    @Size(max = 255, message = "O título da reportagem não pode ultrapassar 255 caracteres")
+    private String storyTitle;
+
+    @Size(max = 500, message = "O subtítulo da reportagem não pode ultrapassar 500 caracteres")
+    private String storySubtitle;
+
     @NotBlank(message = "O conteúdo da história é obrigatório")
     private String contentHtml;
 

@@ -53,6 +53,8 @@ public class StadiumService {
         stadium.setAddress(dto.getAddress());
         stadium.setMapsDirectUrl(dto.getMapsDirectUrl());
         stadium.setMapsEmbedUrl(dto.getMapsEmbedUrl());
+        stadium.setStoryTitle(dto.getStoryTitle());
+        stadium.setStorySubtitle(dto.getStorySubtitle());
         stadium.setContentHtml(dto.getContentHtml());
 
         if (dto.getGallery() != null) {
@@ -126,6 +128,8 @@ public class StadiumService {
                 .address(entity.getAddress())
                 .mapsDirectUrl(entity.getMapsDirectUrl())
                 .mapsEmbedUrl(entity.getMapsEmbedUrl())
+                .storyTitle(entity.getStoryTitle())
+                .storySubtitle(entity.getStorySubtitle())
                 .contentHtml(entity.getContentHtml())
                 .gallery(entity.getGallery() != null ? entity.getGallery() : new ArrayList<>())
                 .facts(entity.getFacts() != null ? entity.getFacts() : new ArrayList<>())
@@ -157,6 +161,8 @@ public class StadiumService {
                 .address("Avenida Bento Gonçalves com Gonçalves Chaves, Centro - Pelotas/RS, CEP 96015-140")
                 .mapsDirectUrl("https://www.google.com/maps/search/?api=1&query=Est%C3%A1dio+Boca+do+Lobo+Pelotas")
                 .mapsEmbedUrl("https://maps.google.com/maps?q=Est%C3%A1dio+Boca+do+Lobo,+Pelotas+-+RS&t=&z=16&ie=UTF8&iwloc=&output=embed")
+                .storyTitle("A História Viva da Boca do Lobo")
+                .storySubtitle("Uma viagem pelas memórias, pelo pioneirismo e pela paixão do caldeirão áureo-cerúleo")
                 .contentHtml("<p>História do Estádio Boca do Lobo em carregamento...</p>")
                 .gallery(new ArrayList<>())
                 .facts(new ArrayList<>())

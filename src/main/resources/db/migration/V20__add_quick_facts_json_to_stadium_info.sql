@@ -13,3 +13,4 @@ SET quick_facts_json = '[
   {"id":"fact-6","label":"Localização Nobre","value":"Avenida Bento Gonçalves com Gonçalves Chaves","icon":"mapPin","order":6}
 ]'::jsonb
 WHERE id = 1 AND (quick_facts_json IS NULL OR quick_facts_json = '[]'::jsonb);
+

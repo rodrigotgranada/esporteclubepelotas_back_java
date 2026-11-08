@@ -56,6 +56,12 @@ public class StadiumInfo {
     @Column(name = "maps_embed_url", columnDefinition = "TEXT")
     private String mapsEmbedUrl;
 
+    @Column(name = "story_title", length = 255)
+    private String storyTitle;
+
+    @Column(name = "story_subtitle", length = 500)
+    private String storySubtitle;
+
     @Column(name = "content_html", nullable = false, columnDefinition = "TEXT")
     private String contentHtml;
 

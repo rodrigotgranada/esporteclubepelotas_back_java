@@ -16,3 +16,4 @@ public class StadiumQuickFactDto {
     private String icon;
     private Integer order;
 }
+
