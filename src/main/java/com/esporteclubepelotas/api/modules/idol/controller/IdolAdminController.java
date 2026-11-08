@@ -77,16 +77,16 @@ public class IdolAdminController {
     @Operation(summary = "Upload da foto principal do ídolo")
     public ResponseEntity<Map<String, String>> uploadPhoto(
             @PathVariable String id,
-            @RequestParam("photo") MultipartFile photo) {
-        return ResponseEntity.ok(idolAdminService.uploadPhoto(id, photo));
+            @RequestParam(value = "file", required = false) MultipartFile file, @RequestParam(value = "photo", required = false) MultipartFile photo) {
+        MultipartFile target = file != null ? file : photo; return ResponseEntity.ok(idolAdminService.uploadPhoto(id, target));
     }
 
     @PostMapping(value = "/{id}/gallery", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload de fotos para a galeria histórica do ídolo")
     public ResponseEntity<Map<String, Object>> uploadGallery(
             @PathVariable String id,
-            @RequestParam("gallery") List<MultipartFile> files) {
-        return ResponseEntity.ok(idolAdminService.uploadGallery(id, files));
+            @RequestParam(value = "files", required = false) List<MultipartFile> files, @RequestParam(value = "gallery", required = false) List<MultipartFile> gallery) {
+        List<MultipartFile> target = files != null && !files.isEmpty() ? files : gallery; return ResponseEntity.ok(idolAdminService.uploadGallery(id, target));
     }
 }
 

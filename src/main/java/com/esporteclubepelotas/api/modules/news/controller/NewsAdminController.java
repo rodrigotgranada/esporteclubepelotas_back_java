@@ -51,26 +51,45 @@ public class NewsAdminController {
 
     @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload de imagem para o corpo do texto da matéria")
-    public ResponseEntity<Map<String, String>> uploadContentImage(@RequestParam("image") MultipartFile file) {
-        return ResponseEntity.ok(newsAdminService.uploadContentImage(file));
+    public ResponseEntity<Map<String, String>> uploadContentImage(
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "image", required = false) MultipartFile image
+    ) {
+        MultipartFile targetFile = file != null ? file : image;
+        if (targetFile == null || targetFile.isEmpty()) {
+            throw new IllegalArgumentException("Arquivo de imagem não informado.");
+        }
+        return ResponseEntity.ok(newsAdminService.uploadContentImage(targetFile));
     }
 
     @PostMapping(value = "/upload-cover", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload prévio da imagem de capa antes da persistência da matéria")
     public ResponseEntity<Map<String, String>> uploadStandaloneCover(
-            @RequestParam("cover") MultipartFile file,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "cover", required = false) MultipartFile cover,
             @RequestParam(value = "folderId", required = false) String folderId
     ) {
-        return ResponseEntity.ok(newsAdminService.uploadStandaloneCover(file, folderId));
+        MultipartFile targetFile = file != null ? file : cover;
+        if (targetFile == null || targetFile.isEmpty()) {
+            throw new IllegalArgumentException("Arquivo de capa não informado.");
+        }
+        return ResponseEntity.ok(newsAdminService.uploadStandaloneCover(targetFile, folderId));
     }
 
     @PostMapping(value = "/upload-gallery", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload prévio de fotos da galeria antes da persistência da matéria")
     public ResponseEntity<Map<String, List<String>>> uploadStandaloneGallery(
-            @RequestParam("gallery") List<MultipartFile> files,
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
+            @RequestParam(value = "gallery", required = false) List<MultipartFile> gallery,
+            @RequestParam(value = "file", required = false) List<MultipartFile> singleFiles,
             @RequestParam(value = "folderId", required = false) String folderId
     ) {
-        return ResponseEntity.ok(newsAdminService.uploadStandaloneGallery(files, folderId));
+        List<MultipartFile> targetFiles = files != null && !files.isEmpty() ? files
+                : (gallery != null && !gallery.isEmpty() ? gallery : singleFiles);
+        if (targetFiles == null || targetFiles.isEmpty()) {
+            throw new IllegalArgumentException("Nenhum arquivo enviado para a galeria.");
+        }
+        return ResponseEntity.ok(newsAdminService.uploadStandaloneGallery(targetFiles, folderId));
     }
 
     @GetMapping("/comments")
