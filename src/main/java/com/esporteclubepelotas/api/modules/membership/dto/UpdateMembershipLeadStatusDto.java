@@ -17,3 +17,4 @@ public class UpdateMembershipLeadStatusDto {
 
     private String notes;
 }
+

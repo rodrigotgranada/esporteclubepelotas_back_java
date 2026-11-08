@@ -40,3 +40,4 @@ public class UpdateMembershipPlanDto {
 
     private Boolean active;
 }
+

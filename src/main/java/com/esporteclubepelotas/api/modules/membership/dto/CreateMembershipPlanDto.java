@@ -44,3 +44,4 @@ public class CreateMembershipPlanDto {
 
     private Boolean active;
 }
+

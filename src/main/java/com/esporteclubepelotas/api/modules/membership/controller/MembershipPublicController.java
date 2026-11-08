@@ -42,3 +42,4 @@ public class MembershipPublicController {
         return ResponseEntity.status(HttpStatus.CREATED).body(leadService.createLead(dto));
     }
 }
+

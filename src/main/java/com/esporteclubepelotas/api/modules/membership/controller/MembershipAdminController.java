@@ -2,10 +2,13 @@ package com.esporteclubepelotas.api.modules.membership.controller;
 
 import com.esporteclubepelotas.api.common.security.CurrentUser;
 import com.esporteclubepelotas.api.common.security.UserPrincipal;
+import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
 import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
 import com.esporteclubepelotas.api.modules.membership.dto.*;
 import com.esporteclubepelotas.api.modules.membership.service.MembershipLeadService;
 import com.esporteclubepelotas.api.modules.membership.service.MembershipPlanService;
+import com.esporteclubepelotas.api.modules.setting.dto.SettingUpdateDto;
+import com.esporteclubepelotas.api.modules.setting.service.SettingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,6 +34,46 @@ public class MembershipAdminController {
 
     private final MembershipPlanService planService;
     private final MembershipLeadService leadService;
+    private final SettingService settingService;
+    private final PortalWebSocketHandler webSocketHandler;
+
+    @GetMapping("/system-config")
+    @Operation(summary = "Obter provedor ativo do Quadro Social (ElevenTickets ou Nativo)")
+    public ResponseEntity<MembershipSystemConfigDto> getSystemConfig() {
+        var settings = settingService.getSettings();
+        return ResponseEntity.ok(MembershipSystemConfigDto.builder()
+                .provider(settings.getMembershipSystemProvider() != null ? settings.getMembershipSystemProvider() : "ELEVENTICKETS")
+                .externalUrl(settings.getMembershipExternalUrl() != null ? settings.getMembershipExternalUrl() : "https://socioecpelotas.eleventickets.com/#/")
+                .build());
+    }
+
+    @PutMapping("/system-config")
+    @AuditLog(action = "UPDATE_MEMBERSHIP_SYSTEM_CONFIG", module = "membership")
+    @Operation(summary = "Alternar provedor ativo do Quadro Social entre ElevenTickets e Nativo")
+    public ResponseEntity<MembershipSystemConfigDto> updateSystemConfig(
+            @RequestBody @Valid MembershipSystemConfigDto dto,
+            @CurrentUser UserPrincipal user
+    ) {
+        String provider = (dto.getProvider() != null && !dto.getProvider().isBlank())
+                ? dto.getProvider().trim().toUpperCase()
+                : "ELEVENTICKETS";
+        String externalUrl = (dto.getExternalUrl() != null && !dto.getExternalUrl().isBlank())
+                ? dto.getExternalUrl().trim()
+                : "https://socioecpelotas.eleventickets.com/#/";
+
+        SettingUpdateDto updateDto = SettingUpdateDto.builder()
+                .membershipSystemProvider(provider)
+                .membershipExternalUrl(externalUrl)
+                .build();
+
+        settingService.updateSettings(updateDto, null);
+        webSocketHandler.broadcastAfterCommit("membership_config", "UPDATED", provider);
+
+        return ResponseEntity.ok(MembershipSystemConfigDto.builder()
+                .provider(provider)
+                .externalUrl(externalUrl)
+                .build());
+    }
 
     @GetMapping("/plans")
     @Operation(summary = "Listar todos os planos de sócios para a tabela administrativa")
@@ -124,3 +167,4 @@ public class MembershipAdminController {
         return ResponseEntity.ok(leadService.updateStatus(id, dto, userId));
     }
 }
+

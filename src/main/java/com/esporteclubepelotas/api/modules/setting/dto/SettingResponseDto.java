@@ -32,6 +32,8 @@ public class SettingResponseDto {
     private String stadiumAddress;
     private String googleMapsEmbedUrl;
     private String copyrightText;
+    private String membershipSystemProvider;
+    private String membershipExternalUrl;
     private List<YouthPillarItem> youthPillars;
     private YouthTryoutsConfig youthTryouts;
     private Instant createdAt;
@@ -55,6 +57,8 @@ public class SettingResponseDto {
                 .stadiumAddress(setting.getStadiumAddress())
                 .googleMapsEmbedUrl(setting.getGoogleMapsEmbedUrl())
                 .copyrightText(setting.getCopyrightText())
+                .membershipSystemProvider(setting.getMembershipSystemProvider() != null ? setting.getMembershipSystemProvider() : "ELEVENTICKETS")
+                .membershipExternalUrl(setting.getMembershipExternalUrl() != null ? setting.getMembershipExternalUrl() : "https://socioecpelotas.eleventickets.com/#/")
                 .youthPillars(setting.getYouthPillars())
                 .youthTryouts(setting.getYouthTryouts())
                 .createdAt(setting.getCreatedAt())

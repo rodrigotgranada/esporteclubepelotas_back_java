@@ -79,6 +79,14 @@ public class Setting {
     private String copyrightText = "© 2026 Esporte Clube Pelotas. Todos os direitos reservados.";
 
     @Builder.Default
+    @Column(name = "membership_system_provider", nullable = false, length = 50)
+    private String membershipSystemProvider = "ELEVENTICKETS";
+
+    @Builder.Default
+    @Column(name = "membership_external_url", columnDefinition = "TEXT", nullable = false)
+    private String membershipExternalUrl = "https://socioecpelotas.eleventickets.com/#/";
+
+    @Builder.Default
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "youth_pillars")
     private List<YouthPillarItem> youthPillars = new ArrayList<>();

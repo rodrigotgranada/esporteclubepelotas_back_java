@@ -18,3 +18,4 @@ public class ReorderMembershipPlansDto {
     @NotEmpty(message = "A lista ordenada de IDs não pode ser vazia")
     private List<UUID> planIds;
 }
+

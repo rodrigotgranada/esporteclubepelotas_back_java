@@ -46,3 +46,4 @@ public interface MembershipPlanRepository extends JpaRepository<MembershipPlan, 
     boolean existsBySlugAndIdNot(String slug, UUID id);
     boolean existsBySlug(String slug);
 }
+

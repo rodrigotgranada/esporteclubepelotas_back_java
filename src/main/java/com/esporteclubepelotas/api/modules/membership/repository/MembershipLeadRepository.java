@@ -32,3 +32,4 @@ public interface MembershipLeadRepository extends JpaRepository<MembershipLead, 
 
     long countByStatus(String status);
 }
+
