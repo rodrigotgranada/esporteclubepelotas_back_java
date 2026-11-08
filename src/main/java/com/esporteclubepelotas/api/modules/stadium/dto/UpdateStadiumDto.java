@@ -44,6 +44,7 @@ public class UpdateStadiumDto {
 
     private List<StadiumGalleryImageDto> gallery;
     private List<StadiumFactDto> facts;
+    private List<StadiumQuickFactDto> quickFacts;
     private Boolean isActive;
 }
 

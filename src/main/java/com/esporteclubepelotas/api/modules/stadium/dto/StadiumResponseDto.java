@@ -26,6 +26,7 @@ public class StadiumResponseDto {
     private String contentHtml;
     private List<StadiumGalleryImageDto> gallery;
     private List<StadiumFactDto> facts;
+    private List<StadiumQuickFactDto> quickFacts;
     private Boolean isActive;
     private Instant createdAt;
     private Instant updatedAt;

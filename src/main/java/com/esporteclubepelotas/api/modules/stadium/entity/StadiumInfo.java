@@ -2,6 +2,7 @@ package com.esporteclubepelotas.api.modules.stadium.entity;
 
 import com.esporteclubepelotas.api.modules.stadium.dto.StadiumFactDto;
 import com.esporteclubepelotas.api.modules.stadium.dto.StadiumGalleryImageDto;
+import com.esporteclubepelotas.api.modules.stadium.dto.StadiumQuickFactDto;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -67,6 +68,11 @@ public class StadiumInfo {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "facts_json", nullable = false)
     private List<StadiumFactDto> facts = new ArrayList<>();
+
+    @Builder.Default
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "quick_facts_json", nullable = false)
+    private List<StadiumQuickFactDto> quickFacts = new ArrayList<>();
 
     @Builder.Default
     @Column(name = "is_active", nullable = false)

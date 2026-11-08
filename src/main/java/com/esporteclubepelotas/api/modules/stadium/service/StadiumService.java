@@ -61,6 +61,9 @@ public class StadiumService {
         if (dto.getFacts() != null) {
             stadium.setFacts(dto.getFacts());
         }
+        if (dto.getQuickFacts() != null) {
+            stadium.setQuickFacts(dto.getQuickFacts());
+        }
         if (dto.getIsActive() != null) {
             stadium.setIsActive(dto.getIsActive());
         }
@@ -126,6 +129,7 @@ public class StadiumService {
                 .contentHtml(entity.getContentHtml())
                 .gallery(entity.getGallery() != null ? entity.getGallery() : new ArrayList<>())
                 .facts(entity.getFacts() != null ? entity.getFacts() : new ArrayList<>())
+                .quickFacts(entity.getQuickFacts() != null ? entity.getQuickFacts() : new ArrayList<>())
                 .isActive(entity.getIsActive())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
@@ -133,6 +137,15 @@ public class StadiumService {
     }
 
     private StadiumInfo createDefaultStadium() {
+        List<StadiumQuickFactDto> defaultQuickFacts = List.of(
+                new StadiumQuickFactDto("fact-1", "Fundação / Inauguração", "25 de Outubro de 1908", "calendar", 1),
+                new StadiumQuickFactDto("fact-2", "Capacidade Oficial", "23.336 espectadores", "users", 2),
+                new StadiumQuickFactDto("fact-3", "Dimensões do Gramado", "105m x 68m (Padrão Oficial)", "maximize", 3),
+                new StadiumQuickFactDto("fact-4", "Alcunha Mística", "A Boca do Lobo", "flame", 4),
+                new StadiumQuickFactDto("fact-5", "Pioneirismo de Refletores", "Desde 1930 (1º do interior do RS)", "zap", 5),
+                new StadiumQuickFactDto("fact-6", "Localização Nobre", "Avenida Bento Gonçalves com Gonçalves Chaves", "mapPin", 6)
+        );
+
         StadiumInfo defaultInfo = StadiumInfo.builder()
                 .id(1L)
                 .title("Estádio Boca do Lobo: A Fortaleza Centenária do Futebol Gaúcho")
@@ -147,6 +160,7 @@ public class StadiumService {
                 .contentHtml("<p>História do Estádio Boca do Lobo em carregamento...</p>")
                 .gallery(new ArrayList<>())
                 .facts(new ArrayList<>())
+                .quickFacts(defaultQuickFacts)
                 .isActive(true)
                 .build();
         return stadiumRepository.save(defaultInfo);
