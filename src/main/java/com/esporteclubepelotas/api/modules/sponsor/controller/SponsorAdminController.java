@@ -16,6 +16,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -67,9 +68,21 @@ public class SponsorAdminController {
         return ResponseEntity.ok(sponsorService.update(id, dto, userId));
     }
 
+    @PatchMapping("/reorder")
+    @AuditLog(action = "REORDER_SPONSORS", module = "sponsors")
+    @Operation(summary = "Reordenar posições de exibição dos patrocinadores")
+    public ResponseEntity<Map<String, Object>> reorder(
+            @RequestBody @Valid List<SponsorReorderItemDto> items,
+            @CurrentUser UserPrincipal user
+    ) {
+        String userId = user != null ? user.getId() : null;
+        sponsorService.reorder(items, userId);
+        return ResponseEntity.ok(Map.of("success", true, "message", "Patrocinadores reordenados com sucesso."));
+    }
+
     @DeleteMapping("/{id}")
     @AuditLog(action = "DELETE_SPONSOR", module = "sponsors")
-    @Operation(summary = "Excluir patrocinador")
+    @Operation(summary = "Inativar patrocinador via soft-delete permanente")
     public ResponseEntity<Map<String, Object>> delete(
             @PathVariable UUID id,
             @CurrentUser UserPrincipal user
@@ -89,4 +102,3 @@ public class SponsorAdminController {
         return ResponseEntity.ok(sponsorService.uploadLogo(target));
     }
 }
-

@@ -56,6 +56,9 @@ public class Sponsor {
     @Builder.Default
     private Long clicksCount = 0L;
 
+    @Column(name = "deleted_at")
+    private Instant deletedAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -64,4 +67,3 @@ public class Sponsor {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 }
-

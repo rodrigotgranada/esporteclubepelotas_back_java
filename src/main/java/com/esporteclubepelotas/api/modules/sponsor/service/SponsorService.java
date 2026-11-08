@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -63,6 +64,9 @@ public class SponsorService {
         Specification<Sponsor> spec = (root, q, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             LocalDate today = LocalDate.now();
+
+            // Filtrar estritamente registros não deletados (Soft Delete)
+            predicates.add(cb.isNull(root.get("deletedAt")));
 
             if (query.getSearch() != null && !query.getSearch().isBlank()) {
                 String pattern = "%" + query.getSearch().trim().toLowerCase() + "%";
@@ -123,6 +127,7 @@ public class SponsorService {
     @Transactional(readOnly = true)
     public SponsorDto findById(UUID id) {
         Sponsor sponsor = sponsorRepository.findById(id)
+                .filter(s -> s.getDeletedAt() == null)
                 .orElseThrow(() -> new BusinessException("Patrocinador não encontrado."));
         return SponsorMapperHelper.toDto(sponsor);
     }
@@ -161,6 +166,7 @@ public class SponsorService {
     @CacheEvict(value = {"sponsors_public", "sponsors_featured"}, allEntries = true)
     public SponsorDto update(UUID id, UpdateSponsorDto dto, String userId) {
         Sponsor sponsor = sponsorRepository.findById(id)
+                .filter(s -> s.getDeletedAt() == null)
                 .orElseThrow(() -> new BusinessException("Patrocinador não encontrado."));
 
         if (dto.getName() != null && !dto.getName().isBlank()) {
@@ -201,11 +207,34 @@ public class SponsorService {
     @CacheEvict(value = {"sponsors_public", "sponsors_featured"}, allEntries = true)
     public void delete(UUID id, String userId) {
         Sponsor sponsor = sponsorRepository.findById(id)
+                .filter(s -> s.getDeletedAt() == null)
                 .orElseThrow(() -> new BusinessException("Patrocinador não encontrado."));
 
-        sponsorRepository.delete(sponsor);
-        log.info("Patrocinador excluído com sucesso: id={}, nome={}, por usuário={}", id, sponsor.getName(), userId);
+        // Soft Delete preserva o histórico contratual e a contabilidade de métricas
+        sponsor.setDeletedAt(Instant.now());
+        sponsor.setActive(false);
+        sponsorRepository.save(sponsor);
+        log.info("Patrocinador inativado via soft-delete com sucesso: id={}, nome={}, por usuário={}", id, sponsor.getName(), userId);
         webSocketHandler.broadcastAfterCommit("sponsors", "DELETED", id.toString());
+    }
+
+    @Transactional
+    @CacheEvict(value = {"sponsors_public", "sponsors_featured"}, allEntries = true)
+    public void reorder(List<SponsorReorderItemDto> items, String userId) {
+        if (items == null || items.isEmpty()) return;
+
+        for (SponsorReorderItemDto item : items) {
+            if (item.getId() != null && item.getDisplayOrder() != null) {
+                sponsorRepository.findById(item.getId()).ifPresent(sponsor -> {
+                    if (sponsor.getDeletedAt() == null) {
+                        sponsor.setDisplayOrder(item.getDisplayOrder());
+                        sponsorRepository.save(sponsor);
+                    }
+                });
+            }
+        }
+        log.info("Patrocinadores reordenados com sucesso por usuário={}", userId);
+        webSocketHandler.broadcastAfterCommit("sponsors", "REORDERED", "all");
     }
 
     public Map<String, String> uploadLogo(MultipartFile file) {
@@ -219,4 +248,3 @@ public class SponsorService {
         return Map.of("url", url);
     }
 }
-
