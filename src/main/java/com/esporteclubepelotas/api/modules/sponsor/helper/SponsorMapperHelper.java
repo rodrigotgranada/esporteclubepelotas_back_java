@@ -27,6 +27,7 @@ public final class SponsorMapperHelper {
                 .id(sponsor.getId())
                 .name(sponsor.getName())
                 .logoUrl(sponsor.getLogoUrl())
+                .logoDarkUrl(sponsor.getLogoDarkUrl())
                 .websiteUrl(sponsor.getWebsiteUrl())
                 .isFeatured(sponsor.isFeatured())
                 .isActive(sponsor.isActive())

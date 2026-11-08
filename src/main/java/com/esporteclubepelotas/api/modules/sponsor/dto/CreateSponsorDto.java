@@ -22,6 +22,10 @@ public class CreateSponsorDto {
     @NotBlank(message = "A URL do logotipo é obrigatória.")
     private String logoUrl;
 
+    @JsonProperty("logoDarkUrl")
+    @JsonAlias({"logo_dark_url"})
+    private String logoDarkUrl;
+
     private String websiteUrl;
 
     @JsonProperty("isFeatured")

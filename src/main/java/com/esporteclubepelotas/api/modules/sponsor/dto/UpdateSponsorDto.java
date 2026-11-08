@@ -17,6 +17,11 @@ public class UpdateSponsorDto {
 
     private String name;
     private String logoUrl;
+
+    @JsonProperty("logoDarkUrl")
+    @JsonAlias({"logo_dark_url"})
+    private String logoDarkUrl;
+
     private String websiteUrl;
 
     @JsonProperty("isFeatured")

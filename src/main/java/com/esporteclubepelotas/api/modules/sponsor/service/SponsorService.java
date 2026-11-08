@@ -134,9 +134,14 @@ public class SponsorService {
                 ? dto.getLogoUrl().trim()
                 : "";
 
+        String cleanLogoDark = dto.getLogoDarkUrl() != null && !dto.getLogoDarkUrl().startsWith("blob:")
+                ? dto.getLogoDarkUrl().trim()
+                : null;
+
         Sponsor sponsor = Sponsor.builder()
                 .name(dto.getName().trim())
                 .logoUrl(cleanLogo)
+                .logoDarkUrl(cleanLogoDark)
                 .websiteUrl(dto.getWebsiteUrl() != null ? dto.getWebsiteUrl().trim() : null)
                 .featured(Boolean.TRUE.equals(dto.getIsFeatured()))
                 .active(!Boolean.FALSE.equals(dto.getIsActive()))
@@ -163,6 +168,9 @@ public class SponsorService {
         }
         if (dto.getLogoUrl() != null && !dto.getLogoUrl().startsWith("blob:")) {
             sponsor.setLogoUrl(dto.getLogoUrl().trim());
+        }
+        if (dto.getLogoDarkUrl() != null && !dto.getLogoDarkUrl().startsWith("blob:")) {
+            sponsor.setLogoDarkUrl(dto.getLogoDarkUrl().trim().isEmpty() ? null : dto.getLogoDarkUrl().trim());
         }
         if (dto.getWebsiteUrl() != null) {
             sponsor.setWebsiteUrl(dto.getWebsiteUrl().trim().isEmpty() ? null : dto.getWebsiteUrl().trim());

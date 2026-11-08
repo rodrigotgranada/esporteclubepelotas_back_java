@@ -28,6 +28,9 @@ public class Sponsor {
     @Column(name = "logo_url", nullable = false, columnDefinition = "TEXT")
     private String logoUrl;
 
+    @Column(name = "logo_dark_url", columnDefinition = "TEXT")
+    private String logoDarkUrl;
+
     @Column(name = "website_url", columnDefinition = "TEXT")
     private String websiteUrl;
 
