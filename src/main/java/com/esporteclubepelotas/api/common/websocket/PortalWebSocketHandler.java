@@ -61,6 +61,10 @@ public class PortalWebSocketHandler extends TextWebSocketHandler {
         }
     }
 
+    public void broadcastAfterCommit(String topic, String action, String entityId) {
+        broadcastAfterCommit(topic, action, entityId, null);
+    }
+
     public void broadcastAfterCommit(String topic, String action, String entityId, Boolean isYouth) {
         RealtimeEventDto event = RealtimeEventDto.builder()
                 .topic(topic)
