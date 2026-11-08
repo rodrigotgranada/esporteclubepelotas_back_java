@@ -26,7 +26,7 @@ public class StadiumController {
     public ResponseEntity<StadiumResponseDto> getStadium() {
         StadiumResponseDto response = stadiumService.getStadiumInfo();
         return ResponseEntity.ok()
-                .cacheControl(CacheControl.maxAge(60, TimeUnit.SECONDS).staleWhileRevalidate(120, TimeUnit.SECONDS).cachePublic())
+                .cacheControl(CacheControl.noCache().mustRevalidate())
                 .body(response);
     }
 }
