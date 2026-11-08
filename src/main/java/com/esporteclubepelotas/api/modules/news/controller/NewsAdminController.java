@@ -1,19 +1,28 @@
 package com.esporteclubepelotas.api.modules.news.controller;
 
+import com.esporteclubepelotas.api.common.security.CurrentUser;
 import com.esporteclubepelotas.api.common.security.UserPrincipal;
-import com.esporteclubepelotas.api.modules.news.dto.*;
+import com.esporteclubepelotas.api.modules.news.dto.CreateCategoryDto;
+import com.esporteclubepelotas.api.modules.news.dto.CreateNewsDto;
+import com.esporteclubepelotas.api.modules.news.dto.GetNewsCommentsResponseDto;
+import com.esporteclubepelotas.api.modules.news.dto.GetNewsResponseDto;
+import com.esporteclubepelotas.api.modules.news.dto.NewsArticleDto;
+import com.esporteclubepelotas.api.modules.news.dto.NewsCategoryDto;
+import com.esporteclubepelotas.api.modules.news.dto.NewsCommentDto;
+import com.esporteclubepelotas.api.modules.news.dto.QueryNewsDto;
+import com.esporteclubepelotas.api.modules.news.dto.ShowcaseResponseDto;
+import com.esporteclubepelotas.api.modules.news.dto.UpdateNewsDto;
+import com.esporteclubepelotas.api.modules.news.dto.UpdateShowcaseDto;
 import com.esporteclubepelotas.api.modules.news.entity.NewsCommentStatus;
 import com.esporteclubepelotas.api.modules.news.service.NewsAdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,13 +32,16 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/news/admin")
-@RequiredArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasAuthority('news.manage') or hasRole('ADMIN') or hasRole('OWNER') or hasRole('EDITOR')")
 @Tag(name = "News (Administração / Editor)", description = "Gestão de matérias, categorias, vitrine da capa e moderação de comentários")
 public class NewsAdminController {
 
     private final NewsAdminService newsAdminService;
+
+    public NewsAdminController(NewsAdminService newsAdminService) {
+        this.newsAdminService = newsAdminService;
+    }
 
     @GetMapping
     @Operation(summary = "Listar todas as matérias para gestão (inclui rascunhos e agendadas)")
@@ -156,7 +168,7 @@ public class NewsAdminController {
     @Operation(summary = "Criar uma nova matéria (rascunho ou publicada)")
     public ResponseEntity<NewsArticleDto> create(
             @RequestBody @Valid CreateNewsDto dto,
-            @AuthenticationPrincipal UserPrincipal principal
+            @CurrentUser UserPrincipal principal
     ) {
         String authorId = principal != null ? principal.getId() : null;
         return ResponseEntity.status(HttpStatus.CREATED).body(newsAdminService.create(dto, authorId));
@@ -167,7 +179,7 @@ public class NewsAdminController {
     public ResponseEntity<NewsArticleDto> update(
             @PathVariable UUID id,
             @RequestBody @Valid UpdateNewsDto dto,
-            @AuthenticationPrincipal UserPrincipal principal
+            @CurrentUser UserPrincipal principal
     ) {
         String userId = principal != null ? principal.getId() : null;
         return ResponseEntity.ok(newsAdminService.update(id, dto, userId));
@@ -177,7 +189,7 @@ public class NewsAdminController {
     @Operation(summary = "Duplicar uma matéria existente criando um novo rascunho")
     public ResponseEntity<NewsArticleDto> duplicate(
             @PathVariable UUID id,
-            @AuthenticationPrincipal UserPrincipal principal
+            @CurrentUser UserPrincipal principal
     ) {
         String userId = principal != null ? principal.getId() : null;
         return ResponseEntity.status(HttpStatus.CREATED).body(newsAdminService.duplicate(id, userId));
@@ -201,17 +213,29 @@ public class NewsAdminController {
     @Operation(summary = "Upload da imagem de capa da matéria")
     public ResponseEntity<Map<String, String>> uploadCover(
             @PathVariable UUID id,
-            @RequestParam("cover") MultipartFile file
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "cover", required = false) MultipartFile cover
     ) {
-        return ResponseEntity.ok(newsAdminService.uploadCover(id, file));
+        MultipartFile target = file != null ? file : cover;
+        if (target == null || target.isEmpty()) {
+            throw new IllegalArgumentException("Arquivo de capa não informado.");
+        }
+        return ResponseEntity.ok(newsAdminService.uploadCover(id, target));
     }
 
     @PostMapping(value = "/{id}/gallery", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload de múltiplas fotos para a galeria da matéria")
     public ResponseEntity<Map<String, List<String>>> uploadGallery(
             @PathVariable UUID id,
-            @RequestParam("gallery") List<MultipartFile> files
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
+            @RequestParam(value = "gallery", required = false) List<MultipartFile> gallery,
+            @RequestParam(value = "file", required = false) List<MultipartFile> singleFiles
     ) {
-        return ResponseEntity.ok(newsAdminService.uploadGallery(id, files));
+        List<MultipartFile> target = files != null && !files.isEmpty() ? files
+                : (gallery != null && !gallery.isEmpty() ? gallery : singleFiles);
+        if (target == null || target.isEmpty()) {
+            throw new IllegalArgumentException("Nenhum arquivo enviado para a galeria.");
+        }
+        return ResponseEntity.ok(newsAdminService.uploadGallery(id, target));
     }
 }
