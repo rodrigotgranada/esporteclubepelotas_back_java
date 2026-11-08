@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.sponsor.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,9 +24,13 @@ public class CreateSponsorDto {
 
     private String websiteUrl;
 
+    @JsonProperty("isFeatured")
+    @JsonAlias({"featured", "is_featured"})
     @Builder.Default
     private Boolean isFeatured = false;
 
+    @JsonProperty("isActive")
+    @JsonAlias({"active", "is_active"})
     @Builder.Default
     private Boolean isActive = true;
 
