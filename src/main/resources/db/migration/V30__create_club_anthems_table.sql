@@ -90,3 +90,4 @@ Salve o Pelotas! Vitorioso!
     NOW()
 )
 ON CONFLICT (id) DO NOTHING;
+

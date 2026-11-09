@@ -32,3 +32,4 @@ public interface ClubAnthemRepository extends JpaRepository<ClubAnthem, UUID> {
     @Query("UPDATE ClubAnthem a SET a.isOfficial = false WHERE a.deletedAt IS NULL")
     void unsetAllOfficialAnthems();
 }
+

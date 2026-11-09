@@ -51,3 +51,4 @@ public class ClubAnthemRequest {
     @Builder.Default
     private Integer displayOrder = 0;
 }
+

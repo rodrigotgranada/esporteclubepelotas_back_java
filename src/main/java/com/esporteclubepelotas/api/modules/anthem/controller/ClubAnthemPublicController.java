@@ -36,3 +36,4 @@ public class ClubAnthemPublicController {
         return ResponseEntity.ok(anthemService.listPublicVersions());
     }
 }
+

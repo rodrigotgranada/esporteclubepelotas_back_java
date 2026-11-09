@@ -87,3 +87,4 @@ public class ClubAnthemAdminController {
         return ResponseEntity.ok(anthemService.uploadCover(target));
     }
 }
+

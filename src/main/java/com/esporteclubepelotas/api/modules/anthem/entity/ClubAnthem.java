@@ -77,3 +77,4 @@ public class ClubAnthem {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 }
+
