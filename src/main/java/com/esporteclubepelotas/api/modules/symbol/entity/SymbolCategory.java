@@ -6,3 +6,4 @@ public enum SymbolCategory {
     FLAG,
     COLORS
 }
+

@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.symbol.controller;
 
+import com.esporteclubepelotas.api.modules.symbol.dto.ClubSymbolOverviewRequest;
+import com.esporteclubepelotas.api.modules.symbol.dto.ClubSymbolOverviewResponse;
 import com.esporteclubepelotas.api.modules.symbol.dto.ClubSymbolRequest;
 import com.esporteclubepelotas.api.modules.symbol.dto.ClubSymbolResponse;
 import com.esporteclubepelotas.api.modules.symbol.entity.SymbolCategory;
@@ -27,6 +29,15 @@ import java.util.UUID;
 public class ClubSymbolAdminController {
 
     private final ClubSymbolService symbolService;
+
+    @PutMapping("/overview/{category}")
+    @Operation(summary = "Atualizar texto geral / narrativa institucional de uma categoria")
+    public ResponseEntity<ClubSymbolOverviewResponse> updateOverview(
+            @PathVariable String category,
+            @Valid @RequestBody ClubSymbolOverviewRequest request
+    ) {
+        return ResponseEntity.ok(symbolService.updateOverview(category, request));
+    }
 
     @GetMapping
     @Operation(summary = "Listar todos os símbolos para administração")
@@ -84,3 +95,4 @@ public class ClubSymbolAdminController {
         return ResponseEntity.ok(symbolService.uploadImage(target));
     }
 }
+

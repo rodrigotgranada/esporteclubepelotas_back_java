@@ -230,3 +230,4 @@ INSERT INTO public.club_symbols (
     NOW()
 )
 ON CONFLICT (id) DO NOTHING;
+

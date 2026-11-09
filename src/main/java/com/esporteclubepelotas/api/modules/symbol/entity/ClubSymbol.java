@@ -29,7 +29,7 @@ public class ClubSymbol {
     @Column(nullable = false, length = 30)
     private SymbolCategory category;
 
-    @Column(nullable = false, length = 150)
+    @Column(length = 150)
     private String name;
 
     @Column(length = 250)
@@ -75,3 +75,4 @@ public class ClubSymbol {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 }
+

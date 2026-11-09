@@ -18,7 +18,6 @@ public class ClubSymbolRequest {
     @NotNull(message = "A categoria do símbolo é obrigatória")
     private SymbolCategory category;
 
-    @NotBlank(message = "O nome do símbolo é obrigatório")
     @Size(max = 150, message = "O nome não pode exceder 150 caracteres")
     private String name;
 
@@ -45,3 +44,4 @@ public class ClubSymbolRequest {
     @Builder.Default
     private Integer displayOrder = 0;
 }
+

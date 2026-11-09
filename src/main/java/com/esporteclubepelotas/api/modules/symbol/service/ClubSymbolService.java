@@ -5,10 +5,14 @@ import com.esporteclubepelotas.api.common.exception.ResourceNotFoundException;
 import com.esporteclubepelotas.api.common.storage.MediaUploadSanitizer;
 import com.esporteclubepelotas.api.common.storage.StorageService;
 import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
+import com.esporteclubepelotas.api.modules.symbol.dto.ClubSymbolOverviewRequest;
+import com.esporteclubepelotas.api.modules.symbol.dto.ClubSymbolOverviewResponse;
 import com.esporteclubepelotas.api.modules.symbol.dto.ClubSymbolRequest;
 import com.esporteclubepelotas.api.modules.symbol.dto.ClubSymbolResponse;
 import com.esporteclubepelotas.api.modules.symbol.entity.ClubSymbol;
+import com.esporteclubepelotas.api.modules.symbol.entity.ClubSymbolOverview;
 import com.esporteclubepelotas.api.modules.symbol.entity.SymbolCategory;
+import com.esporteclubepelotas.api.modules.symbol.repository.ClubSymbolOverviewRepository;
 import com.esporteclubepelotas.api.modules.symbol.repository.ClubSymbolRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +31,7 @@ import java.util.UUID;
 public class ClubSymbolService {
 
     private final ClubSymbolRepository symbolRepository;
+    private final ClubSymbolOverviewRepository overviewRepository;
     private final StorageService storageService;
     private final PortalWebSocketHandler webSocketHandler;
 
@@ -83,10 +88,13 @@ public class ClubSymbolService {
         List<String> cleanGallery = MediaUploadSanitizer.sanitizeUrlList(request.getGalleryUrls());
 
         boolean isOfficial = Boolean.TRUE.equals(request.getIsOfficial());
+        String resolvedName = request.getName() != null && !request.getName().trim().isEmpty()
+                ? request.getName().trim()
+                : resolveDefaultName(request.getCategory(), request.getYearStart(), request.getYearEnd());
 
         ClubSymbol symbol = ClubSymbol.builder()
                 .category(request.getCategory())
-                .name(request.getName().trim())
+                .name(resolvedName)
                 .subtitle(request.getSubtitle() != null ? request.getSubtitle().trim() : null)
                 .description(request.getDescription() != null ? request.getDescription().trim() : null)
                 .imageUrl(cleanImage)
@@ -119,9 +127,12 @@ public class ClubSymbolService {
         List<String> cleanGallery = MediaUploadSanitizer.sanitizeUrlList(request.getGalleryUrls());
 
         boolean isOfficial = Boolean.TRUE.equals(request.getIsOfficial());
+        String resolvedName = request.getName() != null && !request.getName().trim().isEmpty()
+                ? request.getName().trim()
+                : resolveDefaultName(request.getCategory(), request.getYearStart(), request.getYearEnd());
 
         symbol.setCategory(request.getCategory());
-        symbol.setName(request.getName().trim());
+        symbol.setName(resolvedName);
         symbol.setSubtitle(request.getSubtitle() != null ? request.getSubtitle().trim() : null);
         symbol.setDescription(request.getDescription() != null ? request.getDescription().trim() : null);
         symbol.setImageUrl(cleanImage);
@@ -195,4 +206,55 @@ public class ClubSymbolService {
 
         return Map.of("url", url);
     }
+
+    @Transactional(readOnly = true)
+    public List<ClubSymbolOverviewResponse> listAllOverviews() {
+        return overviewRepository.findAll().stream()
+                .map(ClubSymbolOverviewResponse::fromEntity)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ClubSymbolOverviewResponse getOverviewByCategory(String category) {
+        return overviewRepository.findById(category.toUpperCase())
+                .map(ClubSymbolOverviewResponse::fromEntity)
+                .orElseGet(() -> ClubSymbolOverviewResponse.builder()
+                        .category(category.toUpperCase())
+                        .title("")
+                        .description("")
+                        .build());
+    }
+
+    @Transactional
+    public ClubSymbolOverviewResponse updateOverview(String category, ClubSymbolOverviewRequest request) {
+        String catKey = category.toUpperCase();
+        ClubSymbolOverview overview = overviewRepository.findById(catKey)
+                .orElseGet(() -> ClubSymbolOverview.builder()
+                        .category(catKey)
+                        .build());
+
+        overview.setTitle(request.getTitle().trim());
+        overview.setDescription(request.getDescription().trim());
+        ClubSymbolOverview saved = overviewRepository.save(overview);
+
+        webSocketHandler.broadcastAfterCommit("symbols_overview", "UPDATE", catKey);
+        log.info("Visão geral de símbolo atualizada: category={}, title={}", catKey, saved.getTitle());
+        return ClubSymbolOverviewResponse.fromEntity(saved);
+    }
+
+    private String resolveDefaultName(SymbolCategory category, Integer yearStart, Integer yearEnd) {
+        String prefix = switch (category) {
+            case MASCOT -> "Mascote";
+            case SHIELD -> "Escudo";
+            case FLAG -> "Pavilhão";
+            case COLORS -> "Cores";
+        };
+        if (yearStart != null && yearEnd != null) {
+            return prefix + " (" + yearStart + " - " + yearEnd + ")";
+        } else if (yearStart != null) {
+            return prefix + " (Desde " + yearStart + ")";
+        }
+        return prefix + " Histórico";
+    }
 }
+

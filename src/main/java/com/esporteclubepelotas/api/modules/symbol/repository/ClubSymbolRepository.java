@@ -30,3 +30,4 @@ public interface ClubSymbolRepository extends JpaRepository<ClubSymbol, UUID> {
     @Query("UPDATE ClubSymbol s SET s.isOfficial = false WHERE s.category = :category AND s.id <> :id")
     void unsetOtherOfficialSymbols(SymbolCategory category, UUID id);
 }
+
