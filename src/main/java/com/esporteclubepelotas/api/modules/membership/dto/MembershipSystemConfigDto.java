@@ -13,3 +13,4 @@ public class MembershipSystemConfigDto {
     private String provider; // ELEVENTICKETS ou NATIVE
     private String externalUrl;
 }
+

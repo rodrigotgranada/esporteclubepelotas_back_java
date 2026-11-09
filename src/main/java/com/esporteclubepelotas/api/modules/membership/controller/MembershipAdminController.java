@@ -5,6 +5,7 @@ import com.esporteclubepelotas.api.common.security.UserPrincipal;
 import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
 import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
 import com.esporteclubepelotas.api.modules.membership.dto.*;
+import com.esporteclubepelotas.api.modules.membership.service.EleventicketsSyncService;
 import com.esporteclubepelotas.api.modules.membership.service.MembershipLeadService;
 import com.esporteclubepelotas.api.modules.membership.service.MembershipPlanService;
 import com.esporteclubepelotas.api.modules.setting.dto.SettingUpdateDto;
@@ -15,10 +16,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -35,6 +40,7 @@ public class MembershipAdminController {
     private final MembershipPlanService planService;
     private final MembershipLeadService leadService;
     private final SettingService settingService;
+    private final EleventicketsSyncService syncService;
     private final PortalWebSocketHandler webSocketHandler;
 
     @GetMapping("/system-config")
@@ -166,5 +172,58 @@ public class MembershipAdminController {
         String userId = user != null ? user.getId() : null;
         return ResponseEntity.ok(leadService.updateStatus(id, dto, userId));
     }
-}
 
+    // --- Sincronização ElevenTickets & Base de Sócios ---
+
+    @PostMapping(value = "/import-eleventickets", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AuditLog(action = "IMPORT_ELEVENTICKETS_CSV", module = "membership")
+    @Operation(summary = "Importar planilha CSV da ElevenTickets para atualizar sócios e pré-cadastros")
+    public ResponseEntity<EleventicketsImportSummaryDto> importEleventickets(
+            @RequestParam("file") MultipartFile file
+    ) {
+        return ResponseEntity.ok(syncService.importCsv(file));
+    }
+
+    @GetMapping("/eleventickets-summary")
+    @Operation(summary = "Obter estatísticas de sócios e sincronizações da ElevenTickets")
+    public ResponseEntity<EleventicketsSummaryDto> getEleventicketsSummary() {
+        return ResponseEntity.ok(syncService.getSummary());
+    }
+
+    @GetMapping("/members")
+    @Operation(summary = "Listar sócios do portal com filtros de busca, status e modo de sincronização")
+    public ResponseEntity<Page<EleventicketsMemberDto>> getMembers(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean isSocio,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String syncMode,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int limit
+    ) {
+        int pageIndex = Math.max(0, page - 1);
+        int pageSize = Math.max(1, limit);
+        var pageable = PageRequest.of(pageIndex, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return ResponseEntity.ok(syncService.getMembers(search, isSocio, status, syncMode, pageable));
+    }
+
+    @PostMapping("/members/{userId}/override")
+    @AuditLog(action = "MANUAL_SOCIO_OVERRIDE", module = "membership")
+    @Operation(summary = "Aplicar trava manual de status de sócio pelo administrador com justificativa")
+    public ResponseEntity<EleventicketsMemberDto> manualOverride(
+            @PathVariable String userId,
+            @RequestBody @Valid ManualSocioOverrideDto dto,
+            @CurrentUser UserPrincipal user
+    ) {
+        String adminEmail = user != null ? user.getEmail() : "Administrador";
+        return ResponseEntity.ok(syncService.manualOverride(userId, dto, adminEmail));
+    }
+
+    @PostMapping("/members/{userId}/release-override")
+    @AuditLog(action = "RELEASE_SOCIO_OVERRIDE", module = "membership")
+    @Operation(summary = "Restaurar sincronização automática da ElevenTickets para o usuário")
+    public ResponseEntity<EleventicketsMemberDto> releaseOverride(
+            @PathVariable String userId
+    ) {
+        return ResponseEntity.ok(syncService.releaseOverride(userId));
+    }
+}

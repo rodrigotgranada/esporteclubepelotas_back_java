@@ -43,6 +43,15 @@ public class UserSummaryDto {
     private boolean mustChangePassword;
     private boolean isActive;
 
+    // Quadro Social / ElevenTickets
+    private boolean isSocio;
+    private String eleventicketsId;
+    private String socioPlanName;
+    private String socioStatus;
+    private String socioSyncMode;
+    private LocalDate socioSince;
+    private Instant socioLastSyncedAt;
+
     private List<PhoneItem> phones;
     private List<AddressItem> addresses;
     private UserPreferences preferences;
@@ -93,6 +102,13 @@ public class UserSummaryDto {
                 .status(user.getStatus())
                 .mustChangePassword(user.isMustChangePassword())
                 .isActive(user.isActive())
+                .isSocio(user.isSocio())
+                .eleventicketsId(user.getEleventicketsId())
+                .socioPlanName(user.getSocioPlanName())
+                .socioStatus(user.getSocioStatus())
+                .socioSyncMode(user.getSocioSyncMode())
+                .socioSince(user.getSocioSince())
+                .socioLastSyncedAt(user.getSocioLastSyncedAt())
                 .phones(user.getPhones())
                 .addresses(user.getAddresses())
                 .preferences(user.getPreferences())

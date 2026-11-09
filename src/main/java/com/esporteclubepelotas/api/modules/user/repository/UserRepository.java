@@ -26,9 +26,17 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
 
     Optional<User> findByEmailAndVerificationCode(String email, String verificationCode);
 
+    Optional<User> findByEleventicketsId(String eleventicketsId);
+
     boolean existsByEmail(String email);
 
     boolean existsByCpf(String cpf);
+
+    long countByIsSocioTrue();
+
+    long countByIsSocioFalseAndEleventicketsIdIsNotNull();
+
+    long countBySocioSyncMode(String syncMode);
 
     Page<User> findAllByIsActiveTrue(Pageable pageable);
 
@@ -46,6 +54,25 @@ public interface UserRepository extends JpaRepository<User, String>, JpaSpecific
             @Param("roleName") String roleName,
             @Param("status") UserStatus status,
             @Param("includeInactive") boolean includeInactive,
+            Pageable pageable
+    );
+
+    @Query("SELECT u FROM User u WHERE " +
+            "(u.isSocio = true OR u.eleventicketsId IS NOT NULL) AND " +
+            "(:isSocio IS NULL OR u.isSocio = :isSocio) AND " +
+            "(:status IS NULL OR u.socioStatus = :status) AND " +
+            "(:syncMode IS NULL OR u.socioSyncMode = :syncMode) AND " +
+            "(:search IS NULL OR " +
+            "LOWER(u.firstName) LIKE CONCAT('%', :search, '%') OR " +
+            "LOWER(u.lastName) LIKE CONCAT('%', :search, '%') OR " +
+            "LOWER(u.email) LIKE CONCAT('%', :search, '%') OR " +
+            "u.cpf LIKE CONCAT('%', :search, '%') OR " +
+            "u.eleventicketsId LIKE CONCAT('%', :search, '%'))")
+    Page<User> findMembersWithFilters(
+            @Param("search") String search,
+            @Param("isSocio") Boolean isSocio,
+            @Param("status") String status,
+            @Param("syncMode") String syncMode,
             Pageable pageable
     );
 }

@@ -93,6 +93,37 @@ public class User {
     @Builder.Default
     private int tokenVersion = 1;
 
+    // --- Quadro Social / ElevenTickets ---
+    @Column(name = "eleventickets_id", length = 50)
+    private String eleventicketsId;
+
+    @Column(name = "is_socio", nullable = false)
+    @Builder.Default
+    private boolean isSocio = false;
+
+    @Column(name = "socio_plan_name", length = 100)
+    private String socioPlanName;
+
+    @Column(name = "socio_status", length = 30)
+    @Builder.Default
+    private String socioStatus = "INACTIVE";
+
+    @Column(name = "socio_sync_mode", nullable = false, length = 30)
+    @Builder.Default
+    private String socioSyncMode = "AUTO";
+
+    @Column(name = "socio_override_reason", columnDefinition = "TEXT")
+    private String socioOverrideReason;
+
+    @Column(name = "socio_override_at")
+    private Instant socioOverrideAt;
+
+    @Column(name = "socio_since")
+    private LocalDate socioSince;
+
+    @Column(name = "socio_last_synced_at")
+    private Instant socioLastSyncedAt;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Builder.Default
     private List<PhoneItem> phones = new ArrayList<>();
@@ -135,6 +166,9 @@ public class User {
         }
         if (this.pendingChanges == null) {
             this.pendingChanges = new ArrayList<>();
+        }
+        if (this.socioSyncMode == null || this.socioSyncMode.isBlank()) {
+            this.socioSyncMode = "AUTO";
         }
     }
 }

@@ -8,6 +8,8 @@ import com.esporteclubepelotas.api.common.security.JwtTokenProvider;
 import com.esporteclubepelotas.api.common.security.UserPrincipal;
 import com.esporteclubepelotas.api.common.storage.StorageService;
 import com.esporteclubepelotas.api.modules.auth.dto.*;
+import com.esporteclubepelotas.api.modules.membership.entity.EleventicketsMemberCache;
+import com.esporteclubepelotas.api.modules.membership.repository.EleventicketsMemberCacheRepository;
 import com.esporteclubepelotas.api.modules.role.entity.Role;
 import com.esporteclubepelotas.api.modules.role.repository.RoleRepository;
 import com.esporteclubepelotas.api.modules.user.dto.CreateUserDto;
@@ -26,8 +28,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.security.SecureRandom;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.Optional;
 import java.util.UUID;
 
 @Slf4j
@@ -37,6 +41,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final EleventicketsMemberCacheRepository cacheRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final StorageService storageService;
@@ -54,12 +59,12 @@ public class AuthService {
         if (!cleanCpf.isBlank()) {
             user = userRepository.findByCpf(cleanCpf).orElse(null);
         }
-        if (user == null) {
+        if (user == null && !rawIdentifier.isBlank()) {
             user = userRepository.findByEmail(rawIdentifier.toLowerCase()).orElse(null);
         }
 
-        if (user == null || !user.isActive()) {
-            throw new UnauthorizedException("Credenciais inválidas ou conta inativa");
+        if (user == null) {
+            throw new UnauthorizedException("Credenciais inválidas");
         }
 
         UserLockoutHelper.checkLockout(user);
@@ -68,6 +73,10 @@ public class AuthService {
             UserLockoutHelper.handleFailedLoginAttempt(user);
             userRepository.save(user);
             throw new UnauthorizedException("Credenciais inválidas");
+        }
+
+        if (!user.isActive()) {
+            throw new UnauthorizedException("Conta inativa ou suspensa. Contate a administração.");
         }
 
         UserLockoutHelper.resetLoginAttempts(user);
@@ -124,6 +133,25 @@ public class AuthService {
                 .addresses(dto.getAddresses())
                 .preferences(dto.getPreferences())
                 .build();
+
+        // Auto-vínculo de sócio se o CPF constar no cache pré-importado da ElevenTickets
+        Optional<EleventicketsMemberCache> cacheOpt = cacheRepository.findByCpf(cleanCpf);
+        if (cacheOpt.isPresent()) {
+            EleventicketsMemberCache cache = cacheOpt.get();
+            if ("ACTIVE".equalsIgnoreCase(cache.getStatus())) {
+                user.setSocio(true);
+                user.setEleventicketsId(cache.getEleventicketsId());
+                user.setSocioPlanName(cache.getPlanName());
+                user.setSocioStatus("ACTIVE");
+                user.setSocioSince(LocalDate.now());
+                user.setSocioLastSyncedAt(Instant.now());
+                Role socioRole = roleRepository.findByName("SOCIO").orElse(null);
+                if (socioRole != null && "USER".equals(role.getName())) {
+                    user.setRole(socioRole);
+                }
+                log.info("🎉 Auto-vínculo de Sócio ElevenTickets realizado para novo cadastro: CPF {}", cleanCpf);
+            }
+        }
 
         User savedUser = userRepository.save(user);
 
