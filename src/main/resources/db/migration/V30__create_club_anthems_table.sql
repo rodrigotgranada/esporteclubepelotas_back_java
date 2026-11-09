@@ -79,7 +79,7 @@ Salve o Pelotas! Vitorioso!
     'José Walter de Oliveira (Valmúrio)',
     1918,
     'https://ia800908.us.archive.org/16/items/hino-pelotas/hino-esporte-clube-pelotas.mp3',
-    'https://www.youtube.com/watch?v=kY3j_x6c3y8',
+    NULL,
     '/images/pelotas-logo.png',
     'A Poesia Imortal de Valmúrio',
     'Composto pelo saudoso músico, radialista e torcedor apaixonado José Walter de Oliveira, eternizado pelo pseudônimo Valmúrio, o hino do Esporte Clube Pelotas é uma das obras mais emblemáticas do futebol brasileiro. Seus versos tocam a alma de cada torcedor áureo-cerúleo, exaltando a tradição azul e amarela e a vibração inigualável da Boca do Lobo.',
