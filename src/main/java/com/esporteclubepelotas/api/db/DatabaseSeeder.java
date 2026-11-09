@@ -122,7 +122,8 @@ public class DatabaseSeeder implements CommandLineRunner {
                 SystemModule.builder().name("Ídolos & Memorial").slug("idols").description("Lendas da Boca do Lobo").isActive(true).build(),
                 SystemModule.builder().name("Futebol").slug("football").description("Plantel, atletas e comissão técnica").isActive(true).build(),
                 SystemModule.builder().name("História").slug("history").description("Linha do tempo e patrimônio centenário").isActive(true).build(),
-                SystemModule.builder().name("Configurações").slug("settings").description("Personalização e temas do clube").isActive(true).build()
+                SystemModule.builder().name("Configurações").slug("settings").description("Personalização e temas do clube").isActive(true).build(),
+                SystemModule.builder().name("Hino Oficial").slug("anthem").description("Hino oficial, letras, versões de áudio e história dos compositores").isActive(true).build()
         );
 
         moduleRepository.saveAll(modules);
