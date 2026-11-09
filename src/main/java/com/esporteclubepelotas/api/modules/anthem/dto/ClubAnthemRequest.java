@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ClubAnthemRequest {
 
-    @NotBlank(message = "O título do hino é obrigatório")
     @Size(max = 200, message = "O título não pode ultrapassar 200 caracteres")
     private String title;
 
@@ -51,4 +50,3 @@ public class ClubAnthemRequest {
     @Builder.Default
     private Integer displayOrder = 0;
 }
-

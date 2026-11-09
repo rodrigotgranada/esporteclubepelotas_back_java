@@ -65,9 +65,10 @@ public class ClubAnthemService {
         String cleanVideo = MediaUploadSanitizer.sanitizeNullableUrl(request.getVideoUrl());
 
         boolean isOfficial = Boolean.TRUE.equals(request.getIsOfficial());
+        String resolvedTitle = resolveTitle(request, null);
 
         ClubAnthem anthem = ClubAnthem.builder()
-                .title(request.getTitle().trim())
+                .title(resolvedTitle)
                 .subtitle(request.getSubtitle() != null ? request.getSubtitle().trim() : null)
                 .lyrics(request.getLyrics().trim())
                 .authorLyrics(request.getAuthorLyrics() != null ? request.getAuthorLyrics().trim() : null)
@@ -105,8 +106,9 @@ public class ClubAnthemService {
         String cleanVideo = MediaUploadSanitizer.sanitizeNullableUrl(request.getVideoUrl());
 
         boolean isOfficial = Boolean.TRUE.equals(request.getIsOfficial());
+        String resolvedTitle = resolveTitle(request, anthem.getTitle());
 
-        anthem.setTitle(request.getTitle().trim());
+        anthem.setTitle(resolvedTitle);
         anthem.setSubtitle(request.getSubtitle() != null ? request.getSubtitle().trim() : null);
         anthem.setLyrics(request.getLyrics().trim());
         anthem.setAuthorLyrics(request.getAuthorLyrics() != null ? request.getAuthorLyrics().trim() : null);
@@ -204,5 +206,21 @@ public class ClubAnthemService {
         );
 
         return Map.of("url", url);
+    }
+
+    private String resolveTitle(ClubAnthemRequest request, String existingTitle) {
+        if (request.getTitle() != null && !request.getTitle().isBlank()) {
+            return request.getTitle().trim();
+        }
+        if (existingTitle != null && !existingTitle.isBlank()) {
+            return existingTitle;
+        }
+        if (request.getCompositionYear() != null) {
+            return "Versão (" + request.getCompositionYear() + ")";
+        }
+        if (request.getAuthorLyrics() != null && !request.getAuthorLyrics().isBlank()) {
+            return "Hino - " + request.getAuthorLyrics().trim();
+        }
+        return "Hino Oficial do Esporte Clube Pelotas";
     }
 }
