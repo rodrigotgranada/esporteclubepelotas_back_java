@@ -17,3 +17,4 @@ public class ClubSymbolOverviewRequest {
     @NotBlank(message = "A descrição geral é obrigatória")
     private String description;
 }
+

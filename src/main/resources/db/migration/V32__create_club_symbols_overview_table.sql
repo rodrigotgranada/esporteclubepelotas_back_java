@@ -45,3 +45,4 @@ ON CONFLICT (category) DO UPDATE SET
     title = EXCLUDED.title,
     description = EXCLUDED.description,
     updated_at = NOW();
+

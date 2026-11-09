@@ -29,3 +29,4 @@ public class ClubSymbolOverview {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 }
+
