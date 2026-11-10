@@ -21,3 +21,4 @@ WHERE slug IS NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS idx_matches_slug 
 ON matches (slug) 
 WHERE deleted_at IS NULL;
+

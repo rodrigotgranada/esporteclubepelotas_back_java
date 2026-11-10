@@ -28,6 +28,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class MatchService {
 
+    public static final String DEFAULT_OPPONENT_LOGO = "/images/default-club-badge.svg";
+
     private final MatchRepository matchRepository;
     private final ChampionshipRepository championshipRepository;
     private final StorageService storageService;
@@ -77,6 +79,9 @@ public class MatchService {
                 .orElseThrow(() -> new ResourceNotFoundException("Campeonato não encontrado"));
 
         String sanitizedLogo = MediaUploadSanitizer.sanitizeNullableUrl(request.getOpponentLogoUrl());
+        if (sanitizedLogo == null || sanitizedLogo.isBlank() || "/images/pelotas-logo.png".equals(sanitizedLogo.trim())) {
+            sanitizedLogo = DEFAULT_OPPONENT_LOGO;
+        }
 
         HomeAway homeAway = request.getHomeAway() != null ? request.getHomeAway() : HomeAway.HOME;
         String slug = generateMatchSlug(homeAway, request.getOpponentName(), request.getMatchDate(), request.getSlug(), null);
@@ -119,6 +124,9 @@ public class MatchService {
                 .orElseThrow(() -> new ResourceNotFoundException("Campeonato não encontrado"));
 
         String sanitizedLogo = MediaUploadSanitizer.sanitizeNullableUrl(request.getOpponentLogoUrl());
+        if (sanitizedLogo == null || sanitizedLogo.isBlank() || "/images/pelotas-logo.png".equals(sanitizedLogo.trim())) {
+            sanitizedLogo = DEFAULT_OPPONENT_LOGO;
+        }
 
         match.setChampionship(championship);
         match.setOpponentName(request.getOpponentName().trim());
@@ -184,13 +192,18 @@ public class MatchService {
     }
 
     public MatchResponse toResponse(Match entity) {
+        String opponentLogo = entity.getOpponentLogoUrl();
+        if (opponentLogo == null || opponentLogo.isBlank() || "/images/pelotas-logo.png".equals(opponentLogo.trim())) {
+            opponentLogo = DEFAULT_OPPONENT_LOGO;
+        }
+
         return MatchResponse.builder()
                 .id(entity.getId())
                 .championshipId(entity.getChampionship() != null ? entity.getChampionship().getId() : null)
                 .championshipName(entity.getChampionship() != null ? entity.getChampionship().getName() : null)
                 .seasonYear(entity.getChampionship() != null ? entity.getChampionship().getSeasonYear() : null)
                 .opponentName(entity.getOpponentName())
-                .opponentLogoUrl(entity.getOpponentLogoUrl())
+                .opponentLogoUrl(opponentLogo)
                 .homeAway(entity.getHomeAway())
                 .stadiumName(entity.getStadiumName())
                 .city(entity.getCity())

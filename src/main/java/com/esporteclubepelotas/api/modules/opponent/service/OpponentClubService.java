@@ -23,6 +23,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class OpponentClubService {
 
+    public static final String DEFAULT_BADGE_URL = "/images/default-club-badge.svg";
+
     private final OpponentClubRepository clubRepository;
     private final StorageService storageService;
     private final PortalWebSocketHandler webSocketHandler;
@@ -48,6 +50,9 @@ public class OpponentClubService {
     @Transactional
     public OpponentClubResponse create(OpponentClubRequest request) {
         String sanitizedBadge = MediaUploadSanitizer.sanitizeNullableUrl(request.getBadgeUrl());
+        if (sanitizedBadge == null || sanitizedBadge.isBlank() || "/images/pelotas-logo.png".equals(sanitizedBadge.trim())) {
+            sanitizedBadge = DEFAULT_BADGE_URL;
+        }
 
         OpponentClub club = OpponentClub.builder()
                 .name(request.getName().trim())
@@ -71,6 +76,9 @@ public class OpponentClubService {
                 .orElseThrow(() -> new ResourceNotFoundException("Clube adversário não encontrado"));
 
         String sanitizedBadge = MediaUploadSanitizer.sanitizeNullableUrl(request.getBadgeUrl());
+        if (sanitizedBadge == null || sanitizedBadge.isBlank() || "/images/pelotas-logo.png".equals(sanitizedBadge.trim())) {
+            sanitizedBadge = DEFAULT_BADGE_URL;
+        }
 
         club.setName(request.getName().trim());
         club.setShortName(request.getShortName() != null ? request.getShortName().trim() : null);
@@ -109,11 +117,16 @@ public class OpponentClubService {
     }
 
     public OpponentClubResponse toResponse(OpponentClub entity) {
+        String badge = entity.getBadgeUrl();
+        if (badge == null || badge.isBlank() || "/images/pelotas-logo.png".equals(badge.trim())) {
+            badge = DEFAULT_BADGE_URL;
+        }
+
         return OpponentClubResponse.builder()
                 .id(entity.getId())
                 .name(entity.getName())
                 .shortName(entity.getShortName())
-                .badgeUrl(entity.getBadgeUrl())
+                .badgeUrl(badge)
                 .city(entity.getCity())
                 .stadiumName(entity.getStadiumName())
                 .isActive(entity.getIsActive())
