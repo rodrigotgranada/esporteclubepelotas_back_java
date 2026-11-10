@@ -75,6 +75,8 @@ public class SecurityConfig {
                         .requestMatchers("/news/admin/**").authenticated()
                         .requestMatchers("/users/admin/**").authenticated()
                         .requestMatchers("/kits/admin/**").authenticated()
+                        .requestMatchers("/matches/admin/**").authenticated()
+                        .requestMatchers("/championships/admin/**").authenticated()
 
                         // 4. Consultas Publicas (GET)
                         .requestMatchers(HttpMethod.GET, "/idols", "/idols/*", "/idols/*/prev-next", "/idols/featured").permitAll()
@@ -90,6 +92,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/anthem", "/anthem/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/symbols", "/symbols/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/kits/public", "/kits/public/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/matches/public", "/matches/public/**").permitAll()
 
                         // 5. Todas as rotas administrativas e modificacoes exigem autenticacao
                         .anyRequest().authenticated()
