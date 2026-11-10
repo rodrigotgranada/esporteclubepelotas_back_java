@@ -4,6 +4,7 @@ import com.esporteclubepelotas.api.modules.news.entity.NewsArticle;
 import com.esporteclubepelotas.api.modules.news.entity.NewsFeaturedSlot;
 import com.esporteclubepelotas.api.modules.news.entity.NewsStatus;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -97,8 +98,12 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, UUID>,
             Instant now
     );
 
-    @Query("SELECT a FROM NewsArticle a WHERE a.isActive = true AND a.status = 'PUBLISHED' AND a.featuredSlot = 'MAIN'")
-    Optional<NewsArticle> findCurrentPublishedMain();
+    @Query("SELECT a FROM NewsArticle a WHERE a.isActive = true AND a.status = 'PUBLISHED' AND a.featuredSlot = 'MAIN' ORDER BY a.publishedAt DESC")
+    List<NewsArticle> findCurrentPublishedMainList(Pageable pageable);
+
+    default Optional<NewsArticle> findCurrentPublishedMain() {
+        return findCurrentPublishedMainList(PageRequest.of(0, 1)).stream().findFirst();
+    }
 
     @Query("SELECT a FROM NewsArticle a WHERE a.isActive = true AND a.status = 'PUBLISHED' AND a.featuredSlot = 'SECONDARY' ORDER BY a.publishedAt DESC")
     List<NewsArticle> findPublishedSecondary(Pageable pageable);
@@ -130,4 +135,3 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, UUID>,
     @Query("UPDATE NewsArticle a SET a.viewsCount = a.viewsCount + 1 WHERE a.id = :id")
     void incrementViewsCount(@Param("id") UUID id);
 }
-
