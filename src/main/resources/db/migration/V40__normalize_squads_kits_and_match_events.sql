@@ -52,3 +52,4 @@ ALTER TABLE public.match_events
 
 CREATE INDEX IF NOT EXISTS idx_match_events_player_athlete ON public.match_events(player_athlete_id);
 CREATE INDEX IF NOT EXISTS idx_match_events_player_out_athlete ON public.match_events(player_out_athlete_id);
+

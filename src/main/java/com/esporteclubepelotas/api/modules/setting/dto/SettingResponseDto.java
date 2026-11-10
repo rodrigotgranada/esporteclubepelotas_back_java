@@ -36,6 +36,20 @@ public class SettingResponseDto {
     private String membershipExternalUrl;
     private List<YouthPillarItem> youthPillars;
     private YouthTryoutsConfig youthTryouts;
+
+    // Loja Oficial Lobo Mania
+    private String storeName;
+    private String storeDescription;
+    private String storeExternalUrl;
+    private Boolean storeIsOnlineActive;
+    private String storeInstagramUrl;
+    private String storeWhatsappNumber;
+    private String storeWhatsappMessage;
+    private String storeOpeningHours;
+    private String storeAddress;
+    private Boolean storeHasMemberDiscount;
+    private String storeMemberDiscountText;
+
     private Instant createdAt;
     private Instant updatedAt;
 
@@ -61,9 +75,19 @@ public class SettingResponseDto {
                 .membershipExternalUrl(setting.getMembershipExternalUrl() != null ? setting.getMembershipExternalUrl() : "https://socioecpelotas.eleventickets.com/#/")
                 .youthPillars(setting.getYouthPillars())
                 .youthTryouts(setting.getYouthTryouts())
+                .storeName(setting.getStoreName() != null ? setting.getStoreName() : "Loja Oficial Lobo Mania")
+                .storeDescription(setting.getStoreDescription())
+                .storeExternalUrl(setting.getStoreExternalUrl())
+                .storeIsOnlineActive(setting.getStoreIsOnlineActive() != null ? setting.getStoreIsOnlineActive() : false)
+                .storeInstagramUrl(setting.getStoreInstagramUrl())
+                .storeWhatsappNumber(setting.getStoreWhatsappNumber())
+                .storeWhatsappMessage(setting.getStoreWhatsappMessage())
+                .storeOpeningHours(setting.getStoreOpeningHours())
+                .storeAddress(setting.getStoreAddress())
+                .storeHasMemberDiscount(setting.getStoreHasMemberDiscount() != null ? setting.getStoreHasMemberDiscount() : true)
+                .storeMemberDiscountText(setting.getStoreMemberDiscountText())
                 .createdAt(setting.getCreatedAt())
                 .updatedAt(setting.getUpdatedAt())
                 .build();
     }
 }
-

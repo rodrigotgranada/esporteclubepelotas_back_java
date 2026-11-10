@@ -28,5 +28,17 @@ public class SettingUpdateDto {
     private String membershipExternalUrl;
     private List<YouthPillarItem> youthPillars;
     private YouthTryoutsConfig youthTryouts;
-}
 
+    // Loja Oficial Lobo Mania
+    private String storeName;
+    private String storeDescription;
+    private String storeExternalUrl;
+    private Boolean storeIsOnlineActive;
+    private String storeInstagramUrl;
+    private String storeWhatsappNumber;
+    private String storeWhatsappMessage;
+    private String storeOpeningHours;
+    private String storeAddress;
+    private Boolean storeHasMemberDiscount;
+    private String storeMemberDiscountText;
+}

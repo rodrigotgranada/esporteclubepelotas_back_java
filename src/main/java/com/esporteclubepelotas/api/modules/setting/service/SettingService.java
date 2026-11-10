@@ -79,6 +79,19 @@ public class SettingService {
             if (dto.getMembershipExternalUrl() != null) setting.setMembershipExternalUrl(dto.getMembershipExternalUrl().trim());
             if (dto.getYouthPillars() != null) setting.setYouthPillars(new ArrayList<>(dto.getYouthPillars()));
             if (dto.getYouthTryouts() != null) setting.setYouthTryouts(dto.getYouthTryouts());
+
+            // Loja Oficial Lobo Mania
+            if (dto.getStoreName() != null) setting.setStoreName(dto.getStoreName().trim());
+            if (dto.getStoreDescription() != null) setting.setStoreDescription(dto.getStoreDescription().trim());
+            if (dto.getStoreExternalUrl() != null) setting.setStoreExternalUrl(dto.getStoreExternalUrl().trim());
+            if (dto.getStoreIsOnlineActive() != null) setting.setStoreIsOnlineActive(dto.getStoreIsOnlineActive());
+            if (dto.getStoreInstagramUrl() != null) setting.setStoreInstagramUrl(dto.getStoreInstagramUrl().trim());
+            if (dto.getStoreWhatsappNumber() != null) setting.setStoreWhatsappNumber(dto.getStoreWhatsappNumber().trim());
+            if (dto.getStoreWhatsappMessage() != null) setting.setStoreWhatsappMessage(dto.getStoreWhatsappMessage().trim());
+            if (dto.getStoreOpeningHours() != null) setting.setStoreOpeningHours(dto.getStoreOpeningHours().trim());
+            if (dto.getStoreAddress() != null) setting.setStoreAddress(dto.getStoreAddress().trim());
+            if (dto.getStoreHasMemberDiscount() != null) setting.setStoreHasMemberDiscount(dto.getStoreHasMemberDiscount());
+            if (dto.getStoreMemberDiscountText() != null) setting.setStoreMemberDiscountText(dto.getStoreMemberDiscountText().trim());
         }
 
         if (logoFile != null && !logoFile.isEmpty()) {
@@ -161,6 +174,17 @@ public class SettingService {
                 .stadiumAddress("Av. Bento Gonçalves esquina Parque Dom Antônio Zattera - Pelotas/RS, CEP 96015-140")
                 .googleMapsEmbedUrl("https://maps.google.com/maps?q=Est%C3%A1dio+Boca+do+Lobo,+Pelotas+-+RS&t=&z=16&ie=UTF8&iwloc=&output=embed")
                 .copyrightText("© 2026 Esporte Clube Pelotas. Todos os direitos reservados.")
+                .storeName("Loja Oficial Lobo Mania")
+                .storeDescription("Vista o manto áureo-cerúleo e apoie o Esporte Clube Pelotas. Produtos oficiais, camisas de jogo, linha casual e acessórios exclusivos.")
+                .storeExternalUrl(null)
+                .storeIsOnlineActive(false)
+                .storeInstagramUrl("https://www.instagram.com/lojadolobo/")
+                .storeWhatsappNumber("5553999999999")
+                .storeWhatsappMessage("Olá! Gostaria de informações sobre produtos e mantos oficiais do E.C. Pelotas.")
+                .storeOpeningHours("Segunda a Sexta: 09h às 19h | Sábado: 09h às 13h | Dias de jogos na Boca do Lobo: até o intervalo")
+                .storeAddress("Estádio Boca do Lobo - Av. Bento Gonçalves esquina Parque Dom Antônio Zattera - Pelotas/RS")
+                .storeHasMemberDiscount(true)
+                .storeMemberDiscountText("Sócios do Pelotas em dia têm desconto exclusivo em produtos e mantos oficiais mediante apresentação da carteirinha física ou digital.")
                 .build();
 
         return settingRepository.save(setting);
