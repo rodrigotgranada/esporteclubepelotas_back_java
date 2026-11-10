@@ -20,3 +20,4 @@ public interface MatchEventRepository extends JpaRepository<MatchEvent, UUID> {
 
     void deleteByMatchId(UUID matchId);
 }
+

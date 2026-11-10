@@ -19,7 +19,9 @@ public class MatchResponse {
     private UUID championshipId;
     private String championshipName;
     private Integer seasonYear;
+    private UUID opponentClubId;
     private String opponentName;
+    private String opponentShortName;
     private String opponentLogoUrl;
     private HomeAway homeAway;
     private String stadiumName;

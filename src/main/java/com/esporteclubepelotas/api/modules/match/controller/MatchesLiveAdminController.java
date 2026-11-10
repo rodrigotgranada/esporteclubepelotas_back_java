@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/admin/matches")
+@RequestMapping("/matches/admin")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'EDITOR')")
 public class MatchesLiveAdminController {

@@ -19,3 +19,4 @@ public class MatchLiveDetailsResponse {
     private Instant timerStartedAt;
     private Boolean isTimerRunning;
 }
+

@@ -4,6 +4,7 @@ import com.esporteclubepelotas.api.common.exception.ResourceNotFoundException;
 import com.esporteclubepelotas.api.common.storage.MediaUploadSanitizer;
 import com.esporteclubepelotas.api.common.storage.StorageService;
 import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
+import com.esporteclubepelotas.api.modules.match.repository.MatchRepository;
 import com.esporteclubepelotas.api.modules.opponent.dto.OpponentClubRequest;
 import com.esporteclubepelotas.api.modules.opponent.dto.OpponentClubResponse;
 import com.esporteclubepelotas.api.modules.opponent.entity.OpponentClub;
@@ -26,6 +27,7 @@ public class OpponentClubService {
     public static final String DEFAULT_BADGE_URL = "/images/default-club-badge.svg";
 
     private final OpponentClubRepository clubRepository;
+    private final MatchRepository matchRepository;
     private final StorageService storageService;
     private final PortalWebSocketHandler webSocketHandler;
 
@@ -93,7 +95,23 @@ public class OpponentClubService {
         }
 
         OpponentClub updated = clubRepository.save(club);
+
+        if (updated.getBadgeUrl() != null && !updated.getBadgeUrl().isBlank() && !DEFAULT_BADGE_URL.equals(updated.getBadgeUrl().trim())) {
+            try {
+                int affected = matchRepository.updateOpponentLogoForClub(
+                        updated.getId(),
+                        updated.getName(),
+                        updated.getShortName(),
+                        updated.getBadgeUrl()
+                );
+                log.info("Sincronizado distintivo do adversário {} em {} partidas ativas", updated.getName(), affected);
+            } catch (Exception ex) {
+                log.warn("Erro ao sincronizar distintivo do adversário {} nas partidas: {}", updated.getName(), ex.getMessage());
+            }
+        }
+
         webSocketHandler.broadcastAfterCommit("clubs", "CLUB_UPDATED", updated.getId().toString());
+        webSocketHandler.broadcastAfterCommit("matches", "MATCH_UPDATED", updated.getId().toString());
         log.info("Clube adversário atualizado com sucesso: {} ({})", updated.getName(), updated.getId());
         return toResponse(updated);
     }

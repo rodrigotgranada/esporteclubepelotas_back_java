@@ -22,6 +22,8 @@ public class MatchRequest {
     @NotNull(message = "O campeonato é obrigatório")
     private UUID championshipId;
 
+    private UUID opponentClubId;
+
     @NotBlank(message = "O nome do adversário é obrigatório")
     @Size(min = 2, max = 160, message = "O nome do adversário deve ter entre 2 e 160 caracteres")
     private String opponentName;

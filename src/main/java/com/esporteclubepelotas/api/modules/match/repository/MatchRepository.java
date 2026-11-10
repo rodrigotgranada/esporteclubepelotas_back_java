@@ -2,6 +2,7 @@ package com.esporteclubepelotas.api.modules.match.repository;
 
 import com.esporteclubepelotas.api.modules.match.entity.Match;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -14,16 +15,16 @@ import java.util.UUID;
 @Repository
 public interface MatchRepository extends JpaRepository<Match, UUID> {
 
-    @Query("SELECT m FROM Match m JOIN FETCH m.championship c WHERE m.deletedAt IS NULL ORDER BY m.matchDate DESC")
+    @Query("SELECT m FROM Match m JOIN FETCH m.championship c LEFT JOIN FETCH m.opponentClub oc WHERE m.deletedAt IS NULL ORDER BY m.matchDate DESC")
     List<Match> findAllActive();
 
-    @Query("SELECT m FROM Match m JOIN FETCH m.championship c WHERE m.championship.id = :championshipId AND m.deletedAt IS NULL ORDER BY m.matchDate ASC")
+    @Query("SELECT m FROM Match m JOIN FETCH m.championship c LEFT JOIN FETCH m.opponentClub oc WHERE m.championship.id = :championshipId AND m.deletedAt IS NULL ORDER BY m.matchDate ASC")
     List<Match> findByChampionshipId(@Param("championshipId") UUID championshipId);
 
-    @Query("SELECT m FROM Match m JOIN FETCH m.championship c WHERE m.id = :id AND m.deletedAt IS NULL")
+    @Query("SELECT m FROM Match m JOIN FETCH m.championship c LEFT JOIN FETCH m.opponentClub oc WHERE m.id = :id AND m.deletedAt IS NULL")
     Optional<Match> findActiveById(@Param("id") UUID id);
 
-    @Query("SELECT m FROM Match m JOIN FETCH m.championship c WHERE m.slug = :slug AND m.deletedAt IS NULL")
+    @Query("SELECT m FROM Match m JOIN FETCH m.championship c LEFT JOIN FETCH m.opponentClub oc WHERE m.slug = :slug AND m.deletedAt IS NULL")
     Optional<Match> findBySlugAndDeletedAtIsNull(@Param("slug") String slug);
 
     boolean existsBySlugAndDeletedAtIsNull(String slug);
@@ -32,7 +33,7 @@ public interface MatchRepository extends JpaRepository<Match, UUID> {
      * Busca o próximo jogo do Pelotas (partida em andamento ou próxima agendada)
      * Regra: somente se o campeonato estiver ativo!
      */
-    @Query(value = "SELECT m FROM Match m JOIN FETCH m.championship c " +
+    @Query(value = "SELECT m FROM Match m JOIN FETCH m.championship c LEFT JOIN FETCH m.opponentClub oc " +
            "WHERE m.deletedAt IS NULL " +
            "AND c.deletedAt IS NULL " +
            "AND c.isActive = true " +
@@ -41,5 +42,17 @@ public interface MatchRepository extends JpaRepository<Match, UUID> {
            "ORDER BY CASE WHEN m.status = com.esporteclubepelotas.api.modules.match.entity.MatchStatus.IN_PROGRESS THEN 0 ELSE 1 END, m.matchDate ASC " +
            "LIMIT 1")
     Optional<Match> findNextMatch(@Param("now") Instant now);
+
+    @Modifying
+    @Query("UPDATE Match m SET m.opponentLogoUrl = :badgeUrl " +
+           "WHERE m.deletedAt IS NULL AND (" +
+           "   (m.opponentClub IS NOT NULL AND m.opponentClub.id = :clubId) " +
+           "   OR LOWER(TRIM(m.opponentName)) = LOWER(TRIM(:clubName)) " +
+           "   OR (:shortName IS NOT NULL AND LOWER(TRIM(m.opponentName)) = LOWER(TRIM(:shortName)))" +
+           ")")
+    int updateOpponentLogoForClub(@Param("clubId") UUID clubId,
+                                 @Param("clubName") String clubName,
+                                 @Param("shortName") String shortName,
+                                 @Param("badgeUrl") String badgeUrl);
 }
 

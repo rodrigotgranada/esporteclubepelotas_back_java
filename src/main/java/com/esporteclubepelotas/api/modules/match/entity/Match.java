@@ -28,6 +28,10 @@ public class Match {
     @JoinColumn(name = "championship_id", nullable = false)
     private Championship championship;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "opponent_club_id")
+    private com.esporteclubepelotas.api.modules.opponent.entity.OpponentClub opponentClub;
+
     @Column(name = "opponent_name", nullable = false, length = 160)
     private String opponentName;
 

@@ -12,6 +12,8 @@ import com.esporteclubepelotas.api.modules.match.entity.Match;
 import com.esporteclubepelotas.api.modules.match.entity.MatchStatus;
 import com.esporteclubepelotas.api.modules.match.repository.ChampionshipRepository;
 import com.esporteclubepelotas.api.modules.match.repository.MatchRepository;
+import com.esporteclubepelotas.api.modules.opponent.entity.OpponentClub;
+import com.esporteclubepelotas.api.modules.opponent.repository.OpponentClubRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -32,6 +34,7 @@ public class MatchService {
 
     private final MatchRepository matchRepository;
     private final ChampionshipRepository championshipRepository;
+    private final OpponentClubRepository opponentClubRepository;
     private final StorageService storageService;
     private final PortalWebSocketHandler webSocketHandler;
 
@@ -78,9 +81,15 @@ public class MatchService {
         Championship championship = championshipRepository.findActiveById(request.getChampionshipId())
                 .orElseThrow(() -> new ResourceNotFoundException("Campeonato não encontrado"));
 
+        OpponentClub opponentClub = resolveOpponentClub(request.getOpponentClubId(), request.getOpponentName());
+
         String sanitizedLogo = MediaUploadSanitizer.sanitizeNullableUrl(request.getOpponentLogoUrl());
-        if (sanitizedLogo == null || sanitizedLogo.isBlank() || "/images/pelotas-logo.png".equals(sanitizedLogo.trim())) {
-            sanitizedLogo = DEFAULT_OPPONENT_LOGO;
+        if (sanitizedLogo == null || sanitizedLogo.isBlank() || DEFAULT_OPPONENT_LOGO.equals(sanitizedLogo.trim()) || "/images/pelotas-logo.png".equals(sanitizedLogo.trim())) {
+            if (opponentClub != null && opponentClub.getBadgeUrl() != null && !opponentClub.getBadgeUrl().isBlank() && !DEFAULT_OPPONENT_LOGO.equals(opponentClub.getBadgeUrl().trim())) {
+                sanitizedLogo = opponentClub.getBadgeUrl();
+            } else {
+                sanitizedLogo = DEFAULT_OPPONENT_LOGO;
+            }
         }
 
         HomeAway homeAway = request.getHomeAway() != null ? request.getHomeAway() : HomeAway.HOME;
@@ -88,6 +97,7 @@ public class MatchService {
 
         Match match = Match.builder()
                 .championship(championship)
+                .opponentClub(opponentClub)
                 .opponentName(request.getOpponentName().trim())
                 .opponentLogoUrl(sanitizedLogo)
                 .homeAway(homeAway)
@@ -123,12 +133,19 @@ public class MatchService {
         Championship championship = championshipRepository.findActiveById(request.getChampionshipId())
                 .orElseThrow(() -> new ResourceNotFoundException("Campeonato não encontrado"));
 
+        OpponentClub opponentClub = resolveOpponentClub(request.getOpponentClubId(), request.getOpponentName());
+
         String sanitizedLogo = MediaUploadSanitizer.sanitizeNullableUrl(request.getOpponentLogoUrl());
-        if (sanitizedLogo == null || sanitizedLogo.isBlank() || "/images/pelotas-logo.png".equals(sanitizedLogo.trim())) {
-            sanitizedLogo = DEFAULT_OPPONENT_LOGO;
+        if (sanitizedLogo == null || sanitizedLogo.isBlank() || DEFAULT_OPPONENT_LOGO.equals(sanitizedLogo.trim()) || "/images/pelotas-logo.png".equals(sanitizedLogo.trim())) {
+            if (opponentClub != null && opponentClub.getBadgeUrl() != null && !opponentClub.getBadgeUrl().isBlank() && !DEFAULT_OPPONENT_LOGO.equals(opponentClub.getBadgeUrl().trim())) {
+                sanitizedLogo = opponentClub.getBadgeUrl();
+            } else {
+                sanitizedLogo = DEFAULT_OPPONENT_LOGO;
+            }
         }
 
         match.setChampionship(championship);
+        match.setOpponentClub(opponentClub);
         match.setOpponentName(request.getOpponentName().trim());
         match.setOpponentLogoUrl(sanitizedLogo);
         if (request.getHomeAway() != null) {
@@ -193,6 +210,30 @@ public class MatchService {
 
     public MatchResponse toResponse(Match entity) {
         String opponentLogo = entity.getOpponentLogoUrl();
+        UUID opponentClubId = null;
+        String opponentShortName = null;
+
+        if (entity.getOpponentClub() != null) {
+            opponentClubId = entity.getOpponentClub().getId();
+            opponentShortName = entity.getOpponentClub().getShortName();
+            if ((opponentLogo == null || opponentLogo.isBlank() || DEFAULT_OPPONENT_LOGO.equals(opponentLogo.trim()) || "/images/pelotas-logo.png".equals(opponentLogo.trim()))
+                    && entity.getOpponentClub().getBadgeUrl() != null && !entity.getOpponentClub().getBadgeUrl().isBlank()) {
+                opponentLogo = entity.getOpponentClub().getBadgeUrl();
+            }
+        }
+
+        if (opponentLogo == null || opponentLogo.isBlank() || DEFAULT_OPPONENT_LOGO.equals(opponentLogo.trim()) || "/images/pelotas-logo.png".equals(opponentLogo.trim())) {
+            List<OpponentClub> found = opponentClubRepository.findByNameOrShortNameIgnoreCase(entity.getOpponentName());
+            if (!found.isEmpty()) {
+                OpponentClub club = found.get(0);
+                if (opponentClubId == null) opponentClubId = club.getId();
+                if (opponentShortName == null) opponentShortName = club.getShortName();
+                if (club.getBadgeUrl() != null && !club.getBadgeUrl().isBlank() && !DEFAULT_OPPONENT_LOGO.equals(club.getBadgeUrl().trim())) {
+                    opponentLogo = club.getBadgeUrl();
+                }
+            }
+        }
+
         if (opponentLogo == null || opponentLogo.isBlank() || "/images/pelotas-logo.png".equals(opponentLogo.trim())) {
             opponentLogo = DEFAULT_OPPONENT_LOGO;
         }
@@ -202,7 +243,9 @@ public class MatchService {
                 .championshipId(entity.getChampionship() != null ? entity.getChampionship().getId() : null)
                 .championshipName(entity.getChampionship() != null ? entity.getChampionship().getName() : null)
                 .seasonYear(entity.getChampionship() != null ? entity.getChampionship().getSeasonYear() : null)
+                .opponentClubId(opponentClubId)
                 .opponentName(entity.getOpponentName())
+                .opponentShortName(opponentShortName)
                 .opponentLogoUrl(opponentLogo)
                 .homeAway(entity.getHomeAway())
                 .stadiumName(entity.getStadiumName())
@@ -227,6 +270,20 @@ public class MatchService {
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
+    }
+
+    private OpponentClub resolveOpponentClub(UUID clubId, String opponentName) {
+        if (clubId != null) {
+            Optional<OpponentClub> byId = opponentClubRepository.findActiveById(clubId);
+            if (byId.isPresent()) return byId.get();
+        }
+        if (opponentName != null && !opponentName.trim().isEmpty()) {
+            List<OpponentClub> found = opponentClubRepository.findByNameOrShortNameIgnoreCase(opponentName.trim());
+            if (!found.isEmpty()) {
+                return found.get(0);
+            }
+        }
+        return null;
     }
 
     private String generateMatchSlug(HomeAway homeAway, String opponentName, Instant matchDate, String requestedSlug, UUID excludeId) {
