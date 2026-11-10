@@ -15,3 +15,4 @@ WHERE opponent_logo_url = '/images/pelotas-logo.png'
 
 ALTER TABLE opponent_clubs 
     ALTER COLUMN badge_url SET DEFAULT '/images/default-club-badge.svg';
+
