@@ -23,6 +23,10 @@ public class SquadDto {
     @JsonProperty("_id")
     private String mongoId;
 
+    private String championshipId;
+    private String coachId;
+    private String coachPhotoUrl;
+
     private Integer year;
     private SquadCategory category;
     private String seasonName;
@@ -42,4 +46,3 @@ public class SquadDto {
     private Instant createdAt;
     private Instant updatedAt;
 }
-

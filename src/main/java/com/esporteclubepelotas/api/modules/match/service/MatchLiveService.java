@@ -2,6 +2,8 @@ package com.esporteclubepelotas.api.modules.match.service;
 
 import com.esporteclubepelotas.api.common.exception.ResourceNotFoundException;
 import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
+import com.esporteclubepelotas.api.modules.football.entity.Athlete;
+import com.esporteclubepelotas.api.modules.football.repository.AthleteRepository;
 import com.esporteclubepelotas.api.modules.match.dto.*;
 import com.esporteclubepelotas.api.modules.match.entity.*;
 import com.esporteclubepelotas.api.modules.match.repository.MatchEventRepository;
@@ -23,6 +25,7 @@ public class MatchLiveService {
     private final MatchRepository matchRepository;
     private final MatchEventRepository matchEventRepository;
     private final MatchService matchService;
+    private final AthleteRepository athleteRepository;
     private final PortalWebSocketHandler webSocketHandler;
 
     @Transactional(readOnly = true)
@@ -63,6 +66,23 @@ public class MatchLiveService {
         String description = request.getDescription();
         String playerName = request.getPlayerName() != null ? request.getPlayerName().trim() : null;
         String playerOutName = request.getPlayerOutName() != null ? request.getPlayerOutName().trim() : null;
+
+        Athlete playerAthlete = null;
+        Athlete playerOutAthlete = null;
+        if (team == MatchEventTeam.PELOTAS || type == MatchEventType.GOAL_PELOTAS) {
+            playerAthlete = resolveAthlete(request.getPlayerAthleteId(), playerName);
+            if (playerAthlete != null) {
+                playerName = playerAthlete.getNickname() != null && !playerAthlete.getNickname().isBlank()
+                        ? playerAthlete.getNickname()
+                        : playerAthlete.getName();
+            }
+            playerOutAthlete = resolveAthlete(request.getPlayerOutAthleteId(), playerOutName);
+            if (playerOutAthlete != null) {
+                playerOutName = playerOutAthlete.getNickname() != null && !playerOutAthlete.getNickname().isBlank()
+                        ? playerOutAthlete.getNickname()
+                        : playerOutAthlete.getName();
+            }
+        }
 
         // Lógica automática de títulos e incremento de placar
         switch (type) {
@@ -143,6 +163,8 @@ public class MatchLiveService {
                 .period(period)
                 .eventType(type)
                 .team(team)
+                .playerAthlete(playerAthlete)
+                .playerOutAthlete(playerOutAthlete)
                 .playerName(playerName)
                 .playerOutName(playerOutName)
                 .title(title)
@@ -307,6 +329,34 @@ public class MatchLiveService {
             formattedMinute = event.getMinute() + "+" + event.getMinuteExtra() + "'";
         }
 
+        UUID playerAthleteId = null;
+        String playerNickname = null;
+        String playerPhotoUrl = null;
+        String playerName = event.getPlayerName();
+
+        if (event.getPlayerAthlete() != null) {
+            Athlete a = event.getPlayerAthlete();
+            playerAthleteId = a.getId();
+            playerNickname = a.getNickname();
+            playerPhotoUrl = a.getPhotoUrl();
+            if (playerName == null || playerName.isBlank()) {
+                playerName = a.getNickname() != null && !a.getNickname().isBlank() ? a.getNickname() : a.getName();
+            }
+        }
+
+        UUID playerOutAthleteId = null;
+        String playerOutNickname = null;
+        String playerOutName = event.getPlayerOutName();
+
+        if (event.getPlayerOutAthlete() != null) {
+            Athlete out = event.getPlayerOutAthlete();
+            playerOutAthleteId = out.getId();
+            playerOutNickname = out.getNickname();
+            if (playerOutName == null || playerOutName.isBlank()) {
+                playerOutName = out.getNickname() != null && !out.getNickname().isBlank() ? out.getNickname() : out.getName();
+            }
+        }
+
         return MatchEventResponse.builder()
                 .id(event.getId())
                 .matchId(event.getMatch() != null ? event.getMatch().getId() : null)
@@ -316,14 +366,34 @@ public class MatchLiveService {
                 .period(event.getPeriod())
                 .eventType(event.getEventType())
                 .team(event.getTeam())
-                .playerName(event.getPlayerName())
-                .playerOutName(event.getPlayerOutName())
+                .playerAthleteId(playerAthleteId)
+                .playerNickname(playerNickname)
+                .playerPhotoUrl(playerPhotoUrl)
+                .playerOutAthleteId(playerOutAthleteId)
+                .playerOutNickname(playerOutNickname)
+                .playerName(playerName)
+                .playerOutName(playerOutName)
                 .title(event.getTitle())
                 .description(event.getDescription())
                 .scorePelotasMoment(event.getScorePelotasMoment())
                 .scoreOpponentMoment(event.getScoreOpponentMoment())
                 .createdAt(event.getCreatedAt())
                 .build();
+    }
+
+    private Athlete resolveAthlete(UUID athleteId, String playerName) {
+        if (athleteId != null) {
+            java.util.Optional<Athlete> byId = athleteRepository.findById(athleteId);
+            if (byId.isPresent()) return byId.get();
+        }
+        if (playerName != null && !playerName.trim().isEmpty()) {
+            String clean = playerName.trim().toLowerCase();
+            return athleteRepository.findAll().stream()
+                    .filter(a -> a.getName().toLowerCase().equals(clean) || (a.getNickname() != null && a.getNickname().toLowerCase().equals(clean)))
+                    .findFirst()
+                    .orElse(null);
+        }
+        return null;
     }
 }
 

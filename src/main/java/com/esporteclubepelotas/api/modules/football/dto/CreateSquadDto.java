@@ -19,6 +19,12 @@ import java.util.List;
 @AllArgsConstructor
 public class CreateSquadDto {
 
+    @Schema(description = "ID do campeonato oficial vinculado", example = "00000000-0000-4000-a000-000000000001")
+    private String championshipId;
+
+    @Schema(description = "ID do atleta/staff treinador vinculado", example = "455ed6c8-95e5-46b2-8435-e883b50b49f9")
+    private String coachId;
+
     @NotNull(message = "O ano da temporada é obrigatório.")
     @Min(value = 1908, message = "O ano deve ser no mínimo 1908.")
     @Schema(description = "Ano da temporada", example = "2026")
@@ -46,12 +52,11 @@ public class CreateSquadDto {
     @Schema(description = "Define se é o elenco ativo atual", example = "false")
     private Boolean isCurrent = false;
 
-    @Valid
-    @Schema(description = "Atletas integrantes do elenco")
-    private List<SquadMemberDto> members;
-
     @Builder.Default
     @Schema(description = "Status ativo do elenco", example = "true")
     private Boolean isActive = true;
-}
 
+    @Valid
+    @Schema(description = "Atletas integrantes do elenco")
+    private List<SquadMemberDto> members;
+}

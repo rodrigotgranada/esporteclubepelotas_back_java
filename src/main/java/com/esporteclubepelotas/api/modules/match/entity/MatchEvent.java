@@ -49,6 +49,14 @@ public class MatchEvent {
     @Builder.Default
     private MatchEventTeam team = MatchEventTeam.NEUTRAL;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_athlete_id")
+    private com.esporteclubepelotas.api.modules.football.entity.Athlete playerAthlete;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "player_out_athlete_id")
+    private com.esporteclubepelotas.api.modules.football.entity.Athlete playerOutAthlete;
+
     @Column(name = "player_name", length = 150)
     private String playerName;
 

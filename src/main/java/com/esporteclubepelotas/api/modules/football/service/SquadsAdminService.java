@@ -8,6 +8,8 @@ import com.esporteclubepelotas.api.modules.football.helper.FootballMapperHelper;
 import com.esporteclubepelotas.api.modules.football.repository.AthleteRepository;
 import com.esporteclubepelotas.api.modules.football.repository.SquadMemberRepository;
 import com.esporteclubepelotas.api.modules.football.repository.SquadRepository;
+import com.esporteclubepelotas.api.modules.match.entity.Championship;
+import com.esporteclubepelotas.api.modules.match.repository.ChampionshipRepository;
 import com.esporteclubepelotas.api.modules.user.entity.User;
 import com.esporteclubepelotas.api.modules.user.repository.UserRepository;
 import jakarta.persistence.criteria.Predicate;
@@ -31,6 +33,7 @@ public class SquadsAdminService {
     private final SquadRepository squadRepository;
     private final SquadMemberRepository squadMemberRepository;
     private final AthleteRepository athleteRepository;
+    private final ChampionshipRepository championshipRepository;
     private final UserRepository userRepository;
     private final StorageService storageService;
 
@@ -114,11 +117,26 @@ public class SquadsAdminService {
                 .map(s -> SquadStaffMember.builder().role(s.getRole().trim()).name(s.getName().trim()).build())
                 .toList();
 
+        Championship championship = resolveChampionship(dto.getChampionshipId(), dto.getSeasonName());
+        Athlete coach = resolveCoach(dto.getCoachId(), dto.getCoachName());
+
+        String resolvedSeasonName = championship != null && championship.getName() != null
+                ? championship.getName()
+                : dto.getSeasonName().trim();
+        Integer resolvedYear = championship != null && championship.getSeasonYear() != null
+                ? championship.getSeasonYear()
+                : dto.getYear();
+        String resolvedCoachName = coach != null && coach.getName() != null
+                ? coach.getName()
+                : (dto.getCoachName() != null ? dto.getCoachName().trim() : null);
+
         Squad squad = Squad.builder()
-                .year(dto.getYear())
+                .championship(championship)
+                .coach(coach)
+                .year(resolvedYear)
                 .category(dto.getCategory())
-                .seasonName(dto.getSeasonName().trim())
-                .coachName(dto.getCoachName() != null ? dto.getCoachName().trim() : null)
+                .seasonName(resolvedSeasonName)
+                .coachName(resolvedCoachName)
                 .staff(new ArrayList<>(staffMembers))
                 .coverUrl(dto.getCoverUrl())
                 .isCurrent(Boolean.TRUE.equals(dto.getIsCurrent()))
@@ -158,12 +176,27 @@ public class SquadsAdminService {
             squad.setCategory(dto.getCategory());
         }
 
-        if (dto.getSeasonName() != null && !dto.getSeasonName().isBlank()) {
-            squad.setSeasonName(dto.getSeasonName().trim());
+        if (dto.getChampionshipId() != null || (dto.getSeasonName() != null && !dto.getSeasonName().isBlank())) {
+            Championship championship = resolveChampionship(dto.getChampionshipId(), dto.getSeasonName() != null ? dto.getSeasonName() : squad.getSeasonName());
+            if (championship != null) {
+                squad.setChampionship(championship);
+                squad.setSeasonName(championship.getName());
+                if (dto.getYear() == null && championship.getSeasonYear() != null) {
+                    squad.setYear(championship.getSeasonYear());
+                }
+            } else if (dto.getSeasonName() != null && !dto.getSeasonName().isBlank()) {
+                squad.setSeasonName(dto.getSeasonName().trim());
+            }
         }
 
-        if (dto.getCoachName() != null) {
-            squad.setCoachName(dto.getCoachName().trim());
+        if (dto.getCoachId() != null || dto.getCoachName() != null) {
+            Athlete coach = resolveCoach(dto.getCoachId(), dto.getCoachName() != null ? dto.getCoachName() : squad.getCoachName());
+            if (coach != null) {
+                squad.setCoach(coach);
+                squad.setCoachName(coach.getName());
+            } else if (dto.getCoachName() != null) {
+                squad.setCoachName(dto.getCoachName().trim());
+            }
         }
 
         if (dto.getCoverUrl() != null) {
@@ -326,5 +359,41 @@ public class SquadsAdminService {
     private String getFileExtension(String filename) {
         if (filename == null || !filename.contains(".")) return "webp";
         return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
+    }
+
+    private Championship resolveChampionship(String championshipId, String seasonName) {
+        if (championshipId != null && !championshipId.isBlank()) {
+            try {
+                UUID id = UUID.fromString(championshipId.trim());
+                java.util.Optional<Championship> byId = championshipRepository.findActiveById(id);
+                if (byId.isPresent()) return byId.get();
+            } catch (IllegalArgumentException ignored) {}
+        }
+        if (seasonName != null && !seasonName.trim().isEmpty()) {
+            String clean = seasonName.trim().toLowerCase();
+            return championshipRepository.findAllActive().stream()
+                    .filter(c -> c.getName().toLowerCase().equals(clean) || clean.contains(c.getName().toLowerCase()))
+                    .findFirst()
+                    .orElse(null);
+        }
+        return null;
+    }
+
+    private Athlete resolveCoach(String coachId, String coachName) {
+        if (coachId != null && !coachId.isBlank()) {
+            try {
+                UUID id = UUID.fromString(coachId.trim());
+                java.util.Optional<Athlete> byId = athleteRepository.findById(id);
+                if (byId.isPresent()) return byId.get();
+            } catch (IllegalArgumentException ignored) {}
+        }
+        if (coachName != null && !coachName.trim().isEmpty()) {
+            String clean = coachName.trim().toLowerCase();
+            return athleteRepository.findAll().stream()
+                    .filter(a -> a.getAthleteType() == AthleteType.STAFF && a.getName().toLowerCase().equals(clean))
+                    .findFirst()
+                    .orElse(null);
+        }
+        return null;
     }
 }

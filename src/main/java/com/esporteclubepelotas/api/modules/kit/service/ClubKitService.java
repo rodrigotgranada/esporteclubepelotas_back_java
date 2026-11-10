@@ -10,6 +10,8 @@ import com.esporteclubepelotas.api.modules.kit.dto.ClubKitRequest;
 import com.esporteclubepelotas.api.modules.kit.dto.ClubKitResponse;
 import com.esporteclubepelotas.api.modules.kit.entity.ClubKit;
 import com.esporteclubepelotas.api.modules.kit.repository.ClubKitRepository;
+import com.esporteclubepelotas.api.modules.match.entity.Championship;
+import com.esporteclubepelotas.api.modules.match.repository.ChampionshipRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,7 @@ import java.util.UUID;
 public class ClubKitService {
 
     private final ClubKitRepository kitRepository;
+    private final ChampionshipRepository championshipRepository;
     private final StorageService storageService;
     private final PortalWebSocketHandler webSocketHandler;
 
@@ -108,11 +111,16 @@ public class ClubKitService {
         }
         List<String> cleanGallery = MediaUploadSanitizer.sanitizeUrlList(request.getGalleryUrls());
 
+        Championship championship = resolveChampionship(request.getChampionshipId(), request.getCompetition());
+        String compName = championship != null ? championship.getName() : request.getCompetition().trim();
+        Integer year = championship != null ? championship.getSeasonYear() : request.getSeasonYear();
+
         ClubKit kit = ClubKit.builder()
                 .name(request.getName().trim())
                 .kitType(request.getKitType())
-                .competition(request.getCompetition().trim())
-                .seasonYear(request.getSeasonYear())
+                .championship(championship)
+                .competition(compName)
+                .seasonYear(year)
                 .imageUrl(cleanImage)
                 .galleryUrls(cleanGallery)
                 .manufacturer(request.getManufacturer() != null ? request.getManufacturer().trim() : null)
@@ -143,10 +151,15 @@ public class ClubKitService {
         }
         List<String> cleanGallery = MediaUploadSanitizer.sanitizeUrlList(request.getGalleryUrls());
 
+        Championship championship = resolveChampionship(request.getChampionshipId(), request.getCompetition());
+        String compName = championship != null ? championship.getName() : request.getCompetition().trim();
+        Integer year = championship != null ? championship.getSeasonYear() : request.getSeasonYear();
+
         kit.setName(request.getName().trim());
         kit.setKitType(request.getKitType());
-        kit.setCompetition(request.getCompetition().trim());
-        kit.setSeasonYear(request.getSeasonYear());
+        kit.setChampionship(championship);
+        kit.setCompetition(compName);
+        kit.setSeasonYear(year);
         kit.setImageUrl(cleanImage);
         kit.setGalleryUrls(cleanGallery);
         kit.setManufacturer(request.getManufacturer() != null ? request.getManufacturer().trim() : null);
@@ -163,6 +176,21 @@ public class ClubKitService {
                 updated.getId(), updated.getName(), updated.getCompetition());
 
         return ClubKitResponse.fromEntity(updated);
+    }
+
+    private Championship resolveChampionship(UUID championshipId, String competitionName) {
+        if (championshipId != null) {
+            java.util.Optional<Championship> byId = championshipRepository.findActiveById(championshipId);
+            if (byId.isPresent()) return byId.get();
+        }
+        if (competitionName != null && !competitionName.trim().isEmpty()) {
+            String clean = competitionName.trim().toLowerCase();
+            return championshipRepository.findAllActive().stream()
+                    .filter(c -> c.getName().toLowerCase().equals(clean) || clean.contains(c.getName().toLowerCase()))
+                    .findFirst()
+                    .orElse(null);
+        }
+        return null;
     }
 
     @Transactional

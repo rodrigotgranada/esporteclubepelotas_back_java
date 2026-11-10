@@ -28,6 +28,10 @@ public class MatchEventRequest {
 
     private MatchEventTeam team;
 
+    private java.util.UUID playerAthleteId;
+
+    private java.util.UUID playerOutAthleteId;
+
     private String playerName;
 
     private String playerOutName;

@@ -17,6 +17,7 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ClubKitResponse {
     private UUID id;
+    private UUID championshipId;
     private String name;
     private KitType kitType;
     private String competition;
@@ -34,12 +35,22 @@ public class ClubKitResponse {
 
     public static ClubKitResponse fromEntity(ClubKit kit) {
         if (kit == null) return null;
+
+        UUID champId = kit.getChampionship() != null ? kit.getChampionship().getId() : null;
+        String compName = kit.getChampionship() != null && kit.getChampionship().getName() != null
+                ? kit.getChampionship().getName()
+                : kit.getCompetition();
+        Integer year = kit.getChampionship() != null && kit.getChampionship().getSeasonYear() != null
+                ? kit.getChampionship().getSeasonYear()
+                : kit.getSeasonYear();
+
         return ClubKitResponse.builder()
                 .id(kit.getId())
+                .championshipId(champId)
                 .name(kit.getName())
                 .kitType(kit.getKitType())
-                .competition(kit.getCompetition())
-                .seasonYear(kit.getSeasonYear())
+                .competition(compName)
+                .seasonYear(year)
                 .imageUrl(kit.getImageUrl())
                 .galleryUrls(kit.getGalleryUrls())
                 .manufacturer(kit.getManufacturer())

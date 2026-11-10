@@ -40,6 +40,10 @@ public class ClubKit {
     @Column(name = "kit_type", nullable = false, length = 30)
     private KitType kitType;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "championship_id")
+    private com.esporteclubepelotas.api.modules.match.entity.Championship championship;
+
     @Column(nullable = false, length = 150)
     private String competition;
 

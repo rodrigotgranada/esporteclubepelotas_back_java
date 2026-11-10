@@ -84,6 +84,24 @@ public final class FootballMapperHelper {
         if (squad == null) return null;
         String idStr = squad.getId() != null ? squad.getId().toString() : null;
 
+        String championshipId = squad.getChampionship() != null && squad.getChampionship().getId() != null
+                ? squad.getChampionship().getId().toString()
+                : null;
+        String seasonName = squad.getChampionship() != null && squad.getChampionship().getName() != null
+                ? squad.getChampionship().getName()
+                : squad.getSeasonName();
+        Integer year = squad.getChampionship() != null && squad.getChampionship().getSeasonYear() != null
+                ? squad.getChampionship().getSeasonYear()
+                : squad.getYear();
+
+        String coachId = squad.getCoach() != null && squad.getCoach().getId() != null
+                ? squad.getCoach().getId().toString()
+                : null;
+        String coachName = squad.getCoach() != null && squad.getCoach().getName() != null
+                ? squad.getCoach().getName()
+                : squad.getCoachName();
+        String coachPhoto = squad.getCoach() != null ? squad.getCoach().getPhotoUrl() : null;
+
         List<SquadStaffDto> staffList = (squad.getStaff() != null ? squad.getStaff() : Collections.<SquadStaffMember>emptyList()).stream()
                 .map(FootballMapperHelper::mapStaffMember)
                 .toList();
@@ -95,10 +113,13 @@ public final class FootballMapperHelper {
         return SquadDto.builder()
                 .id(idStr)
                 .mongoId(idStr)
-                .year(squad.getYear())
+                .championshipId(championshipId)
+                .coachId(coachId)
+                .coachPhotoUrl(coachPhoto)
+                .year(year)
                 .category(squad.getCategory())
-                .seasonName(squad.getSeasonName())
-                .coachName(squad.getCoachName())
+                .seasonName(seasonName)
+                .coachName(coachName)
                 .staff(staffList)
                 .coverUrl(squad.getCoverUrl())
                 .isCurrent(squad.isCurrent())

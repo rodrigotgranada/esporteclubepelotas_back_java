@@ -17,6 +17,12 @@ import java.util.List;
 @AllArgsConstructor
 public class UpdateSquadDto {
 
+    @Schema(description = "ID do campeonato oficial vinculado")
+    private String championshipId;
+
+    @Schema(description = "ID do atleta/staff treinador vinculado")
+    private String coachId;
+
     @Min(value = 1908, message = "O ano deve ser no mínimo 1908.")
     @Schema(description = "Ano da temporada")
     private Integer year;
@@ -47,4 +53,3 @@ public class UpdateSquadDto {
     @Schema(description = "Status ativo do elenco")
     private Boolean isActive;
 }
-

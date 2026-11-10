@@ -1,5 +1,6 @@
 package com.esporteclubepelotas.api.modules.football.entity;
 
+import com.esporteclubepelotas.api.modules.match.entity.Championship;
 import com.esporteclubepelotas.api.modules.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -28,6 +29,14 @@ public class Squad {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "championship_id")
+    private Championship championship;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "coach_id")
+    private Athlete coach;
 
     @Column(name = "\"year\"", nullable = false)
     private Integer year;
@@ -72,4 +81,3 @@ public class Squad {
     @UpdateTimestamp
     private Instant updatedAt;
 }
-

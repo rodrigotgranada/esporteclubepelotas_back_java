@@ -23,6 +23,11 @@ public class MatchEventResponse {
     private MatchPeriod period;
     private MatchEventType eventType;
     private MatchEventTeam team;
+    private UUID playerAthleteId;
+    private String playerNickname;
+    private String playerPhotoUrl;
+    private UUID playerOutAthleteId;
+    private String playerOutNickname;
     private String playerName;
     private String playerOutName;
     private String title;
