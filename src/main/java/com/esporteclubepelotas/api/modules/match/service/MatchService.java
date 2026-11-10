@@ -221,6 +221,9 @@ public class MatchService {
                 .transmissionUrl(entity.getTransmissionUrl())
                 .notes(entity.getNotes())
                 .displayOrder(entity.getDisplayOrder())
+                .currentPeriod(entity.getCurrentPeriod())
+                .currentMinute(entity.getCurrentMinute())
+                .timerStartedAt(entity.getTimerStartedAt())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

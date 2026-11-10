@@ -38,6 +38,9 @@ public class MatchResponse {
     private String transmissionUrl;
     private String notes;
     private Integer displayOrder;
+    private String currentPeriod;
+    private String currentMinute;
+    private Instant timerStartedAt;
     private Instant createdAt;
     private Instant updatedAt;
 }

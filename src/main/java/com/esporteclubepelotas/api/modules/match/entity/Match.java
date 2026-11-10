@@ -91,6 +91,17 @@ public class Match {
     @Builder.Default
     private Integer displayOrder = 0;
 
+    @Column(name = "current_period", length = 30)
+    @Builder.Default
+    private String currentPeriod = "PRE_MATCH";
+
+    @Column(name = "current_minute", length = 20)
+    @Builder.Default
+    private String currentMinute = "0'";
+
+    @Column(name = "timer_started_at")
+    private Instant timerStartedAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
