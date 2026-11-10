@@ -209,25 +209,34 @@ public class MatchService {
     }
 
     public MatchResponse toResponse(Match entity) {
+        String opponentName = entity.getOpponentName();
         String opponentLogo = entity.getOpponentLogoUrl();
         UUID opponentClubId = null;
         String opponentShortName = null;
 
+        // Se a partida estiver vinculada ao catálogo oficial, o clube é a fonte única da verdade
         if (entity.getOpponentClub() != null) {
-            opponentClubId = entity.getOpponentClub().getId();
-            opponentShortName = entity.getOpponentClub().getShortName();
-            if ((opponentLogo == null || opponentLogo.isBlank() || DEFAULT_OPPONENT_LOGO.equals(opponentLogo.trim()) || "/images/pelotas-logo.png".equals(opponentLogo.trim()))
-                    && entity.getOpponentClub().getBadgeUrl() != null && !entity.getOpponentClub().getBadgeUrl().isBlank()) {
-                opponentLogo = entity.getOpponentClub().getBadgeUrl();
+            OpponentClub club = entity.getOpponentClub();
+            opponentClubId = club.getId();
+            opponentShortName = club.getShortName();
+            if (club.getShortName() != null && !club.getShortName().isBlank()) {
+                opponentName = club.getShortName();
+            } else if (club.getName() != null && !club.getName().isBlank()) {
+                opponentName = club.getName();
             }
-        }
-
-        if (opponentLogo == null || opponentLogo.isBlank() || DEFAULT_OPPONENT_LOGO.equals(opponentLogo.trim()) || "/images/pelotas-logo.png".equals(opponentLogo.trim())) {
+            if (club.getBadgeUrl() != null && !club.getBadgeUrl().isBlank()) {
+                opponentLogo = club.getBadgeUrl();
+            }
+        } else {
+            // Fallback de resolução por nome caso a FK ainda não estivesse associada
             List<OpponentClub> found = opponentClubRepository.findByNameOrShortNameIgnoreCase(entity.getOpponentName());
             if (!found.isEmpty()) {
                 OpponentClub club = found.get(0);
-                if (opponentClubId == null) opponentClubId = club.getId();
-                if (opponentShortName == null) opponentShortName = club.getShortName();
+                opponentClubId = club.getId();
+                opponentShortName = club.getShortName();
+                if (club.getShortName() != null && !club.getShortName().isBlank()) {
+                    opponentName = club.getShortName();
+                }
                 if (club.getBadgeUrl() != null && !club.getBadgeUrl().isBlank() && !DEFAULT_OPPONENT_LOGO.equals(club.getBadgeUrl().trim())) {
                     opponentLogo = club.getBadgeUrl();
                 }
@@ -244,7 +253,7 @@ public class MatchService {
                 .championshipName(entity.getChampionship() != null ? entity.getChampionship().getName() : null)
                 .seasonYear(entity.getChampionship() != null ? entity.getChampionship().getSeasonYear() : null)
                 .opponentClubId(opponentClubId)
-                .opponentName(entity.getOpponentName())
+                .opponentName(opponentName)
                 .opponentShortName(opponentShortName)
                 .opponentLogoUrl(opponentLogo)
                 .homeAway(entity.getHomeAway())

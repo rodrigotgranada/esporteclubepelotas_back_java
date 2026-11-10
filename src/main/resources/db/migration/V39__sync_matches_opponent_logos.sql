@@ -21,3 +21,4 @@ WHERE m.deleted_at IS NULL
       LOWER(TRIM(m.opponent_name)) = LOWER(TRIM(c.name))
       OR LOWER(TRIM(m.opponent_name)) = LOWER(TRIM(c.short_name))
   );
+
