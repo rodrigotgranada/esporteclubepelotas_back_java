@@ -24,3 +24,4 @@ public class OpponentClubResponse {
     private Instant createdAt;
     private Instant updatedAt;
 }
+

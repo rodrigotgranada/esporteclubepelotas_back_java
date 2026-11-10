@@ -26,3 +26,4 @@ public class OpponentClubsPublicController {
         return ResponseEntity.ok(clubService.findById(id));
     }
 }
+

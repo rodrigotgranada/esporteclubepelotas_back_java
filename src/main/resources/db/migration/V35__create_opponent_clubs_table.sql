@@ -64,3 +64,4 @@ VALUES
     ('Grêmio Esportivo Bagé', 'Bagé', 'Bagé - RS', 'Estádio Pedra Moura', '/images/pelotas-logo.png', 15),
     ('Esporte Clube Internacional', 'Inter de Santa Maria', 'Santa Maria - RS', 'Estádio Presidente Vargas', '/images/pelotas-logo.png', 16)
 ON CONFLICT (id) DO NOTHING;
+

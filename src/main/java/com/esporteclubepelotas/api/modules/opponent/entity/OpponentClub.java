@@ -55,3 +55,4 @@ public class OpponentClub {
     @Column(name = "deleted_at")
     private Instant deletedAt;
 }
+

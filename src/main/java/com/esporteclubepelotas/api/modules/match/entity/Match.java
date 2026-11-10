@@ -51,6 +51,13 @@ public class Match {
     @Column(name = "round_name", nullable = false, length = 100)
     private String roundName;
 
+    @Column(length = 255)
+    private String slug;
+
+    @Column(name = "has_live_coverage", nullable = false)
+    @Builder.Default
+    private Boolean hasLiveCoverage = false;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default

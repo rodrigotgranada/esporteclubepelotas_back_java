@@ -63,3 +63,4 @@ public class OpponentClubsAdminController {
         return ResponseEntity.ok(Map.of("url", url));
     }
 }
+

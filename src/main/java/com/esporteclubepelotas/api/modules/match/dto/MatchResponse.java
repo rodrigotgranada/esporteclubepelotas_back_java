@@ -26,6 +26,8 @@ public class MatchResponse {
     private String city;
     private Instant matchDate;
     private String roundName;
+    private String slug;
+    private Boolean hasLiveCoverage;
     private MatchStatus status;
     private Integer pelotasScore;
     private Integer opponentScore;

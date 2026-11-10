@@ -48,6 +48,12 @@ public class MatchesPublicController {
         return ResponseEntity.ok(championshipService.findCurrentActive());
     }
 
+    @GetMapping("/by-slug/{slug}")
+    @Operation(summary = "Obter detalhes de uma partida por slug amigável")
+    public ResponseEntity<MatchResponse> getBySlug(@PathVariable String slug) {
+        return ResponseEntity.ok(matchService.findBySlug(slug));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "Obter detalhes de uma partida por ID")
     public ResponseEntity<MatchResponse> getById(@PathVariable UUID id) {

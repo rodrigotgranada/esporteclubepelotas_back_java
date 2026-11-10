@@ -54,6 +54,13 @@ public class MatchService {
         return toResponse(match);
     }
 
+    @Transactional(readOnly = true)
+    public MatchResponse findBySlug(String slug) {
+        Match match = matchRepository.findBySlugAndDeletedAtIsNull(slug)
+                .orElseThrow(() -> new ResourceNotFoundException("Partida não encontrada para o slug: " + slug));
+        return toResponse(match);
+    }
+
     /**
      * Retorna a próxima partida do Pelotas (ou em andamento) para destaque na Home.
      * Retorna null se não houver campeonato ativo com jogo agendado.
@@ -71,15 +78,20 @@ public class MatchService {
 
         String sanitizedLogo = MediaUploadSanitizer.sanitizeNullableUrl(request.getOpponentLogoUrl());
 
+        HomeAway homeAway = request.getHomeAway() != null ? request.getHomeAway() : HomeAway.HOME;
+        String slug = generateMatchSlug(homeAway, request.getOpponentName(), request.getMatchDate(), request.getSlug(), null);
+
         Match match = Match.builder()
                 .championship(championship)
                 .opponentName(request.getOpponentName().trim())
                 .opponentLogoUrl(sanitizedLogo)
-                .homeAway(request.getHomeAway() != null ? request.getHomeAway() : HomeAway.HOME)
+                .homeAway(homeAway)
                 .stadiumName(request.getStadiumName().trim())
                 .city(request.getCity() != null ? request.getCity().trim() : null)
                 .matchDate(request.getMatchDate())
                 .roundName(request.getRoundName().trim())
+                .slug(slug)
+                .hasLiveCoverage(request.getHasLiveCoverage() != null ? request.getHasLiveCoverage() : false)
                 .status(request.getStatus() != null ? request.getStatus() : MatchStatus.SCHEDULED)
                 .pelotasScore(request.getPelotasScore())
                 .opponentScore(request.getOpponentScore())
@@ -118,6 +130,17 @@ public class MatchService {
         match.setCity(request.getCity() != null ? request.getCity().trim() : null);
         match.setMatchDate(request.getMatchDate());
         match.setRoundName(request.getRoundName().trim());
+
+        if (request.getSlug() != null && !request.getSlug().trim().isEmpty() && !request.getSlug().equals(match.getSlug())) {
+            match.setSlug(generateMatchSlug(match.getHomeAway(), match.getOpponentName(), match.getMatchDate(), request.getSlug(), match.getId()));
+        } else if (match.getSlug() == null || match.getSlug().isBlank()) {
+            match.setSlug(generateMatchSlug(match.getHomeAway(), match.getOpponentName(), match.getMatchDate(), null, match.getId()));
+        }
+
+        if (request.getHasLiveCoverage() != null) {
+            match.setHasLiveCoverage(request.getHasLiveCoverage());
+        }
+
         if (request.getStatus() != null) {
             match.setStatus(request.getStatus());
         }
@@ -173,6 +196,8 @@ public class MatchService {
                 .city(entity.getCity())
                 .matchDate(entity.getMatchDate())
                 .roundName(entity.getRoundName())
+                .slug(entity.getSlug())
+                .hasLiveCoverage(entity.getHasLiveCoverage() != null ? entity.getHasLiveCoverage() : false)
                 .status(entity.getStatus())
                 .pelotasScore(entity.getPelotasScore())
                 .opponentScore(entity.getOpponentScore())
@@ -186,5 +211,40 @@ public class MatchService {
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();
+    }
+
+    private String generateMatchSlug(HomeAway homeAway, String opponentName, Instant matchDate, String requestedSlug, UUID excludeId) {
+        String base;
+        if (requestedSlug != null && !requestedSlug.trim().isEmpty()) {
+            base = slugify(requestedSlug.trim());
+        } else {
+            String dateStr = matchDate != null ? matchDate.toString().substring(0, 10) : "jogo";
+            String opClean = slugify(opponentName);
+            if (homeAway == HomeAway.HOME) {
+                base = "pelotas-vs-" + opClean + "-" + dateStr;
+            } else {
+                base = opClean + "-vs-pelotas-" + dateStr;
+            }
+        }
+
+        String candidate = base;
+        int counter = 2;
+        while (true) {
+            java.util.Optional<Match> existing = matchRepository.findBySlugAndDeletedAtIsNull(candidate);
+            if (existing.isEmpty() || (excludeId != null && existing.get().getId().equals(excludeId))) {
+                return candidate;
+            }
+            candidate = base + "-" + counter;
+            counter++;
+        }
+    }
+
+    private String slugify(String text) {
+        if (text == null) return "";
+        return java.text.Normalizer.normalize(text, java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "")
+                .toLowerCase()
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("^-+|-+$", "");
     }
 }

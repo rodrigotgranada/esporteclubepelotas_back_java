@@ -23,6 +23,11 @@ public interface MatchRepository extends JpaRepository<Match, UUID> {
     @Query("SELECT m FROM Match m JOIN FETCH m.championship c WHERE m.id = :id AND m.deletedAt IS NULL")
     Optional<Match> findActiveById(@Param("id") UUID id);
 
+    @Query("SELECT m FROM Match m JOIN FETCH m.championship c WHERE m.slug = :slug AND m.deletedAt IS NULL")
+    Optional<Match> findBySlugAndDeletedAtIsNull(@Param("slug") String slug);
+
+    boolean existsBySlugAndDeletedAtIsNull(String slug);
+
     /**
      * Busca o próximo jogo do Pelotas (partida em andamento ou próxima agendada)
      * Regra: somente se o campeonato estiver ativo!

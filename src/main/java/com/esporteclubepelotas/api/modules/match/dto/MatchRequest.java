@@ -45,6 +45,11 @@ public class MatchRequest {
     @Size(max = 100)
     private String roundName;
 
+    private String slug;
+
+    @Builder.Default
+    private Boolean hasLiveCoverage = false;
+
     private MatchStatus status;
 
     private Integer pelotasScore;

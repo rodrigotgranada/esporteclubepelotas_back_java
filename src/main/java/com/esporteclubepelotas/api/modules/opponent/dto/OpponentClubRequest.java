@@ -32,3 +32,4 @@ public class OpponentClubRequest {
 
     private Integer displayOrder;
 }
+
