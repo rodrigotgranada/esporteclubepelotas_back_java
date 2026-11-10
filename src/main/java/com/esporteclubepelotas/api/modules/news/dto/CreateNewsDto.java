@@ -74,6 +74,10 @@ public class CreateNewsDto {
     @Schema(description = "Indica se a matéria pertence às Categorias de Base (Hub da Base)", example = "false")
     private Boolean isYouth = false;
 
+    @Builder.Default
+    @Schema(description = "Indica se a matéria pertence ao Futebol Feminino (Hub das Lobas)", example = "false")
+    private Boolean isFemale = false;
+
     @Size(max = 120, message = "O nome do repórter deve ter no máximo 120 caracteres.")
     @Schema(description = "Nome do repórter / autor do texto", example = "Gustavo Freitas / Assessoria FGF")
     private String reporterName;

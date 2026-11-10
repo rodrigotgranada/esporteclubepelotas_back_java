@@ -65,6 +65,7 @@ public final class NewsMapperHelper {
                 .isPinned(article.isPinned())
                 .showOnHomepage(article.isShowOnHomepage())
                 .isYouth(article.isYouth())
+                .isFemale(article.isFemale())
                 .reporterName(article.getReporterName())
                 .photographerName(article.getPhotographerName())
                 .author(mapAuthor(article.getAuthor()))
@@ -125,4 +126,3 @@ public final class NewsMapperHelper {
                 .build();
     }
 }
-

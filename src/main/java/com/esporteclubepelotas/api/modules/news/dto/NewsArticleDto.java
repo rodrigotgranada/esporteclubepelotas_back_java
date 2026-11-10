@@ -52,6 +52,9 @@ public class NewsArticleDto {
     @JsonProperty("isYouth")
     private boolean isYouth;
 
+    @JsonProperty("isFemale")
+    private boolean isFemale;
+
     private String reporterName;
     private String photographerName;
     private NewsArticleAuthorDto author;

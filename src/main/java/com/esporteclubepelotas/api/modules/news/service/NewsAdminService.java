@@ -64,6 +64,9 @@ public class NewsAdminService {
             if (query.getIsYouth() != null) {
                 predicates.add(cb.equal(root.get("isYouth"), query.getIsYouth()));
             }
+            if (query.getIsFemale() != null) {
+                predicates.add(cb.equal(root.get("isFemale"), query.getIsFemale()));
+            }
 
             if (query.getCategory() != null && !query.getCategory().isBlank()) {
                 String catParam = query.getCategory().trim().toLowerCase();
@@ -175,6 +178,7 @@ public class NewsAdminService {
                 .isPinned(Boolean.TRUE.equals(dto.getIsPinned()))
                 .showOnHomepage(!Boolean.FALSE.equals(dto.getShowOnHomepage()))
                 .isYouth(Boolean.TRUE.equals(dto.getIsYouth()))
+                .isFemale(Boolean.TRUE.equals(dto.getIsFemale()))
                 .reporterName(dto.getReporterName() != null ? dto.getReporterName().trim() : null)
                 .photographerName(dto.getPhotographerName() != null ? dto.getPhotographerName().trim() : null)
                 .author(author)
@@ -250,6 +254,9 @@ public class NewsAdminService {
         }
         if (dto.getIsYouth() != null) {
             article.setYouth(dto.getIsYouth());
+        }
+        if (dto.getIsFemale() != null) {
+            article.setFemale(dto.getIsFemale());
         }
         if (dto.getReporterName() != null) {
             article.setReporterName(dto.getReporterName().trim());
@@ -418,6 +425,7 @@ public class NewsAdminService {
                 .isPinned(false)
                 .showOnHomepage(original.isShowOnHomepage())
                 .isYouth(original.isYouth())
+                .isFemale(original.isFemale())
                 .reporterName(original.getReporterName())
                 .photographerName(original.getPhotographerName())
                 .author(user)

@@ -118,6 +118,10 @@ public class NewsPublicService {
                 predicates.add(cb.equal(root.get("isYouth"), query.getIsYouth()));
             }
 
+            if (query.getIsFemale() != null) {
+                predicates.add(cb.equal(root.get("isFemale"), query.getIsFemale()));
+            }
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 

@@ -58,11 +58,25 @@ public class AthletesAdminService {
             if (query.getGender() != null) {
                 predicates.add(cb.equal(root.get("gender"), query.getGender()));
             }
-            if ("PROFESSIONAL".equalsIgnoreCase(query.getScope()) && query.getAthleteType() == null) {
-                predicates.add(root.get("athleteType").in(AthleteType.PROFESSIONAL, AthleteType.STAFF));
+
+            if ("PROFESSIONAL".equalsIgnoreCase(query.getScope())) {
+                if (query.getGender() == null) {
+                    predicates.add(cb.equal(root.get("gender"), AthleteGender.MALE));
+                }
+                if (query.getAthleteType() == null) {
+                    predicates.add(root.get("athleteType").in(AthleteType.PROFESSIONAL, AthleteType.STAFF));
+                }
+            } else if ("FEMALE".equalsIgnoreCase(query.getScope()) || "FEMININE".equalsIgnoreCase(query.getScope())) {
+                if (query.getGender() == null) {
+                    predicates.add(cb.equal(root.get("gender"), AthleteGender.FEMALE));
+                }
+                if (query.getAthleteType() == null) {
+                    predicates.add(root.get("athleteType").in(AthleteType.PROFESSIONAL, AthleteType.STAFF));
+                }
             } else if ("YOUTH".equalsIgnoreCase(query.getScope()) && query.getAthleteType() == null) {
                 predicates.add(root.get("athleteType").in(AthleteType.YOUTH, AthleteType.STAFF));
             }
+
             if (query.getAthleteType() != null) {
                 predicates.add(cb.equal(root.get("athleteType"), query.getAthleteType()));
             }

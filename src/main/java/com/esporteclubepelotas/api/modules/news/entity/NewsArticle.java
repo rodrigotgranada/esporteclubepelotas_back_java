@@ -20,7 +20,8 @@ import java.util.UUID;
         @Index(name = "idx_news_articles_slug", columnList = "slug", unique = true),
         @Index(name = "idx_news_articles_feed", columnList = "is_active, status, is_pinned, published_at"),
         @Index(name = "idx_news_articles_featured", columnList = "is_active, status, featured_slot, published_at"),
-        @Index(name = "idx_news_articles_home", columnList = "is_active, status, show_on_homepage, published_at")
+        @Index(name = "idx_news_articles_home", columnList = "is_active, status, show_on_homepage, published_at"),
+        @Index(name = "idx_news_articles_female", columnList = "is_active, status, is_female, published_at")
 })
 @Getter
 @Setter
@@ -92,6 +93,10 @@ public class NewsArticle {
     @Column(name = "is_youth", nullable = false)
     @Builder.Default
     private boolean isYouth = false;
+
+    @Column(name = "is_female", nullable = false)
+    @Builder.Default
+    private boolean isFemale = false;
 
     @Column(length = 120)
     private String reporterName;

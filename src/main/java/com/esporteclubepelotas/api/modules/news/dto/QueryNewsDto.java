@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -48,4 +50,7 @@ public class QueryNewsDto {
 
     @Schema(description = "Filtrar por matérias de categorias de base")
     private Boolean isYouth;
+
+    @Schema(description = "Filtrar por matérias de futebol feminino (Lobas)")
+    private Boolean isFemale;
 }
