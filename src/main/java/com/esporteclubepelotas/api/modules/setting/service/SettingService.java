@@ -55,6 +55,25 @@ public class SettingService {
         }
     }
 
+    public Map<String, String> uploadStoreFacade(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Nenhum arquivo enviado.");
+        }
+        try {
+            String originalFilename = file.getOriginalFilename() != null ? file.getOriginalFilename() : "facade.jpg";
+            String facadeUrl = storageService.uploadFile(
+                    file.getBytes(),
+                    "store-facade-" + System.currentTimeMillis() + "-" + originalFilename,
+                    "settings",
+                    file.getContentType()
+            );
+            return Map.of("url", facadeUrl);
+        } catch (IOException e) {
+            log.error("Erro ao ler bytes da foto de fachada: {}", e.getMessage(), e);
+            throw new RuntimeException("Falha ao processar foto da fachada", e);
+        }
+    }
+
     @CacheEvict(value = "publicSettings", allEntries = true)
     @AuditLog(module = "SETTINGS", action = "UPDATE", description = "Atualização de Configurações Globais")
     @Transactional
@@ -80,13 +99,16 @@ public class SettingService {
             if (dto.getYouthPillars() != null) setting.setYouthPillars(new ArrayList<>(dto.getYouthPillars()));
             if (dto.getYouthTryouts() != null) setting.setYouthTryouts(dto.getYouthTryouts());
 
-            // Loja Oficial Lobo Mania
+            // Loja Oficial Alcateia
             if (dto.getStoreName() != null) setting.setStoreName(dto.getStoreName().trim());
             if (dto.getStoreDescription() != null) setting.setStoreDescription(dto.getStoreDescription().trim());
+            if (dto.getStoreFacadeUrl() != null) setting.setStoreFacadeUrl(dto.getStoreFacadeUrl().trim());
             if (dto.getStoreExternalUrl() != null) setting.setStoreExternalUrl(dto.getStoreExternalUrl().trim());
             if (dto.getStoreIsOnlineActive() != null) setting.setStoreIsOnlineActive(dto.getStoreIsOnlineActive());
             if (dto.getStoreInstagramUrl() != null) setting.setStoreInstagramUrl(dto.getStoreInstagramUrl().trim());
+            if (dto.getStoreInstagramDescription() != null) setting.setStoreInstagramDescription(dto.getStoreInstagramDescription().trim());
             if (dto.getStoreWhatsappNumber() != null) setting.setStoreWhatsappNumber(dto.getStoreWhatsappNumber().trim());
+            if (dto.getStoreWhatsappDescription() != null) setting.setStoreWhatsappDescription(dto.getStoreWhatsappDescription().trim());
             if (dto.getStoreWhatsappMessage() != null) setting.setStoreWhatsappMessage(dto.getStoreWhatsappMessage().trim());
             if (dto.getStoreOpeningHours() != null) setting.setStoreOpeningHours(dto.getStoreOpeningHours().trim());
             if (dto.getStoreAddress() != null) setting.setStoreAddress(dto.getStoreAddress().trim());
@@ -174,12 +196,15 @@ public class SettingService {
                 .stadiumAddress("Av. Bento Gonçalves esquina Parque Dom Antônio Zattera - Pelotas/RS, CEP 96015-140")
                 .googleMapsEmbedUrl("https://maps.google.com/maps?q=Est%C3%A1dio+Boca+do+Lobo,+Pelotas+-+RS&t=&z=16&ie=UTF8&iwloc=&output=embed")
                 .copyrightText("© 2026 Esporte Clube Pelotas. Todos os direitos reservados.")
-                .storeName("Loja Oficial Lobo Mania")
+                .storeName("Alcateia")
                 .storeDescription("Vista o manto áureo-cerúleo e apoie o Esporte Clube Pelotas. Produtos oficiais, camisas de jogo, linha casual e acessórios exclusivos.")
+                .storeFacadeUrl(null)
                 .storeExternalUrl(null)
                 .storeIsOnlineActive(false)
-                .storeInstagramUrl("https://www.instagram.com/lojadolobo/")
+                .storeInstagramUrl("https://www.instagram.com/alcateia.ecpelotas/")
+                .storeInstagramDescription("Acompanhe lançamentos de uniformes, bastidores da boutique, reposições e novidades diárias em primeira mão.")
                 .storeWhatsappNumber("5553999999999")
+                .storeWhatsappDescription("Consulte tamanhos disponíveis, envie seu comprovante e garanta seu manto com atendimento personalizado.")
                 .storeWhatsappMessage("Olá! Gostaria de informações sobre produtos e mantos oficiais do E.C. Pelotas.")
                 .storeOpeningHours("Segunda a Sexta: 09h às 19h | Sábado: 09h às 13h | Dias de jogos na Boca do Lobo: até o intervalo")
                 .storeAddress("Estádio Boca do Lobo - Av. Bento Gonçalves esquina Parque Dom Antônio Zattera - Pelotas/RS")

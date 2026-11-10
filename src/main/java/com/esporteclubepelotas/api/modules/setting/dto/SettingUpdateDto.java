@@ -29,13 +29,16 @@ public class SettingUpdateDto {
     private List<YouthPillarItem> youthPillars;
     private YouthTryoutsConfig youthTryouts;
 
-    // Loja Oficial Lobo Mania
+    // Loja Oficial Alcateia
     private String storeName;
     private String storeDescription;
+    private String storeFacadeUrl;
     private String storeExternalUrl;
     private Boolean storeIsOnlineActive;
     private String storeInstagramUrl;
+    private String storeInstagramDescription;
     private String storeWhatsappNumber;
+    private String storeWhatsappDescription;
     private String storeWhatsappMessage;
     private String storeOpeningHours;
     private String storeAddress;

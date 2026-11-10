@@ -58,6 +58,21 @@ public class SettingController {
         return ResponseEntity.ok(settingService.uploadStandaloneLogo(target));
     }
 
+    @PostMapping(value = "/upload-facade", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasAnyAuthority('settings.manage', 'users.manage', 'ROLE_ADMIN', 'ROLE_OWNER')")
+    @Operation(summary = "Upload prévio da foto da fachada da loja oficial (Admin)")
+    public ResponseEntity<Map<String, String>> uploadStoreFacade(
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "facade", required = false) MultipartFile facade
+    ) {
+        MultipartFile target = file != null ? file : facade;
+        if (target == null || target.isEmpty()) {
+            throw new IllegalArgumentException("O arquivo da foto da fachada é obrigatório.");
+        }
+        return ResponseEntity.ok(settingService.uploadStoreFacade(target));
+    }
+
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyAuthority('settings.manage', 'users.manage', 'ROLE_ADMIN', 'ROLE_OWNER')")

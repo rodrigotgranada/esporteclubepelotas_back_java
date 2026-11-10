@@ -97,15 +97,18 @@ public class Setting {
     private YouthTryoutsConfig youthTryouts = new YouthTryoutsConfig();
 
     // ==========================================
-    // LOJA OFICIAL LOBO MANIA
+    // LOJA OFICIAL ALCATEIA
     // ==========================================
     @Builder.Default
     @Column(name = "store_name", length = 150)
-    private String storeName = "Loja Oficial Lobo Mania";
+    private String storeName = "Alcateia";
 
     @Builder.Default
     @Column(name = "store_description", columnDefinition = "TEXT")
     private String storeDescription = "Vista o manto áureo-cerúleo e apoie o Esporte Clube Pelotas. Produtos oficiais, camisas de jogo, linha casual e acessórios exclusivos.";
+
+    @Column(name = "store_facade_url", length = 500)
+    private String storeFacadeUrl;
 
     @Column(name = "store_external_url", length = 500)
     private String storeExternalUrl;
@@ -116,11 +119,19 @@ public class Setting {
 
     @Builder.Default
     @Column(name = "store_instagram_url", length = 255)
-    private String storeInstagramUrl = "https://www.instagram.com/lojadolobo/";
+    private String storeInstagramUrl = "https://www.instagram.com/alcateia.ecpelotas/";
+
+    @Builder.Default
+    @Column(name = "store_instagram_description", length = 255)
+    private String storeInstagramDescription = "Acompanhe lançamentos de uniformes, bastidores da boutique, reposições e novidades diárias em primeira mão.";
 
     @Builder.Default
     @Column(name = "store_whatsapp_number", length = 50)
     private String storeWhatsappNumber = "5553999999999";
+
+    @Builder.Default
+    @Column(name = "store_whatsapp_description", length = 255)
+    private String storeWhatsappDescription = "Consulte tamanhos disponíveis, envie seu comprovante e garanta seu manto com atendimento personalizado.";
 
     @Builder.Default
     @Column(name = "store_whatsapp_message", length = 255)

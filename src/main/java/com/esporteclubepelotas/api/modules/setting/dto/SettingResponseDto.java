@@ -37,13 +37,16 @@ public class SettingResponseDto {
     private List<YouthPillarItem> youthPillars;
     private YouthTryoutsConfig youthTryouts;
 
-    // Loja Oficial Lobo Mania
+    // Loja Oficial Alcateia
     private String storeName;
     private String storeDescription;
+    private String storeFacadeUrl;
     private String storeExternalUrl;
     private Boolean storeIsOnlineActive;
     private String storeInstagramUrl;
+    private String storeInstagramDescription;
     private String storeWhatsappNumber;
+    private String storeWhatsappDescription;
     private String storeWhatsappMessage;
     private String storeOpeningHours;
     private String storeAddress;
@@ -75,12 +78,15 @@ public class SettingResponseDto {
                 .membershipExternalUrl(setting.getMembershipExternalUrl() != null ? setting.getMembershipExternalUrl() : "https://socioecpelotas.eleventickets.com/#/")
                 .youthPillars(setting.getYouthPillars())
                 .youthTryouts(setting.getYouthTryouts())
-                .storeName(setting.getStoreName() != null ? setting.getStoreName() : "Loja Oficial Lobo Mania")
+                .storeName(setting.getStoreName() != null ? setting.getStoreName() : "Alcateia")
                 .storeDescription(setting.getStoreDescription())
+                .storeFacadeUrl(setting.getStoreFacadeUrl())
                 .storeExternalUrl(setting.getStoreExternalUrl())
                 .storeIsOnlineActive(setting.getStoreIsOnlineActive() != null ? setting.getStoreIsOnlineActive() : false)
                 .storeInstagramUrl(setting.getStoreInstagramUrl())
+                .storeInstagramDescription(setting.getStoreInstagramDescription())
                 .storeWhatsappNumber(setting.getStoreWhatsappNumber())
+                .storeWhatsappDescription(setting.getStoreWhatsappDescription())
                 .storeWhatsappMessage(setting.getStoreWhatsappMessage())
                 .storeOpeningHours(setting.getStoreOpeningHours())
                 .storeAddress(setting.getStoreAddress())
