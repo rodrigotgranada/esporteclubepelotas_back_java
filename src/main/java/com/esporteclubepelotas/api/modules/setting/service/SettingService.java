@@ -186,7 +186,7 @@ public class SettingService {
 
         Setting setting = Setting.builder()
                 .clubName("Esporte Clube Pelotas")
-                .clubLogoUrl(null)
+                .clubLogoUrl("/images/pelotas-logo.png")
                 .clubLogoGallery(new ArrayList<>())
                 .socialLinks(socialLinks)
                 .contactPhones(phones)
