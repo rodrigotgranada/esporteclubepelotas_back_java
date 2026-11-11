@@ -121,6 +121,10 @@ public final class NewsMapperHelper {
                 .content(comment.getContent())
                 .status(comment.getStatus())
                 .createdAt(comment.getCreatedAt())
+                .isReported(comment.isReported())
+                .reportCount(comment.getReportCount())
+                .lastReportReason(comment.getLastReportReason())
+                .lastReportedAt(comment.getLastReportedAt())
                 .author(authorDto)
                 .article(articleDto)
                 .build();

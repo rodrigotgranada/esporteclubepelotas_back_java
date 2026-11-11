@@ -1,6 +1,7 @@
 package com.esporteclubepelotas.api.modules.news.service;
 
 import com.esporteclubepelotas.api.common.exception.BusinessException;
+import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
 import com.esporteclubepelotas.api.modules.news.dto.*;
 import com.esporteclubepelotas.api.modules.news.entity.*;
 import com.esporteclubepelotas.api.modules.news.helper.NewsMapperHelper;
@@ -31,6 +32,7 @@ public class NewsPublicService {
     private final NewsCommentRepository commentRepository;
     private final NewsReactionRepository reactionRepository;
     private final UserRepository userRepository;
+    private final PortalWebSocketHandler webSocketHandler;
 
     private User validateActiveUser(String userId) {
         if (userId == null || userId.isBlank()) {
@@ -368,5 +370,14 @@ public class NewsPublicService {
 
         comment.setActive(false);
         commentRepository.save(comment);
+    }
+
+    @Transactional
+    public NewsCommentDto reportComment(UUID commentId, String reason) {
+        NewsCommentDto dto = com.esporteclubepelotas.api.modules.news.helper.NewsCommentsAdminHelper.publicCommentReport(
+                commentRepository, commentId, reason
+        );
+        webSocketHandler.broadcastAfterCommit("news-comments", "REPORTED", commentId.toString());
+        return dto;
     }
 }

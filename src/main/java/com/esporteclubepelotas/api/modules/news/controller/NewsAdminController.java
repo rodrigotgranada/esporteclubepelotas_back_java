@@ -111,9 +111,16 @@ public class NewsAdminController {
             @RequestParam(defaultValue = "10") Integer limit,
             @RequestParam(required = false) NewsCommentStatus status,
             @RequestParam(required = false) String search,
-            @RequestParam(required = false) String articleId
+            @RequestParam(required = false) String articleId,
+            @RequestParam(required = false) Boolean reportedOnly
     ) {
-        return ResponseEntity.ok(newsAdminService.adminFindComments(page, limit, status, search, articleId));
+        return ResponseEntity.ok(newsAdminService.adminFindComments(page, limit, status, search, articleId, reportedOnly));
+    }
+
+    @PatchMapping("/comments/{commentId}/dismiss-report")
+    @Operation(summary = "Ignorar denúncia de comentário (Falso Positivo) mantendo-o ativo")
+    public ResponseEntity<NewsCommentDto> adminDismissCommentReport(@PathVariable UUID commentId) {
+        return ResponseEntity.ok(newsAdminService.adminDismissCommentReport(commentId));
     }
 
     @PatchMapping("/comments/{commentId}/status")

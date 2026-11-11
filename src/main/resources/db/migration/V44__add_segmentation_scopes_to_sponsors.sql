@@ -22,3 +22,4 @@ CREATE INDEX IF NOT EXISTS idx_sponsors_scope_female
 UPDATE public.sponsors
 SET show_on_youth = true, show_on_female = true
 WHERE name IN ('Banrisul', 'Biscoitos Zezé', 'Unimed Pelotas');
+

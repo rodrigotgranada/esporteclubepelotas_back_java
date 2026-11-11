@@ -94,6 +94,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/kits/public", "/kits/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/matches/public", "/matches/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/opponents/public", "/opponents/public/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/news/comments/*/report").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/system-modules", "/system-modules/**").permitAll()
 
                         // 5. Todas as rotas administrativas e modificacoes exigem autenticacao
                         .anyRequest().authenticated()

@@ -26,6 +26,11 @@ public class NewsCommentDto {
     private NewsCommentStatus status;
     private Instant createdAt;
 
+    private Boolean isReported;
+    private Integer reportCount;
+    private String lastReportReason;
+    private Instant lastReportedAt;
+
     private NewsCommentAuthorDto author;
     private NewsCommentArticleDto article;
 }

@@ -94,6 +94,16 @@ public class NewsPublicController {
         return ResponseEntity.status(HttpStatus.CREATED).body(newsPublicService.addComment(slug, userId, dto.getContent()));
     }
 
+    @PostMapping("/comments/{commentId}/report")
+    @Operation(summary = "Denunciar um comentário por violação de diretrizes")
+    public ResponseEntity<NewsCommentDto> reportComment(
+            @PathVariable UUID commentId,
+            @RequestBody(required = false) Map<String, String> body
+    ) {
+        String reason = body != null ? body.get("reason") : null;
+        return ResponseEntity.ok(newsPublicService.reportComment(commentId, reason));
+    }
+
     @DeleteMapping("/comments/{commentId}")
     @SecurityRequirement(name = "bearerAuth")
     @Operation(summary = "Remover um comentário (próprio autor ou moderador)")

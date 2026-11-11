@@ -446,13 +446,22 @@ public class NewsAdminService {
     }
 
     @Transactional(readOnly = true)
-    public GetNewsCommentsResponseDto adminFindComments(Integer page, Integer limit, NewsCommentStatus status, String search, String articleId) {
-        return NewsCommentsAdminHelper.adminFindComments(commentRepository, page, limit, status, search, articleId);
+    public GetNewsCommentsResponseDto adminFindComments(Integer page, Integer limit, NewsCommentStatus status, String search, String articleId, Boolean reportedOnly) {
+        return NewsCommentsAdminHelper.adminFindComments(commentRepository, page, limit, status, search, articleId, reportedOnly);
+    }
+
+    @Transactional
+    public NewsCommentDto adminDismissCommentReport(UUID commentId) {
+        NewsCommentDto dto = NewsCommentsAdminHelper.adminDismissCommentReport(commentRepository, commentId);
+        webSocketHandler.broadcastAfterCommit("news-comments", "UPDATED", commentId.toString());
+        return dto;
     }
 
     @Transactional
     public NewsCommentDto adminUpdateCommentStatus(UUID commentId, NewsCommentStatus status) {
-        return NewsCommentsAdminHelper.adminUpdateCommentStatus(commentRepository, commentId, status);
+        NewsCommentDto dto = NewsCommentsAdminHelper.adminUpdateCommentStatus(commentRepository, commentId, status);
+        webSocketHandler.broadcastAfterCommit("news-comments", "UPDATED", commentId.toString());
+        return dto;
     }
 
     @Transactional

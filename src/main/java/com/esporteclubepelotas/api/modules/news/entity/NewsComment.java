@@ -44,6 +44,20 @@ public class NewsComment {
     @Builder.Default
     private boolean isActive = true;
 
+    @Column(name = "is_reported", nullable = false)
+    @Builder.Default
+    private boolean isReported = false;
+
+    @Column(name = "report_count", nullable = false)
+    @Builder.Default
+    private int reportCount = 0;
+
+    @Column(name = "last_report_reason", columnDefinition = "TEXT")
+    private String lastReportReason;
+
+    @Column(name = "last_reported_at")
+    private Instant lastReportedAt;
+
     @CreationTimestamp
     @Column(updatable = false)
     private Instant createdAt;
