@@ -24,6 +24,7 @@ public class QuerySponsorDto {
     private Boolean isActive;
 
     private String status; // ACTIVE, SCHEDULED, EXPIRED, INACTIVE
+    private String scope; // ALL, MAIN, YOUTH, FEMALE
     @Builder.Default
     private Integer page = 1;
     @Builder.Default

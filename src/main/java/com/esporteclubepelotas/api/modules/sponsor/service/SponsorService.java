@@ -34,19 +34,43 @@ public class SponsorService {
     private final PortalWebSocketHandler webSocketHandler;
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "sponsors_public", sync = true)
-    public List<SponsorDto> findActivePublicSponsors() {
-        return sponsorRepository.findActivePublicSponsors(LocalDate.now())
-                .stream()
+    @Cacheable(value = "sponsors_public", key = "#scope != null ? #scope.toLowerCase() : 'main'", sync = true)
+    public List<SponsorDto> findActivePublicSponsors(String scope) {
+        LocalDate today = LocalDate.now();
+        List<Sponsor> list;
+
+        if (scope == null || scope.equalsIgnoreCase("MAIN") || scope.equalsIgnoreCase("HOME")) {
+            list = sponsorRepository.findActivePublicSponsors(today);
+        } else if (scope.equalsIgnoreCase("YOUTH") || scope.equalsIgnoreCase("BASE")) {
+            list = sponsorRepository.findActivePublicSponsorsYouth(today);
+        } else if (scope.equalsIgnoreCase("FEMALE") || scope.equalsIgnoreCase("FEMININE")) {
+            list = sponsorRepository.findActivePublicSponsorsFemale(today);
+        } else {
+            list = sponsorRepository.findActivePublicSponsors(today);
+        }
+
+        return list.stream()
                 .map(SponsorMapperHelper::toDto)
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "sponsors_featured", sync = true)
-    public List<SponsorDto> findFeaturedPublicSponsors() {
-        return sponsorRepository.findFeaturedPublicSponsors(LocalDate.now())
-                .stream()
+    @Cacheable(value = "sponsors_featured", key = "#scope != null ? #scope.toLowerCase() : 'main'", sync = true)
+    public List<SponsorDto> findFeaturedPublicSponsors(String scope) {
+        LocalDate today = LocalDate.now();
+        List<Sponsor> list;
+
+        if (scope == null || scope.equalsIgnoreCase("MAIN") || scope.equalsIgnoreCase("HOME")) {
+            list = sponsorRepository.findFeaturedPublicSponsors(today);
+        } else if (scope.equalsIgnoreCase("YOUTH") || scope.equalsIgnoreCase("BASE")) {
+            list = sponsorRepository.findFeaturedPublicSponsorsYouth(today);
+        } else if (scope.equalsIgnoreCase("FEMALE") || scope.equalsIgnoreCase("FEMININE")) {
+            list = sponsorRepository.findFeaturedPublicSponsorsFemale(today);
+        } else {
+            list = sponsorRepository.findFeaturedPublicSponsors(today);
+        }
+
+        return list.stream()
                 .map(SponsorMapperHelper::toDto)
                 .toList();
     }
@@ -101,6 +125,15 @@ public class SponsorService {
                 }
             }
 
+            if (query.getScope() != null && !query.getScope().isBlank()) {
+                String sc = query.getScope().trim().toUpperCase();
+                switch (sc) {
+                    case "MAIN", "HOME" -> predicates.add(cb.isTrue(root.get("showOnMain")));
+                    case "YOUTH", "BASE" -> predicates.add(cb.isTrue(root.get("showOnYouth")));
+                    case "FEMALE", "FEMININE" -> predicates.add(cb.isTrue(root.get("showOnFemale")));
+                }
+            }
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
@@ -150,6 +183,9 @@ public class SponsorService {
                 .websiteUrl(dto.getWebsiteUrl() != null ? dto.getWebsiteUrl().trim() : null)
                 .featured(Boolean.TRUE.equals(dto.getIsFeatured()))
                 .active(!Boolean.FALSE.equals(dto.getIsActive()))
+                .showOnMain(!Boolean.FALSE.equals(dto.getShowOnMain()))
+                .showOnYouth(Boolean.TRUE.equals(dto.getShowOnYouth()))
+                .showOnFemale(Boolean.TRUE.equals(dto.getShowOnFemale()))
                 .displayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : 0)
                 .contractStartDate(dto.getContractStartDate())
                 .contractEndDate(dto.getContractEndDate())
@@ -195,6 +231,15 @@ public class SponsorService {
         }
         if (dto.getContractEndDate() != null) {
             sponsor.setContractEndDate(dto.getContractEndDate());
+        }
+        if (dto.getShowOnMain() != null) {
+            sponsor.setShowOnMain(dto.getShowOnMain());
+        }
+        if (dto.getShowOnYouth() != null) {
+            sponsor.setShowOnYouth(dto.getShowOnYouth());
+        }
+        if (dto.getShowOnFemale() != null) {
+            sponsor.setShowOnFemale(dto.getShowOnFemale());
         }
 
         Sponsor saved = sponsorRepository.save(sponsor);

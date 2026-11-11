@@ -42,6 +42,18 @@ public class Sponsor {
     @Builder.Default
     private boolean active = true;
 
+    @Column(name = "show_on_main", nullable = false)
+    @Builder.Default
+    private boolean showOnMain = true;
+
+    @Column(name = "show_on_youth", nullable = false)
+    @Builder.Default
+    private boolean showOnYouth = false;
+
+    @Column(name = "show_on_female", nullable = false)
+    @Builder.Default
+    private boolean showOnFemale = false;
+
     @Column(name = "display_order", nullable = false)
     @Builder.Default
     private Integer displayOrder = 0;

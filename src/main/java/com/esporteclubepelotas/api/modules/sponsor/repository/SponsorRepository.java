@@ -18,6 +18,7 @@ public interface SponsorRepository extends JpaRepository<Sponsor, UUID>, JpaSpec
     @Query("""
         SELECT s FROM Sponsor s
         WHERE s.active = true
+          AND s.showOnMain = true
           AND s.deletedAt IS NULL
           AND (s.contractStartDate IS NULL OR s.contractStartDate <= :today)
           AND (s.contractEndDate IS NULL OR s.contractEndDate >= :today)
@@ -28,13 +29,60 @@ public interface SponsorRepository extends JpaRepository<Sponsor, UUID>, JpaSpec
     @Query("""
         SELECT s FROM Sponsor s
         WHERE s.active = true
+          AND s.showOnYouth = true
+          AND s.deletedAt IS NULL
+          AND (s.contractStartDate IS NULL OR s.contractStartDate <= :today)
+          AND (s.contractEndDate IS NULL OR s.contractEndDate >= :today)
+        ORDER BY s.featured DESC, s.displayOrder ASC, s.name ASC
+    """)
+    List<Sponsor> findActivePublicSponsorsYouth(@Param("today") LocalDate today);
+
+    @Query("""
+        SELECT s FROM Sponsor s
+        WHERE s.active = true
+          AND s.showOnFemale = true
+          AND s.deletedAt IS NULL
+          AND (s.contractStartDate IS NULL OR s.contractStartDate <= :today)
+          AND (s.contractEndDate IS NULL OR s.contractEndDate >= :today)
+        ORDER BY s.featured DESC, s.displayOrder ASC, s.name ASC
+    """)
+    List<Sponsor> findActivePublicSponsorsFemale(@Param("today") LocalDate today);
+
+    @Query("""
+        SELECT s FROM Sponsor s
+        WHERE s.active = true
           AND s.featured = true
+          AND s.showOnMain = true
           AND s.deletedAt IS NULL
           AND (s.contractStartDate IS NULL OR s.contractStartDate <= :today)
           AND (s.contractEndDate IS NULL OR s.contractEndDate >= :today)
         ORDER BY s.displayOrder ASC, s.name ASC
     """)
     List<Sponsor> findFeaturedPublicSponsors(@Param("today") LocalDate today);
+
+    @Query("""
+        SELECT s FROM Sponsor s
+        WHERE s.active = true
+          AND s.featured = true
+          AND s.showOnYouth = true
+          AND s.deletedAt IS NULL
+          AND (s.contractStartDate IS NULL OR s.contractStartDate <= :today)
+          AND (s.contractEndDate IS NULL OR s.contractEndDate >= :today)
+        ORDER BY s.displayOrder ASC, s.name ASC
+    """)
+    List<Sponsor> findFeaturedPublicSponsorsYouth(@Param("today") LocalDate today);
+
+    @Query("""
+        SELECT s FROM Sponsor s
+        WHERE s.active = true
+          AND s.featured = true
+          AND s.showOnFemale = true
+          AND s.deletedAt IS NULL
+          AND (s.contractStartDate IS NULL OR s.contractStartDate <= :today)
+          AND (s.contractEndDate IS NULL OR s.contractEndDate >= :today)
+        ORDER BY s.displayOrder ASC, s.name ASC
+    """)
+    List<Sponsor> findFeaturedPublicSponsorsFemale(@Param("today") LocalDate today);
 
     @Modifying
     @Query("UPDATE Sponsor s SET s.clicksCount = s.clicksCount + 1 WHERE s.id = :id AND s.deletedAt IS NULL")

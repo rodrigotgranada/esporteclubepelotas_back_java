@@ -21,15 +21,19 @@ public class SponsorPublicController {
     private final SponsorService sponsorService;
 
     @GetMapping
-    @Operation(summary = "Listar patrocinadores oficiais ativos em vigência para o rodapé/seção da home")
-    public ResponseEntity<List<SponsorDto>> getActiveSponsors() {
-        return ResponseEntity.ok(sponsorService.findActivePublicSponsors());
+    @Operation(summary = "Listar patrocinadores oficiais ativos em vigência para o rodapé/seção da home ou hubs segmentados")
+    public ResponseEntity<List<SponsorDto>> getActiveSponsors(
+            @RequestParam(required = false) String scope
+    ) {
+        return ResponseEntity.ok(sponsorService.findActivePublicSponsors(scope));
     }
 
     @GetMapping("/featured")
-    @Operation(summary = "Listar patrocinadores destacados para o ticker/marquee superior da home")
-    public ResponseEntity<List<SponsorDto>> getFeaturedSponsors() {
-        return ResponseEntity.ok(sponsorService.findFeaturedPublicSponsors());
+    @Operation(summary = "Listar patrocinadores destacados para o ticker/marquee superior da home ou hubs segmentados")
+    public ResponseEntity<List<SponsorDto>> getFeaturedSponsors(
+            @RequestParam(required = false) String scope
+    ) {
+        return ResponseEntity.ok(sponsorService.findFeaturedPublicSponsors(scope));
     }
 
     @PostMapping("/{id}/click")

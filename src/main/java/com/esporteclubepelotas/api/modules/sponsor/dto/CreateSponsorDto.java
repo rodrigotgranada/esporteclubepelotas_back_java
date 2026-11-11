@@ -38,6 +38,21 @@ public class CreateSponsorDto {
     @Builder.Default
     private Boolean isActive = true;
 
+    @JsonProperty("showOnMain")
+    @JsonAlias({"show_on_main"})
+    @Builder.Default
+    private Boolean showOnMain = true;
+
+    @JsonProperty("showOnYouth")
+    @JsonAlias({"show_on_youth"})
+    @Builder.Default
+    private Boolean showOnYouth = false;
+
+    @JsonProperty("showOnFemale")
+    @JsonAlias({"show_on_female"})
+    @Builder.Default
+    private Boolean showOnFemale = false;
+
     @Builder.Default
     private Integer displayOrder = 0;
 

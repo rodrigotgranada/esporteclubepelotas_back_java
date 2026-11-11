@@ -32,6 +32,18 @@ public class UpdateSponsorDto {
     @JsonAlias({"active", "is_active"})
     private Boolean isActive;
 
+    @JsonProperty("showOnMain")
+    @JsonAlias({"show_on_main"})
+    private Boolean showOnMain;
+
+    @JsonProperty("showOnYouth")
+    @JsonAlias({"show_on_youth"})
+    private Boolean showOnYouth;
+
+    @JsonProperty("showOnFemale")
+    @JsonAlias({"show_on_female"})
+    private Boolean showOnFemale;
+
     private Integer displayOrder;
     private LocalDate contractStartDate;
     private LocalDate contractEndDate;
