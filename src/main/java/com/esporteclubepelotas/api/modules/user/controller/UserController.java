@@ -4,6 +4,7 @@ import com.esporteclubepelotas.api.common.dto.PageResponseDto;
 import com.esporteclubepelotas.api.common.exception.BusinessException;
 import com.esporteclubepelotas.api.common.security.CurrentUser;
 import com.esporteclubepelotas.api.common.security.UserPrincipal;
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
 import com.esporteclubepelotas.api.modules.auth.dto.UserSummaryDto;
 import com.esporteclubepelotas.api.modules.auth.service.AuthService;
 import com.esporteclubepelotas.api.modules.user.dto.AdminUpdateUserDto;
@@ -90,6 +91,7 @@ public class UserController {
 
     @PostMapping(value = "/admin/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    @AuditLog(module = "users", action = "CREATE_USER", description = "Criação de usuário via painel administrativo")
     @Operation(summary = "Criação direta de usuário pelo Painel Administrativo")
     public ResponseEntity<UserSummaryDto> adminCreate(
             @RequestPart("data") String dataJson,
@@ -100,6 +102,7 @@ public class UserController {
 
     @PatchMapping("/admin/{id}")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    @AuditLog(module = "users", action = "UPDATE_USER", description = "Edição cadastral de usuário")
     @Operation(summary = "Edição cadastral de usuário pelo Administrador")
     public ResponseEntity<UserSummaryDto> adminUpdate(
             @PathVariable String id,
@@ -110,6 +113,7 @@ public class UserController {
 
     @PostMapping(value = "/admin/{id}/avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    @AuditLog(module = "users", action = "UPDATE_AVATAR", description = "Alteração de foto de perfil de usuário pelo Admin")
     @Operation(summary = "Upload de foto de perfil de qualquer usuário pelo Admin")
     public ResponseEntity<Map<String, String>> adminUpdateAvatar(
             @PathVariable String id,
@@ -120,6 +124,7 @@ public class UserController {
 
     @DeleteMapping("/admin/{id}/avatar")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    @AuditLog(module = "users", action = "DELETE_AVATAR", description = "Remoção de foto de perfil de usuário pelo Admin")
     @Operation(summary = "Remoção de foto de perfil de um usuário pelo Admin")
     public ResponseEntity<UserSummaryDto> adminDeleteAvatar(
             @PathVariable String id,
@@ -129,6 +134,7 @@ public class UserController {
 
     @PatchMapping({"/admin/{id}/role", "/{id}/role"})
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    @AuditLog(module = "users", action = "CHANGE_ROLE", description = "Alteração de perfil/role de usuário")
     @Operation(summary = "Alteração de cargo/role de um usuário")
     public ResponseEntity<UserSummaryDto> updateRole(
             @PathVariable String id,
@@ -140,6 +146,7 @@ public class UserController {
 
     @PatchMapping({"/admin/{id}/status", "/{id}/status"})
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    @AuditLog(module = "users", action = "CHANGE_STATUS", description = "Alteração de status do usuário (ativo/inativo)")
     @Operation(summary = "Alteração de status (ativo, bloqueado, suspenso) de um usuário")
     public ResponseEntity<UserSummaryDto> updateStatus(
             @PathVariable String id,
@@ -151,6 +158,7 @@ public class UserController {
 
     @DeleteMapping("/admin/{id}")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    @AuditLog(module = "users", action = "DELETE_USER", description = "Exclusão lógica (soft-delete) de usuário")
     @Operation(summary = "Exclusão lógica (soft-delete) de usuário")
     public ResponseEntity<Map<String, Boolean>> adminSoftDelete(
             @PathVariable String id,
@@ -161,6 +169,7 @@ public class UserController {
 
     @PostMapping("/admin/{id}/resend-verification")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    @AuditLog(module = "users", action = "RESEND_VERIFICATION", description = "Reenvio de código de ativação pelo Admin")
     @Operation(summary = "Reenviar e-mail com código de ativação pelo Admin")
     public ResponseEntity<Map<String, Boolean>> adminResendVerification(
             @PathVariable String id,
@@ -171,6 +180,7 @@ public class UserController {
 
     @PostMapping("/admin/{id}/force-password-reset")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
+    @AuditLog(module = "users", action = "FORCE_PASSWORD_RESET", description = "Disparo de redefinição de senha pelo Admin")
     @Operation(summary = "Disparar e-mail de redefinição forçada de senha pelo Admin")
     public ResponseEntity<Map<String, Boolean>> adminForcePasswordReset(
             @PathVariable String id,

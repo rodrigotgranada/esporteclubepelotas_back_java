@@ -15,6 +15,7 @@ import com.esporteclubepelotas.api.modules.news.dto.UpdateNewsDto;
 import com.esporteclubepelotas.api.modules.news.dto.UpdateShowcaseDto;
 import com.esporteclubepelotas.api.modules.news.entity.NewsCommentStatus;
 import com.esporteclubepelotas.api.modules.news.service.NewsAdminService;
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -56,6 +57,7 @@ public class NewsAdminController {
     }
 
     @PostMapping("/categories")
+    @AuditLog(module = "news", action = "CREATE_CATEGORY", description = "Criação de categoria de matéria")
     @Operation(summary = "Criar uma nova categoria in-line diretamente pelo editor")
     public ResponseEntity<NewsCategoryDto> createCategory(@RequestBody @Valid CreateCategoryDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(newsAdminService.createCategory(dto));
@@ -118,12 +120,14 @@ public class NewsAdminController {
     }
 
     @PatchMapping("/comments/{commentId}/dismiss-report")
+    @AuditLog(module = "news-comments", action = "DISMISS_REPORT", description = "Denúncia de comentário desconsiderada como falso positivo")
     @Operation(summary = "Ignorar denúncia de comentário (Falso Positivo) mantendo-o ativo")
     public ResponseEntity<NewsCommentDto> adminDismissCommentReport(@PathVariable UUID commentId) {
         return ResponseEntity.ok(newsAdminService.adminDismissCommentReport(commentId));
     }
 
     @PatchMapping("/comments/{commentId}/status")
+    @AuditLog(module = "news-comments", action = "UPDATE_STATUS", description = "Alteração de status de moderação do comentário")
     @Operation(summary = "Alterar status de moderação do comentário (ACTIVE ou HIDDEN)")
     public ResponseEntity<NewsCommentDto> adminUpdateCommentStatus(
             @PathVariable UUID commentId,
@@ -134,6 +138,7 @@ public class NewsAdminController {
     }
 
     @DeleteMapping("/comments/{commentId}")
+    @AuditLog(module = "news-comments", action = "DELETE_COMMENT", description = "Exclusão lógica de comentário pelo moderador")
     @Operation(summary = "Excluir comentário na moderação (soft-delete)")
     public ResponseEntity<Map<String, Object>> adminDeleteComment(@PathVariable UUID commentId) {
         newsAdminService.adminDeleteComment(commentId);
@@ -147,6 +152,7 @@ public class NewsAdminController {
     }
 
     @PutMapping("/showcase")
+    @AuditLog(module = "news", action = "UPDATE_SHOWCASE", description = "Atualização dos slots da vitrine da capa")
     @Operation(summary = "Atualizar os slots da vitrine da capa de forma atômica (Manchetão e Secundários)")
     public ResponseEntity<Map<String, Object>> updateShowcase(@RequestBody UpdateShowcaseDto dto) {
         newsAdminService.updateShowcase(dto);
@@ -172,6 +178,7 @@ public class NewsAdminController {
     }
 
     @PostMapping
+    @AuditLog(module = "news", action = "CREATE_ARTICLE", description = "Criação de nova matéria no portal")
     @Operation(summary = "Criar uma nova matéria (rascunho ou publicada)")
     public ResponseEntity<NewsArticleDto> create(
             @RequestBody @Valid CreateNewsDto dto,
@@ -182,6 +189,7 @@ public class NewsAdminController {
     }
 
     @PatchMapping("/{id}")
+    @AuditLog(module = "news", action = "UPDATE_ARTICLE", description = "Edição e atualização de matéria")
     @Operation(summary = "Atualizar uma matéria existente")
     public ResponseEntity<NewsArticleDto> update(
             @PathVariable UUID id,
@@ -193,6 +201,7 @@ public class NewsAdminController {
     }
 
     @PostMapping("/{id}/duplicate")
+    @AuditLog(module = "news", action = "DUPLICATE_ARTICLE", description = "Duplicação de matéria para novo rascunho")
     @Operation(summary = "Duplicar uma matéria existente criando um novo rascunho")
     public ResponseEntity<NewsArticleDto> duplicate(
             @PathVariable UUID id,
@@ -203,6 +212,7 @@ public class NewsAdminController {
     }
 
     @PostMapping("/{id}/publish-now")
+    @AuditLog(module = "news", action = "PUBLISH_ARTICLE", description = "Publicação imediata de matéria agendada")
     @Operation(summary = "Publicar imediatamente uma matéria agendada no portal")
     public ResponseEntity<Map<String, Object>> publishNow(@PathVariable UUID id) {
         NewsArticleDto published = newsAdminService.publishNow(id);
@@ -210,6 +220,7 @@ public class NewsAdminController {
     }
 
     @DeleteMapping("/{id}")
+    @AuditLog(module = "news", action = "DELETE_ARTICLE", description = "Exclusão lógica (soft-delete) de matéria")
     @Operation(summary = "Excluir uma matéria (soft-delete)")
     public ResponseEntity<Map<String, Object>> softDelete(@PathVariable UUID id) {
         newsAdminService.softDelete(id);

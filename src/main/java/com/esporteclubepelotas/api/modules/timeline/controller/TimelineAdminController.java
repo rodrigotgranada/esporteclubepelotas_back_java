@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.timeline.controller;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+
 import com.esporteclubepelotas.api.common.security.UserPrincipal;
 import com.esporteclubepelotas.api.modules.timeline.dto.*;
 import com.esporteclubepelotas.api.modules.timeline.service.TimelineAdminService;
@@ -27,6 +29,7 @@ import java.util.UUID;
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasAuthority('timeline.manage') or hasRole('ADMIN') or hasRole('OWNER') or hasRole('EDITOR')")
 @Tag(name = "Linha do Tempo (Gestão Administrativa)", description = "CRUD de marcos históricos do Pelotas com upload de imagens")
+
 public class TimelineAdminController {
 
     private final TimelineAdminService timelineAdminService;
@@ -45,6 +48,7 @@ public class TimelineAdminController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AuditLog(module = "HISTORY", action = "CREATE_TIMELINE_EVENT", description = "Criação de marco histórico (multipart)")
     @Operation(summary = "Criar novo marco histórico com foto opcional (Multipart)")
     public ResponseEntity<TimelineEventDto> createMultipart(
             @RequestParam("data") String dataJson,
@@ -62,6 +66,7 @@ public class TimelineAdminController {
     }
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @AuditLog(module = "HISTORY", action = "CREATE_TIMELINE_EVENT", description = "Criação de marco histórico (json)")
     @Operation(summary = "Criar novo marco histórico sem upload direto de arquivo (JSON puro)")
     public ResponseEntity<TimelineEventDto> createJson(
             @RequestBody @Valid CreateTimelineEventDto dto,
@@ -72,6 +77,7 @@ public class TimelineAdminController {
     }
 
     @PatchMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AuditLog(module = "HISTORY", action = "UPDATE_TIMELINE_EVENT", description = "Atualização de marco histórico (multipart)")
     @Operation(summary = "Atualizar marco histórico existente com foto opcional (Multipart)")
     public ResponseEntity<TimelineEventDto> updateMultipart(
             @PathVariable UUID id,
@@ -91,6 +97,7 @@ public class TimelineAdminController {
     }
 
     @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @AuditLog(module = "HISTORY", action = "UPDATE_TIMELINE_EVENT", description = "Atualização de marco histórico (json)")
     @Operation(summary = "Atualizar marco histórico existente diretamente via JSON")
     public ResponseEntity<TimelineEventDto> updateJson(
             @PathVariable UUID id,
@@ -100,6 +107,7 @@ public class TimelineAdminController {
     }
 
     @DeleteMapping("/{id}")
+    @AuditLog(module = "HISTORY", action = "DELETE_TIMELINE_EVENT", description = "Exclusão de marco histórico")
     @Operation(summary = "Inativar marco histórico (Soft delete)")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         timelineAdminService.delete(id);

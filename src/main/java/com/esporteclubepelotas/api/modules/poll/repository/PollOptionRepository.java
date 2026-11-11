@@ -1,0 +1,22 @@
+package com.esporteclubepelotas.api.modules.poll.repository;
+
+import com.esporteclubepelotas.api.modules.poll.entity.PollOption;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.UUID;
+
+@Repository
+public interface PollOptionRepository extends JpaRepository<PollOption, UUID> {
+
+    List<PollOption> findByPollIdOrderByDisplayOrderAscCreatedAtAsc(UUID pollId);
+
+    @Modifying
+    @Query("UPDATE PollOption po SET po.votesCount = po.votesCount + 1 WHERE po.id = :id")
+    void incrementVoteCount(@Param("id") UUID id);
+}
+

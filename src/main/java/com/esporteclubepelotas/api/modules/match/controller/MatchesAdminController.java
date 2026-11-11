@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.match.controller;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+
 import com.esporteclubepelotas.api.modules.match.dto.MatchRequest;
 import com.esporteclubepelotas.api.modules.match.dto.MatchResponse;
 import com.esporteclubepelotas.api.modules.match.service.MatchService;
@@ -23,6 +25,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
 @Tag(name = "Matches (Admin)", description = "Gestão de partidas do Pelotas")
+
 public class MatchesAdminController {
 
     private final MatchService matchService;
@@ -40,18 +43,21 @@ public class MatchesAdminController {
     }
 
     @PostMapping
+    @AuditLog(module = "MATCHES", action = "CREATE_MATCH", description = "Cadastro de partida")
     @Operation(summary = "Cadastrar nova partida")
     public ResponseEntity<MatchResponse> create(@Valid @RequestBody MatchRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(matchService.create(request));
     }
 
     @PutMapping("/{id}")
+    @AuditLog(module = "MATCHES", action = "UPDATE_MATCH", description = "Atualização de partida")
     @Operation(summary = "Atualizar dados de uma partida")
     public ResponseEntity<MatchResponse> update(@PathVariable UUID id, @Valid @RequestBody MatchRequest request) {
         return ResponseEntity.ok(matchService.update(id, request));
     }
 
     @DeleteMapping("/{id}")
+    @AuditLog(module = "MATCHES", action = "DELETE_MATCH", description = "Exclusão de partida")
     @Operation(summary = "Excluir partida (soft-delete)")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         matchService.delete(id);

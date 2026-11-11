@@ -44,4 +44,5 @@ public class SettingUpdateDto {
     private String storeAddress;
     private Boolean storeHasMemberDiscount;
     private String storeMemberDiscountText;
+    private Boolean newsletterIsActive;
 }

@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.role.controller;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+
 import com.esporteclubepelotas.api.modules.role.dto.CreateRoleDto;
 import com.esporteclubepelotas.api.modules.role.dto.UpdateRoleDto;
 import com.esporteclubepelotas.api.modules.role.entity.Role;
@@ -20,6 +22,7 @@ import java.util.Map;
 @RequestMapping({"/admin/roles", "/roles"})
 @RequiredArgsConstructor
 @Tag(name = "Roles", description = "Gestão de Cargos e Permissões de Acesso (RBAC)")
+
 public class RoleController {
 
     private final RoleService roleService;
@@ -39,6 +42,7 @@ public class RoleController {
     }
 
     @PostMapping
+    @AuditLog(module = "ROLES", action = "CREATE_ROLE", description = "Criação de cargo/permissão")
     @PreAuthorize("hasRole('OWNER')")
     @Operation(summary = "Criar um novo cargo")
     public ResponseEntity<Role> createRole(@Valid @RequestBody CreateRoleDto dto) {
@@ -46,6 +50,7 @@ public class RoleController {
     }
 
     @PatchMapping("/{id}")
+    @AuditLog(module = "ROLES", action = "UPDATE_ROLE", description = "Atualização de cargo/permissão")
     @PreAuthorize("hasRole('OWNER')")
     @Operation(summary = "Atualizar permissões ou dados de um cargo")
     public ResponseEntity<Role> updateRole(
@@ -56,6 +61,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/{id}")
+    @AuditLog(module = "ROLES", action = "DELETE_ROLE", description = "Exclusão de cargo/permissão")
     @PreAuthorize("hasRole('OWNER')")
     @Operation(summary = "Excluir um cargo")
     public ResponseEntity<Map<String, Boolean>> deleteRole(@PathVariable String id) {

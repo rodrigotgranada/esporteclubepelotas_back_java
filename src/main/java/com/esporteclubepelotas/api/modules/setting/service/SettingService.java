@@ -114,6 +114,7 @@ public class SettingService {
             if (dto.getStoreAddress() != null) setting.setStoreAddress(dto.getStoreAddress().trim());
             if (dto.getStoreHasMemberDiscount() != null) setting.setStoreHasMemberDiscount(dto.getStoreHasMemberDiscount());
             if (dto.getStoreMemberDiscountText() != null) setting.setStoreMemberDiscountText(dto.getStoreMemberDiscountText().trim());
+            if (dto.getNewsletterIsActive() != null) setting.setNewsletterIsActive(dto.getNewsletterIsActive());
         }
 
         if (logoFile != null && !logoFile.isEmpty()) {

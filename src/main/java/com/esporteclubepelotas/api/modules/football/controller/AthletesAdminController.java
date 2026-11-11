@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.football.controller;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+
 import com.esporteclubepelotas.api.common.security.UserPrincipal;
 import com.esporteclubepelotas.api.modules.football.dto.AthleteDto;
 import com.esporteclubepelotas.api.modules.football.dto.CreateAthleteDto;
@@ -29,6 +31,7 @@ import java.util.UUID;
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasAuthority('football.manage') or hasRole('ADMIN') or hasRole('OWNER') or hasRole('EDITOR')")
 @Tag(name = "Futebol: Atletas (Gestão Administrativa)", description = "CRUD de atletas do banco permanente e uploads")
+
 public class AthletesAdminController {
 
     private final AthletesAdminService athletesAdminService;
@@ -46,6 +49,7 @@ public class AthletesAdminController {
     }
 
     @PostMapping
+    @AuditLog(module = "ATHLETES", action = "CREATE_ATHLETE", description = "Cadastro de atleta")
     @Operation(summary = "Cadastrar novo atleta no banco permanente")
     public ResponseEntity<AthleteDto> create(
             @RequestBody @Valid CreateAthleteDto dto,
@@ -56,6 +60,7 @@ public class AthletesAdminController {
     }
 
     @PatchMapping("/{id}")
+    @AuditLog(module = "ATHLETES", action = "UPDATE_ATHLETE", description = "Atualização de atleta")
     @Operation(summary = "Atualizar dados cadastrais do atleta")
     public ResponseEntity<AthleteDto> update(
             @PathVariable UUID id,
@@ -65,6 +70,7 @@ public class AthletesAdminController {
     }
 
     @DeleteMapping("/{id}")
+    @AuditLog(module = "ATHLETES", action = "DELETE_ATHLETE", description = "Exclusão de atleta")
     @Operation(summary = "Inativar atleta (Soft Delete)")
     public ResponseEntity<Map<String, Object>> remove(@PathVariable UUID id) {
         athletesAdminService.remove(id);

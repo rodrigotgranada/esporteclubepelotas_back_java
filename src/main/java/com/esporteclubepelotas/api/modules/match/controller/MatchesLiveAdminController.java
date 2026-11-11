@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.match.controller;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+
 import com.esporteclubepelotas.api.modules.match.dto.*;
 import com.esporteclubepelotas.api.modules.match.service.MatchLiveService;
 import jakarta.validation.Valid;
@@ -15,6 +17,7 @@ import java.util.UUID;
 @RequestMapping("/matches/admin")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('ADMIN', 'OWNER', 'EDITOR')")
+
 public class MatchesLiveAdminController {
 
     private final MatchLiveService matchLiveService;
@@ -25,6 +28,7 @@ public class MatchesLiveAdminController {
     }
 
     @PostMapping("/{matchId}/events")
+    @AuditLog(module = "MATCHES_LIVE", action = "ADD_MATCH_EVENT", description = "Adição de evento lance-a-lance")
     public ResponseEntity<MatchEventResponse> addEvent(
             @PathVariable UUID matchId,
             @Valid @RequestBody MatchEventRequest request
@@ -33,12 +37,14 @@ public class MatchesLiveAdminController {
     }
 
     @DeleteMapping("/events/{eventId}")
+    @AuditLog(module = "MATCHES_LIVE", action = "DELETE_MATCH_EVENT", description = "Exclusão de evento lance-a-lance")
     public ResponseEntity<Void> deleteEvent(@PathVariable UUID eventId) {
         matchLiveService.deleteEvent(eventId);
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/{matchId}/live/status")
+    @AuditLog(module = "MATCHES_LIVE", action = "UPDATE_MATCH_LIVE_STATUS", description = "Alteração de status do jogo ao vivo")
     public ResponseEntity<MatchLiveDetailsResponse> handleMatchAction(
             @PathVariable UUID matchId,
             @Valid @RequestBody MatchLiveActionRequest request

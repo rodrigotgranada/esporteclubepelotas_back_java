@@ -1,6 +1,7 @@
 package com.esporteclubepelotas.api.modules.football.controller;
 
 import com.esporteclubepelotas.api.common.security.UserPrincipal;
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
 import com.esporteclubepelotas.api.modules.football.dto.*;
 import com.esporteclubepelotas.api.modules.football.service.SquadsAdminService;
 import com.esporteclubepelotas.api.modules.football.service.YouthPortalService;
@@ -38,6 +39,7 @@ public class SquadsAdminController {
     }
 
     @PutMapping("/youth-config")
+    @AuditLog(module = "FOOTBALL", action = "UPDATE_YOUTH_CONFIG", description = "Atualização das configurações da base")
     @Operation(summary = "Atualizar pilares, critérios de peneiras e contato do Portal da Base")
     public ResponseEntity<YouthPortalConfigDto> updateYouthConfig(
             @RequestBody @Valid YouthPortalConfigDto dto
@@ -67,6 +69,7 @@ public class SquadsAdminController {
     }
 
     @PostMapping
+    @AuditLog(module = "FOOTBALL", action = "CREATE_SQUAD", description = "Criação de novo elenco/temporada")
     @Operation(summary = "Criar nova temporada/elenco")
     public ResponseEntity<SquadDto> create(
             @RequestBody @Valid CreateSquadDto dto,
@@ -77,6 +80,7 @@ public class SquadsAdminController {
     }
 
     @PatchMapping("/{id}")
+    @AuditLog(module = "FOOTBALL", action = "UPDATE_SQUAD", description = "Atualização de elenco")
     @Operation(summary = "Atualizar informações gerais do elenco")
     public ResponseEntity<SquadDto> update(
             @PathVariable UUID id,
@@ -86,6 +90,7 @@ public class SquadsAdminController {
     }
 
     @PutMapping("/{id}/members")
+    @AuditLog(module = "FOOTBALL", action = "SET_SQUAD_MEMBERS", description = "Definição de membros do elenco em lote")
     @Operation(summary = "Definir lista completa de membros do elenco em lote")
     public ResponseEntity<SquadDto> setMembers(
             @PathVariable UUID id,
@@ -95,6 +100,7 @@ public class SquadsAdminController {
     }
 
     @PostMapping("/{id}/members")
+    @AuditLog(module = "FOOTBALL", action = "ADD_SQUAD_MEMBER", description = "Adição ou alteração de membro no elenco")
     @Operation(summary = "Adicionar ou atualizar um membro específico no elenco")
     public ResponseEntity<SquadDto> addOrUpdateMember(
             @PathVariable UUID id,
@@ -104,6 +110,7 @@ public class SquadsAdminController {
     }
 
     @DeleteMapping("/{id}/members/{athleteId}")
+    @AuditLog(module = "FOOTBALL", action = "REMOVE_SQUAD_MEMBER", description = "Remoção de membro do elenco")
     @Operation(summary = "Remover atleta do elenco")
     public ResponseEntity<SquadDto> removeMember(
             @PathVariable UUID id,
@@ -113,6 +120,7 @@ public class SquadsAdminController {
     }
 
     @DeleteMapping("/{id}")
+    @AuditLog(module = "FOOTBALL", action = "DELETE_SQUAD", description = "Exclusão/Inativação de elenco")
     @Operation(summary = "Inativar elenco (Soft Delete)")
     public ResponseEntity<Map<String, Object>> remove(@PathVariable UUID id) {
         squadsAdminService.remove(id);

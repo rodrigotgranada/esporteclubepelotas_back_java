@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.timeline.controller;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+
 import com.esporteclubepelotas.api.modules.timeline.dto.CreateTimelineCategoryDto;
 import com.esporteclubepelotas.api.modules.timeline.dto.TimelineCategoryDto;
 import com.esporteclubepelotas.api.modules.timeline.dto.UpdateTimelineCategoryDto;
@@ -23,6 +25,7 @@ import java.util.UUID;
 @SecurityRequirement(name = "bearerAuth")
 @PreAuthorize("hasAuthority('timeline.manage') or hasRole('ADMIN') or hasRole('OWNER') or hasRole('EDITOR')")
 @Tag(name = "Categorias da Linha do Tempo (Gestão)", description = "CRUD de categorias para os marcos históricos")
+
 public class TimelineCategoryAdminController {
 
     private final TimelineCategoryService timelineCategoryService;
@@ -34,12 +37,14 @@ public class TimelineCategoryAdminController {
     }
 
     @PostMapping
+    @AuditLog(module = "HISTORY", action = "CREATE_TIMELINE_CATEGORY", description = "Criação de categoria de linha do tempo")
     @Operation(summary = "Cadastrar nova categoria de marco histórico")
     public ResponseEntity<TimelineCategoryDto> create(@RequestBody @Valid CreateTimelineCategoryDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(timelineCategoryService.create(dto));
     }
 
     @PutMapping("/{id}")
+    @AuditLog(module = "HISTORY", action = "UPDATE_TIMELINE_CATEGORY", description = "Atualização de categoria de linha do tempo")
     @Operation(summary = "Atualizar categoria existente")
     public ResponseEntity<TimelineCategoryDto> update(
             @PathVariable UUID id,
@@ -49,6 +54,7 @@ public class TimelineCategoryAdminController {
     }
 
     @DeleteMapping("/{id}")
+    @AuditLog(module = "HISTORY", action = "DELETE_TIMELINE_CATEGORY", description = "Exclusão de categoria de linha do tempo")
     @Operation(summary = "Excluir ou inativar categoria")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         timelineCategoryService.delete(id);

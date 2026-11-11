@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.stadium.controller;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+
 import com.esporteclubepelotas.api.modules.stadium.dto.StadiumResponseDto;
 import com.esporteclubepelotas.api.modules.stadium.dto.UpdateStadiumDto;
 import com.esporteclubepelotas.api.modules.stadium.service.StadiumService;
@@ -20,6 +22,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Tag(name = "Admin - Estádio Boca do Lobo", description = "Gestão de dados, memorial e acervo fotográfico da Boca do Lobo")
 @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
+
 public class StadiumAdminController {
 
     private final StadiumService stadiumService;
@@ -31,6 +34,7 @@ public class StadiumAdminController {
     }
 
     @PutMapping
+    @AuditLog(module = "STADIUM", action = "UPDATE_STADIUM", description = "Atualização dos dados do estádio")
     @Operation(summary = "Atualizar informações, memorial e galeria do Estádio")
     public ResponseEntity<StadiumResponseDto> updateStadium(@Valid @RequestBody UpdateStadiumDto dto) {
         return ResponseEntity.ok(stadiumService.updateStadiumInfo(dto));

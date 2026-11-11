@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.symbol.controller;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+
 import com.esporteclubepelotas.api.modules.symbol.dto.ClubSymbolOverviewRequest;
 import com.esporteclubepelotas.api.modules.symbol.dto.ClubSymbolOverviewResponse;
 import com.esporteclubepelotas.api.modules.symbol.dto.ClubSymbolRequest;
@@ -26,11 +28,13 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Tag(name = "Admin - Símbolos & Mascote", description = "Gestão de mascotes, escudos históricos, bandeira e cores")
 @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
+
 public class ClubSymbolAdminController {
 
     private final ClubSymbolService symbolService;
 
     @PutMapping("/overview/{category}")
+    @AuditLog(module = "SYMBOLS", action = "UPDATE_SYMBOL_OVERVIEW", description = "Atualização da visão geral do símbolo")
     @Operation(summary = "Atualizar texto geral / narrativa institucional de uma categoria")
     public ResponseEntity<ClubSymbolOverviewResponse> updateOverview(
             @PathVariable String category,
@@ -58,12 +62,14 @@ public class ClubSymbolAdminController {
     }
 
     @PostMapping
+    @AuditLog(module = "SYMBOLS", action = "CREATE_SYMBOL", description = "Criação de símbolo oficial")
     @Operation(summary = "Criar novo símbolo ou versão")
     public ResponseEntity<ClubSymbolResponse> create(@Valid @RequestBody ClubSymbolRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(symbolService.createSymbol(request));
     }
 
     @PutMapping("/{id}")
+    @AuditLog(module = "SYMBOLS", action = "UPDATE_SYMBOL", description = "Atualização de símbolo oficial")
     @Operation(summary = "Atualizar símbolo existente")
     public ResponseEntity<ClubSymbolResponse> update(
             @PathVariable UUID id,
@@ -73,12 +79,14 @@ public class ClubSymbolAdminController {
     }
 
     @PatchMapping("/{id}/official")
+    @AuditLog(module = "SYMBOLS", action = "SET_OFFICIAL_SYMBOL", description = "Definição de símbolo oficial")
     @Operation(summary = "Definir símbolo como a versão oficial da categoria")
     public ResponseEntity<ClubSymbolResponse> setOfficial(@PathVariable UUID id) {
         return ResponseEntity.ok(symbolService.setOfficial(id));
     }
 
     @DeleteMapping("/{id}")
+    @AuditLog(module = "SYMBOLS", action = "DELETE_SYMBOL", description = "Exclusão de símbolo oficial")
     @Operation(summary = "Excluir símbolo (Soft delete)")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         symbolService.deleteSymbol(id);

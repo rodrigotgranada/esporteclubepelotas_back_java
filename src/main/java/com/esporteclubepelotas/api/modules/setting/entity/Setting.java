@@ -153,6 +153,10 @@ public class Setting {
     @Column(name = "store_member_discount_text", length = 255)
     private String storeMemberDiscountText = "Sócios do Pelotas em dia têm desconto exclusivo em produtos e mantos oficiais mediante apresentação da carteirinha física ou digital.";
 
+    @Builder.Default
+    @Column(name = "newsletter_is_active", nullable = false)
+    private Boolean newsletterIsActive = true;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

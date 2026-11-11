@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.match.controller;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+
 import com.esporteclubepelotas.api.modules.match.dto.ChampionshipRequest;
 import com.esporteclubepelotas.api.modules.match.dto.ChampionshipResponse;
 import com.esporteclubepelotas.api.modules.match.service.ChampionshipService;
@@ -20,6 +22,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
 @Tag(name = "Championships (Admin)", description = "Gestão de campeonatos oficiais")
+
 public class ChampionshipsAdminController {
 
     private final ChampionshipService championshipService;
@@ -37,12 +40,14 @@ public class ChampionshipsAdminController {
     }
 
     @PostMapping
+    @AuditLog(module = "CHAMPIONSHIPS", action = "CREATE_CHAMPIONSHIP", description = "Cadastro de campeonato")
     @Operation(summary = "Cadastrar novo campeonato")
     public ResponseEntity<ChampionshipResponse> create(@Valid @RequestBody ChampionshipRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(championshipService.create(request));
     }
 
     @PutMapping("/{id}")
+    @AuditLog(module = "CHAMPIONSHIPS", action = "UPDATE_CHAMPIONSHIP", description = "Atualização de campeonato")
     @Operation(summary = "Atualizar campeonato")
     public ResponseEntity<ChampionshipResponse> update(
             @PathVariable UUID id,
@@ -52,6 +57,7 @@ public class ChampionshipsAdminController {
     }
 
     @DeleteMapping("/{id}")
+    @AuditLog(module = "CHAMPIONSHIPS", action = "DELETE_CHAMPIONSHIP", description = "Exclusão de campeonato")
     @Operation(summary = "Excluir campeonato (soft-delete)")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         championshipService.delete(id);

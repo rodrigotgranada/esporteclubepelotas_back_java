@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.anthem.controller;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+
 import com.esporteclubepelotas.api.modules.anthem.dto.ClubAnthemRequest;
 import com.esporteclubepelotas.api.modules.anthem.dto.ClubAnthemResponse;
 import com.esporteclubepelotas.api.modules.anthem.service.ClubAnthemService;
@@ -23,6 +25,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Tag(name = "Admin - Hino Oficial", description = "Gestão de versões, letras, áudios e histórico do Hino Oficial")
 @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
+
 public class ClubAnthemAdminController {
 
     private final ClubAnthemService anthemService;
@@ -40,12 +43,14 @@ public class ClubAnthemAdminController {
     }
 
     @PostMapping
+    @AuditLog(module = "ANTHEM", action = "CREATE_ANTHEM", description = "Cadastro de versão do hino")
     @Operation(summary = "Cadastrar nova versão do hino")
     public ResponseEntity<ClubAnthemResponse> create(@Valid @RequestBody ClubAnthemRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(anthemService.createAnthem(request));
     }
 
     @PutMapping("/{id}")
+    @AuditLog(module = "ANTHEM", action = "UPDATE_ANTHEM", description = "Atualização de versão do hino")
     @Operation(summary = "Atualizar versão do hino")
     public ResponseEntity<ClubAnthemResponse> update(
             @PathVariable UUID id,
@@ -55,12 +60,14 @@ public class ClubAnthemAdminController {
     }
 
     @PatchMapping("/{id}/official")
+    @AuditLog(module = "ANTHEM", action = "SET_OFFICIAL_ANTHEM", description = "Definição de versão oficial do hino")
     @Operation(summary = "Definir versão do hino como a oficial principal do clube")
     public ResponseEntity<ClubAnthemResponse> setOfficial(@PathVariable UUID id) {
         return ResponseEntity.ok(anthemService.setOfficial(id));
     }
 
     @DeleteMapping("/{id}")
+    @AuditLog(module = "ANTHEM", action = "DELETE_ANTHEM", description = "Exclusão de versão do hino")
     @Operation(summary = "Excluir versão do hino (Soft delete)")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         anthemService.deleteAnthem(id);

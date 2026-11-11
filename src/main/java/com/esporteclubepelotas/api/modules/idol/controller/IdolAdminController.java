@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.idol.controller;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+
 import com.esporteclubepelotas.api.common.security.CurrentUser;
 import com.esporteclubepelotas.api.common.security.UserPrincipal;
 import com.esporteclubepelotas.api.modules.idol.dto.CreateAdminIdolDto;
@@ -27,6 +29,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN') or hasRole('EDITOR')")
 @Tag(name = "Ídolos (Gestão Administrativa)", description = "CRUD de Ídolos, Fotos e Galerias Históricas")
+
 public class IdolAdminController {
 
     private final IdolAdminService idolAdminService;
@@ -49,6 +52,7 @@ public class IdolAdminController {
     }
 
     @PostMapping
+    @AuditLog(module = "IDOLS", action = "CREATE_IDOL", description = "Cadastro de ídolo")
     @Operation(summary = "Cadastrar um novo ídolo no Memorial")
     public ResponseEntity<IdolDto> create(
             @Valid @RequestBody CreateAdminIdolDto dto,
@@ -58,6 +62,7 @@ public class IdolAdminController {
     }
 
     @PatchMapping("/{id}")
+    @AuditLog(module = "IDOLS", action = "UPDATE_IDOL", description = "Atualização de ídolo")
     @Operation(summary = "Atualizar dados de um ídolo existente")
     public ResponseEntity<IdolDto> update(
             @PathVariable String id,
@@ -68,6 +73,7 @@ public class IdolAdminController {
     }
 
     @DeleteMapping("/{id}")
+    @AuditLog(module = "IDOLS", action = "DELETE_IDOL", description = "Exclusão de ídolo")
     @Operation(summary = "Exclusão lógica de um ídolo (soft delete)")
     public ResponseEntity<Map<String, Object>> delete(@PathVariable String id) {
         return ResponseEntity.ok(idolAdminService.softDelete(id));

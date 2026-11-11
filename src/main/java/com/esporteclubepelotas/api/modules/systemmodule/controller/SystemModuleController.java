@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.systemmodule.controller;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+
 import com.esporteclubepelotas.api.modules.systemmodule.dto.UpdateSystemModuleStatusDto;
 import com.esporteclubepelotas.api.modules.systemmodule.entity.SystemModule;
 import com.esporteclubepelotas.api.modules.systemmodule.service.SystemModuleService;
@@ -16,6 +18,7 @@ import java.util.List;
 @RequestMapping({ "/admin/modules", "/system-modules" })
 @RequiredArgsConstructor
 @Tag(name = "System Modules", description = "Controle de Feature Flags e Módulos do Sistema")
+
 public class SystemModuleController {
 
     private final SystemModuleService systemModuleService;
@@ -27,6 +30,7 @@ public class SystemModuleController {
     }
 
     @PatchMapping({ "/{id}/status", "/{id}/toggle" })
+    @AuditLog(module = "SYSTEM_MODULES", action = "TOGGLE_MODULE", description = "Alteração de status de módulo do sistema")
     @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     @Operation(summary = "Ativar ou desativar módulo (Feature Flag)")
     public ResponseEntity<SystemModule> updateModuleStatus(

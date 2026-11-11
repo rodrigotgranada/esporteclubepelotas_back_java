@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.theme.controller;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+
 import com.esporteclubepelotas.api.modules.theme.dto.ThemeRequestDto;
 import com.esporteclubepelotas.api.modules.theme.dto.ThemeResponseDto;
 import com.esporteclubepelotas.api.modules.theme.service.ThemeService;
@@ -20,6 +22,7 @@ import java.util.Map;
 @RequestMapping("/themes")
 @RequiredArgsConstructor
 @Tag(name = "Themes", description = "Gerenciamento e consulta de temas (Light/Dark/Campanhas)")
+
 public class ThemeController {
 
     private final ThemeService themeService;
@@ -47,6 +50,7 @@ public class ThemeController {
     }
 
     @PostMapping
+    @AuditLog(module = "THEMES", action = "CREATE_THEME", description = "Criação de campanha/tema")
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyAuthority('settings.manage', 'ROLE_ADMIN', 'ROLE_OWNER')")
     @Operation(summary = "Cadastra um novo tema ou campanha sazonal (Admin)")
@@ -56,6 +60,7 @@ public class ThemeController {
     }
 
     @PatchMapping("/{id}")
+    @AuditLog(module = "THEMES", action = "UPDATE_THEME", description = "Atualização de tema")
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyAuthority('settings.manage', 'ROLE_ADMIN', 'ROLE_OWNER')")
     @Operation(summary = "Atualiza parcialmente os dados ou cores de um tema (Admin)")
@@ -64,6 +69,7 @@ public class ThemeController {
     }
 
     @PostMapping("/{id}/activate")
+    @AuditLog(module = "THEMES", action = "ACTIVATE_THEME", description = "Ativação de tema")
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyAuthority('settings.manage', 'ROLE_ADMIN', 'ROLE_OWNER')")
     @Operation(summary = "Ativa um tema (Admin)")
@@ -73,6 +79,7 @@ public class ThemeController {
     }
 
     @PostMapping("/{id}/deactivate")
+    @AuditLog(module = "THEMES", action = "DEACTIVATE_THEME", description = "Desativação de tema")
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyAuthority('settings.manage', 'ROLE_ADMIN', 'ROLE_OWNER')")
     @Operation(summary = "Desativa um tema de campanha (Admin)")
@@ -82,6 +89,7 @@ public class ThemeController {
     }
 
     @DeleteMapping("/{id}")
+    @AuditLog(module = "THEMES", action = "DELETE_THEME", description = "Exclusão de tema")
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyAuthority('settings.manage', 'ROLE_ADMIN', 'ROLE_OWNER')")
     @Operation(summary = "Exclui um tema não-padrão (Admin)")

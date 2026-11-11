@@ -52,6 +52,7 @@ public class SettingResponseDto {
     private String storeAddress;
     private Boolean storeHasMemberDiscount;
     private String storeMemberDiscountText;
+    private Boolean newsletterIsActive;
 
     private Instant createdAt;
     private Instant updatedAt;
@@ -92,6 +93,7 @@ public class SettingResponseDto {
                 .storeAddress(setting.getStoreAddress())
                 .storeHasMemberDiscount(setting.getStoreHasMemberDiscount() != null ? setting.getStoreHasMemberDiscount() : true)
                 .storeMemberDiscountText(setting.getStoreMemberDiscountText())
+                .newsletterIsActive(setting.getNewsletterIsActive() != null ? setting.getNewsletterIsActive() : true)
                 .createdAt(setting.getCreatedAt())
                 .updatedAt(setting.getUpdatedAt())
                 .build();

@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.opponent.controller;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+
 import com.esporteclubepelotas.api.modules.opponent.dto.OpponentClubRequest;
 import com.esporteclubepelotas.api.modules.opponent.dto.OpponentClubResponse;
 import com.esporteclubepelotas.api.modules.opponent.service.OpponentClubService;
@@ -20,6 +22,7 @@ import java.util.UUID;
 @RequestMapping("/opponents/admin")
 @RequiredArgsConstructor
 @PreAuthorize("hasAnyRole('ADMIN', 'OWNER')")
+
 public class OpponentClubsAdminController {
 
     private final OpponentClubService clubService;
@@ -35,11 +38,13 @@ public class OpponentClubsAdminController {
     }
 
     @PostMapping
+    @AuditLog(module = "OPPONENTS", action = "CREATE_OPPONENT", description = "Cadastro de clube adversário")
     public ResponseEntity<OpponentClubResponse> create(@Valid @RequestBody OpponentClubRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(clubService.create(request));
     }
 
     @PutMapping("/{id}")
+    @AuditLog(module = "OPPONENTS", action = "UPDATE_OPPONENT", description = "Atualização de clube adversário")
     public ResponseEntity<OpponentClubResponse> update(
             @PathVariable UUID id,
             @Valid @RequestBody OpponentClubRequest request
@@ -48,6 +53,7 @@ public class OpponentClubsAdminController {
     }
 
     @DeleteMapping("/{id}")
+    @AuditLog(module = "OPPONENTS", action = "DELETE_OPPONENT", description = "Exclusão de clube adversário")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         clubService.delete(id);
         return ResponseEntity.noContent().build();

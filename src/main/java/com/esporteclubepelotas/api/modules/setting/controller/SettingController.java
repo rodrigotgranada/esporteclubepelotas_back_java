@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.setting.controller;
 
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+
 import com.esporteclubepelotas.api.modules.setting.dto.SettingResponseDto;
 import com.esporteclubepelotas.api.modules.setting.dto.SettingUpdateDto;
 import com.esporteclubepelotas.api.modules.setting.service.SettingService;
@@ -22,6 +24,7 @@ import java.util.Map;
 @RequestMapping("/settings")
 @RequiredArgsConstructor
 @Tag(name = "Settings", description = "Configurações Globais do Portal (Redes, Contatos, Estádio, Logotipos)")
+
 public class SettingController {
 
     private final SettingService settingService;
@@ -74,6 +77,7 @@ public class SettingController {
     }
 
     @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @AuditLog(module = "SETTINGS", action = "UPDATE_SETTINGS", description = "Atualização de configurações gerais (multipart)")
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyAuthority('settings.manage', 'users.manage', 'ROLE_ADMIN', 'ROLE_OWNER')")
     @Operation(summary = "Atualiza configurações globais via Multipart (com upload de logo opcional) (Admin)")
@@ -94,6 +98,7 @@ public class SettingController {
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    @AuditLog(module = "SETTINGS", action = "UPDATE_SETTINGS", description = "Atualização de configurações gerais (json)")
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyAuthority('settings.manage', 'users.manage', 'ROLE_ADMIN', 'ROLE_OWNER')")
     @Operation(summary = "Atualiza configurações globais diretamente via JSON (Admin)")
