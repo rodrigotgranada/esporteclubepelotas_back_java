@@ -17,6 +17,7 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,15 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+
+    @Value("${app.cookie.domain:}")
+    private String cookieDomain;
+
+    @Value("${app.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    @Value("${app.cookie.same-site:Lax}")
+    private String cookieSameSite;
 
     public AuthController(AuthService authService) {
         this.authService = authService;
@@ -127,14 +137,18 @@ public class AuthController {
 
     private void setRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
         if (refreshToken == null) return;
-        ResponseCookie cookie = ResponseCookie.from("refresh_token", refreshToken)
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from("refresh_token", refreshToken)
                 .httpOnly(true)
-                .secure(false) // em dev/prod HTTPS o proxy Render cuida ou secure se configurado
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(Duration.ofDays(7))
-                .sameSite("Lax")
-                .build();
-        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+                .sameSite(cookieSameSite != null && !cookieSameSite.isBlank() ? cookieSameSite.trim() : "Lax");
+
+        if (cookieDomain != null && !cookieDomain.isBlank()) {
+            cookieBuilder.domain(cookieDomain.trim());
+        }
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookieBuilder.build().toString());
     }
 
     private String extractRefreshTokenFromCookies(HttpServletRequest request) {

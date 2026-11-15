@@ -24,6 +24,9 @@ FROM eclipse-temurin:17-jre-alpine
 
 WORKDIR /app
 
+# Instala curl para HEALTHCHECK nativo do container
+RUN apk add --no-cache curl
+
 # Cria usuário não-root para segurança
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 USER appuser
@@ -31,11 +34,15 @@ USER appuser
 # Copia o artefato compilado do estágio anterior
 COPY --from=builder /app/target/*.jar app.jar
 
-# Expõe a porta padrão (Render ou Docker local)
-EXPOSE 7998
+# Expõe a porta padrão da aplicação em container/produção
+EXPOSE 8080
 
-# Otimização de memória para limites de 512MB do Render Free
-ENV JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -Xmx350m -Xms128m"
+# Alocação proporcional de memória para containers com pouca RAM e falha rápida em OOM
+ENV JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -XX:MaxRAMPercentage=70.0 -XX:+ExitOnOutOfMemoryError"
+
+# Verificação de integridade via Spring Actuator
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD curl -fsS http://localhost:8080/actuator/health || exit 1
 
 # Inicia a aplicação Spring Boot
 ENTRYPOINT ["java", "-jar", "app.jar"]

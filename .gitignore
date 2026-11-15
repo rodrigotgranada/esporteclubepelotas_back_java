@@ -4,9 +4,15 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### Environment ###
+### Environment & Credentials ###
 .env*
 .env
+*-firebase-adminsdk-*.json
+*firebase-adminsdk*.json
+*service-account*.json
+*serviceAccount*.json
+*-credentials.json
+credentials.json
 
 ### STS ###
 .apt_generated

@@ -116,17 +116,21 @@
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
-        <!-- Spring Boot Starter AMQP (RabbitMQ / CloudAMQP) -->
+        <!-- Spring Retry & Aspects (Retentativas no envio direto Resend sem broker externo) -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-amqp</artifactId>
+            <groupId>org.springframework.retry</groupId>
+            <artifactId>spring-retry</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aspects</artifactId>
         </dependency>
 
-        <!-- H2 Database (Fallback em memória caso não haja PostgreSQL configurado) -->
+        <!-- H2 Database (Exclusivo para testes automatizados) -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
-            <scope>runtime</scope>
+            <scope>test</scope>
         </dependency>
 
         <!-- Firebase Admin SDK (Uploads de Arquivos e Fotos) -->
