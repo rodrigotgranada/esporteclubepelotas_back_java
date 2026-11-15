@@ -38,7 +38,7 @@ COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
 
 # Alocação segura para container de 512MB (evita OOM Kill do cgroup) e startup rápido em low-CPU
-ENV JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -XX:MaxRAMPercentage=55.0 -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=48m -Xss256k -XX:TieredStopAtLevel=1 -XX:+ExitOnOutOfMemoryError"
+ENV JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -XX:MaxRAMPercentage=55.0 -XX:MaxMetaspaceSize=160m -XX:ReservedCodeCacheSize=48m -Xss512k -XX:TieredStopAtLevel=1 -XX:+ExitOnOutOfMemoryError"
 
 # Verificação de integridade via Spring Actuator
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
