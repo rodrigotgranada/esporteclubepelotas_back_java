@@ -42,7 +42,8 @@ public class FirebaseStorageService implements StorageService {
 
         try {
             if (FirebaseApp.getApps().isEmpty()) {
-                byte[] decoded = Base64.getDecoder().decode(credentialsBase64);
+                String normalizedBase64 = credentialsBase64.replaceAll("\\s+", "");
+                byte[] decoded = Base64.getDecoder().decode(normalizedBase64);
                 InputStream serviceAccount = new ByteArrayInputStream(decoded);
 
                 FirebaseOptions options = FirebaseOptions.builder()

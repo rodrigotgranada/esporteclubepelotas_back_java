@@ -38,7 +38,7 @@ COPY --from=builder /app/target/*.jar app.jar
 EXPOSE 8080
 
 # Alocação proporcional de memória para containers com pouca RAM e falha rápida em OOM
-ENV JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -XX:MaxRAMPercentage=70.0 -XX:+ExitOnOutOfMemoryError"
+ENV JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -XX:MaxRAMPercentage=70.0 -XX:+ExitOnOutOfMemoryError -XX:TieredStopAtLevel=1 -Xss512k"
 
 # Verificação de integridade via Spring Actuator
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
