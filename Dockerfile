@@ -37,12 +37,12 @@ COPY --from=builder /app/target/*.jar app.jar
 # Expõe a porta padrão da aplicação em container/produção
 EXPOSE 8080
 
-# Alocação proporcional de memória para containers com pouca RAM e falha rápida em OOM
-ENV JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -XX:MaxRAMPercentage=70.0 -XX:+ExitOnOutOfMemoryError -XX:TieredStopAtLevel=1 -Xss512k"
+# Alocação segura para container de 512MB (evita OOM Kill do cgroup) e startup rápido em low-CPU
+ENV JAVA_TOOL_OPTIONS="-XX:+UseSerialGC -XX:MaxRAMPercentage=55.0 -XX:MaxMetaspaceSize=128m -XX:ReservedCodeCacheSize=48m -Xss256k -XX:TieredStopAtLevel=1 -XX:+ExitOnOutOfMemoryError"
 
 # Verificação de integridade via Spring Actuator
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-    CMD curl -fsS http://localhost:8080/actuator/health || exit 1
+    CMD curl -fsS http://localhost:${PORT:-8080}/actuator/health || exit 1
 
 # Inicia a aplicação Spring Boot
 ENTRYPOINT ["java", "-jar", "app.jar"]
