@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -187,6 +188,34 @@ public class IdolIntegrationTest {
 
         // Limpa
         idolRepository.deleteById(tempId);
+    }
+
+    @Test
+    @DisplayName("POST /idols/admin/upload-photo e upload-gallery devem aceitar imagem válida via MediaUploadSanitizer")
+    void testStandaloneIdolMediaUploads() throws Exception {
+        String ownerToken = obtainToken("admin@esporteclubepelotas.com.br", "admin123");
+        byte[] validPng = new byte[]{
+                (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A,
+                0x00, 0x00, 0x00, 0x0D, 0x49, 0x48, 0x44, 0x52
+        };
+
+        MockMultipartFile photoFile = new MockMultipartFile("file", "idol.png", "image/png", validPng);
+        mockMvc.perform(multipart("/idols/admin/upload-photo")
+                        .file(photoFile)
+                        .param("folderId", "test-folder")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.url").isNotEmpty())
+                .andExpect(jsonPath("$.photoUrl").isNotEmpty());
+
+        MockMultipartFile galleryFile = new MockMultipartFile("files", "gallery.png", "image/png", validPng);
+        mockMvc.perform(multipart("/idols/admin/upload-gallery")
+                        .file(galleryFile)
+                        .param("folderId", "test-folder")
+                        .header("Authorization", "Bearer " + ownerToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.urls[0]").isNotEmpty())
+                .andExpect(jsonPath("$.gallery[0]").isNotEmpty());
     }
 }
 

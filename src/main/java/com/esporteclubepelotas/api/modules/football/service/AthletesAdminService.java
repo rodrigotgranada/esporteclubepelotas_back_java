@@ -1,6 +1,7 @@
 package com.esporteclubepelotas.api.modules.football.service;
 
 import com.esporteclubepelotas.api.common.exception.BusinessException;
+import com.esporteclubepelotas.api.common.storage.MediaUploadSanitizer;
 import com.esporteclubepelotas.api.common.storage.StorageService;
 import com.esporteclubepelotas.api.modules.football.dto.AthleteDto;
 import com.esporteclubepelotas.api.modules.football.dto.CreateAthleteDto;
@@ -300,5 +301,18 @@ public class AthletesAdminService {
         athleteRepository.save(athlete);
 
         return Map.of("photoUrl", photoUrl);
+    }
+
+    public Map<String, String> uploadStandalonePhoto(MultipartFile file, String folderId) {
+        String safeFolderId = MediaUploadSanitizer.sanitizeFolderId(folderId);
+        String url = MediaUploadSanitizer.uploadAndVerify(
+                file,
+                "athletes/" + safeFolderId,
+                "photo-" + System.currentTimeMillis() + ".jpg",
+                MediaUploadSanitizer.MediaKind.IMAGE,
+                storageService,
+                "Falha ao enviar foto do atleta."
+        );
+        return Map.of("url", url, "photoUrl", url);
     }
 }

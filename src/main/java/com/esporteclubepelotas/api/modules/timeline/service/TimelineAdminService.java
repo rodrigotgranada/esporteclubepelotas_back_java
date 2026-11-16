@@ -1,6 +1,7 @@
 package com.esporteclubepelotas.api.modules.timeline.service;
 
 import com.esporteclubepelotas.api.common.exception.ResourceNotFoundException;
+import com.esporteclubepelotas.api.common.storage.MediaUploadSanitizer;
 import com.esporteclubepelotas.api.common.storage.StorageService;
 import com.esporteclubepelotas.api.modules.timeline.dto.*;
 import com.esporteclubepelotas.api.modules.timeline.entity.TimelineCategory;
@@ -25,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -172,19 +174,15 @@ public class TimelineAdminService {
                 .orElseThrow(() -> new ResourceNotFoundException("Marco Histórico", "id", id));
 
         if (photoFile != null && !photoFile.isEmpty()) {
-            try {
-                String originalFilename = photoFile.getOriginalFilename() != null ? photoFile.getOriginalFilename() : "timeline.png";
-                String imageUrl = storageService.uploadFile(
-                        photoFile.getBytes(),
-                        "timeline-" + event.getYear() + "-" + System.currentTimeMillis() + "-" + originalFilename,
-                        "timeline",
-                        photoFile.getContentType()
-                );
-                event.setImageUrl(imageUrl);
-            } catch (IOException e) {
-                log.error("Erro ao atualizar imagem da linha do tempo: {}", e.getMessage(), e);
-                throw new RuntimeException("Falha ao atualizar imagem histórica", e);
-            }
+            String imageUrl = MediaUploadSanitizer.uploadAndVerify(
+                    photoFile,
+                    "timeline",
+                    "timeline-" + event.getYear() + "-" + System.currentTimeMillis() + ".jpg",
+                    MediaUploadSanitizer.MediaKind.IMAGE,
+                    storageService,
+                    "Falha ao atualizar imagem histórica"
+            );
+            event.setImageUrl(imageUrl);
         } else if (dto != null && dto.getImageUrl() != null) {
             event.setImageUrl(dto.getImageUrl());
         }
@@ -228,5 +226,18 @@ public class TimelineAdminService {
         event.setActive(false);
         timelineEventRepository.save(event);
         log.info("🗑️ Marco histórico inativado (soft delete): {}", id);
+    }
+
+    public Map<String, String> uploadStandalonePhoto(MultipartFile file, String folderId) {
+        String safeFolderId = MediaUploadSanitizer.sanitizeFolderId(folderId);
+        String url = MediaUploadSanitizer.uploadAndVerify(
+                file,
+                "timeline/" + safeFolderId,
+                "timeline-" + System.currentTimeMillis() + ".jpg",
+                MediaUploadSanitizer.MediaKind.IMAGE,
+                storageService,
+                "Falha ao enviar imagem da linha do tempo."
+        );
+        return Map.of("url", url, "photoUrl", url);
     }
 }

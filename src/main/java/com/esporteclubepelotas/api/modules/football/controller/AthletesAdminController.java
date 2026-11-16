@@ -77,6 +77,17 @@ public class AthletesAdminController {
         return ResponseEntity.ok(Map.of("success", true, "message", "Atleta desativado com sucesso."));
     }
 
+    @PostMapping(value = "/upload-photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload prévio da foto oficial do atleta")
+    public ResponseEntity<Map<String, String>> uploadStandalonePhoto(
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "photo", required = false) MultipartFile photo,
+            @RequestParam(value = "folderId", required = false) String folderId
+    ) {
+        MultipartFile target = file != null ? file : photo;
+        return ResponseEntity.ok(athletesAdminService.uploadStandalonePhoto(target, folderId));
+    }
+
     @PostMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Fazer upload da foto oficial do atleta")
     public ResponseEntity<Map<String, String>> uploadPhoto(

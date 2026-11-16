@@ -20,6 +20,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -104,6 +105,17 @@ public class TimelineAdminController {
             @RequestBody @Valid UpdateTimelineEventDto dto
     ) {
         return ResponseEntity.ok(timelineAdminService.update(id, dto, null));
+    }
+
+    @PostMapping(value = "/upload-photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload prévio de imagem para marco histórico ou mini-galeria")
+    public ResponseEntity<Map<String, String>> uploadStandalonePhoto(
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "photo", required = false) MultipartFile photo,
+            @RequestParam(value = "folderId", required = false) String folderId
+    ) {
+        MultipartFile target = file != null ? file : photo;
+        return ResponseEntity.ok(timelineAdminService.uploadStandalonePhoto(target, folderId));
     }
 
     @DeleteMapping("/{id}")

@@ -2,6 +2,7 @@ package com.esporteclubepelotas.api.modules.idol.service;
 
 import com.esporteclubepelotas.api.common.exception.BusinessException;
 import com.esporteclubepelotas.api.common.exception.ResourceNotFoundException;
+import com.esporteclubepelotas.api.common.storage.MediaUploadSanitizer;
 import com.esporteclubepelotas.api.common.storage.StorageService;
 import com.esporteclubepelotas.api.modules.idol.dto.*;
 import com.esporteclubepelotas.api.modules.idol.entity.Idol;
@@ -239,5 +240,41 @@ public class IdolAdminService {
                 "message", "Fotos adicionadas à galeria histórica com sucesso."
         );
     }
-}
 
+    public Map<String, String> uploadStandalonePhoto(MultipartFile file, String folderId) {
+        String safeFolderId = MediaUploadSanitizer.sanitizeFolderId(folderId);
+        String url = MediaUploadSanitizer.uploadAndVerify(
+                file,
+                "idols/" + safeFolderId,
+                "photo-" + System.currentTimeMillis() + ".jpg",
+                MediaUploadSanitizer.MediaKind.IMAGE,
+                storageService,
+                "Falha ao enviar foto do ídolo."
+        );
+        return Map.of("url", url, "photoUrl", url);
+    }
+
+    public Map<String, Object> uploadStandaloneGallery(List<MultipartFile> files, String folderId) {
+        if (files == null || files.isEmpty()) {
+            throw new BusinessException("Nenhum arquivo enviado para a galeria.");
+        }
+        String safeFolderId = MediaUploadSanitizer.sanitizeFolderId(folderId);
+        List<String> urls = new ArrayList<>();
+        for (MultipartFile file : files) {
+            if (file == null || file.isEmpty()) continue;
+            String url = MediaUploadSanitizer.uploadAndVerify(
+                    file,
+                    "idols/" + safeFolderId + "/gallery",
+                    "gallery-" + UUID.randomUUID() + ".jpg",
+                    MediaUploadSanitizer.MediaKind.IMAGE,
+                    storageService,
+                    "Falha ao enviar foto da galeria do ídolo."
+            );
+            urls.add(url);
+        }
+        if (urls.isEmpty()) {
+            throw new BusinessException("Nenhum arquivo válido enviado para a galeria.");
+        }
+        return Map.of("urls", urls, "gallery", urls);
+    }
+}

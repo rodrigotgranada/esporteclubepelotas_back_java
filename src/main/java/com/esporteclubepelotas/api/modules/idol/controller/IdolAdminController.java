@@ -79,6 +79,28 @@ public class IdolAdminController {
         return ResponseEntity.ok(idolAdminService.softDelete(id));
     }
 
+    @PostMapping(value = "/upload-photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload prévio da foto principal do ídolo")
+    public ResponseEntity<Map<String, String>> uploadStandalonePhoto(
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam(value = "photo", required = false) MultipartFile photo,
+            @RequestParam(value = "folderId", required = false) String folderId) {
+        MultipartFile target = file != null ? file : photo;
+        return ResponseEntity.ok(idolAdminService.uploadStandalonePhoto(target, folderId));
+    }
+
+    @PostMapping(value = "/upload-gallery", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(summary = "Upload prévio de fotos para a galeria histórica do ídolo")
+    public ResponseEntity<Map<String, Object>> uploadStandaloneGallery(
+            @RequestParam(value = "files", required = false) List<MultipartFile> files,
+            @RequestParam(value = "gallery", required = false) List<MultipartFile> gallery,
+            @RequestParam(value = "file", required = false) List<MultipartFile> singleFiles,
+            @RequestParam(value = "folderId", required = false) String folderId) {
+        List<MultipartFile> target = files != null && !files.isEmpty() ? files
+                : (gallery != null && !gallery.isEmpty() ? gallery : singleFiles);
+        return ResponseEntity.ok(idolAdminService.uploadStandaloneGallery(target, folderId));
+    }
+
     @PostMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Upload da foto principal do ídolo")
     public ResponseEntity<Map<String, String>> uploadPhoto(

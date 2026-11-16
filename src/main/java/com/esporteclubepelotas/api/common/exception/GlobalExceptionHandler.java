@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -74,6 +75,18 @@ public class GlobalExceptionHandler {
                 .path(request.getRequestURI())
                 .build();
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponseDto> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
+        ErrorResponseDto error = ErrorResponseDto.builder()
+                .statusCode(HttpStatus.METHOD_NOT_ALLOWED.value())
+                .message("Método HTTP não suportado para esta rota: " + request.getMethod() + " " + request.getRequestURI())
+                .error(HttpStatus.METHOD_NOT_ALLOWED.getReasonPhrase())
+                .timestamp(Instant.now().toString())
+                .path(request.getRequestURI())
+                .build();
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(error);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
