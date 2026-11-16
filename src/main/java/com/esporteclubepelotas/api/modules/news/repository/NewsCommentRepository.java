@@ -4,6 +4,8 @@ import com.esporteclubepelotas.api.modules.news.entity.NewsComment;
 import com.esporteclubepelotas.api.modules.news.entity.NewsCommentStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
@@ -13,6 +15,11 @@ import java.util.UUID;
 @Repository
 public interface NewsCommentRepository extends JpaRepository<NewsComment, UUID>, JpaSpecificationExecutor<NewsComment> {
 
+    @Override
+    @EntityGraph(attributePaths = {"author", "author.role", "article"})
+    Page<NewsComment> findAll(Specification<NewsComment> spec, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"author", "author.role", "article"})
     Page<NewsComment> findByArticleIdAndIsActiveTrueAndStatusOrderByCreatedAtDesc(
             UUID articleId,
             NewsCommentStatus status,
@@ -21,4 +28,3 @@ public interface NewsCommentRepository extends JpaRepository<NewsComment, UUID>,
 
     long countByArticleIdAndIsActiveTrueAndStatus(UUID articleId, NewsCommentStatus status);
 }
-

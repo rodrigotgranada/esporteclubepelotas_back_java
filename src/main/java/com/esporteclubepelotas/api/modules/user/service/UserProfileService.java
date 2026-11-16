@@ -4,6 +4,7 @@ import com.esporteclubepelotas.api.common.email.EmailService;
 import com.esporteclubepelotas.api.common.email.EmailTemplateHelper;
 import com.esporteclubepelotas.api.common.exception.BusinessException;
 import com.esporteclubepelotas.api.common.exception.ResourceNotFoundException;
+import com.esporteclubepelotas.api.common.security.AuthTokenStateService;
 import com.esporteclubepelotas.api.common.storage.MediaUploadSanitizer;
 import com.esporteclubepelotas.api.common.storage.StorageService;
 import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
@@ -35,6 +36,7 @@ public class UserProfileService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthTokenStateService authTokenStateService;
     private final StorageService storageService;
     private final EmailService emailService;
     private final PortalWebSocketHandler webSocketHandler;
@@ -96,6 +98,7 @@ public class UserProfileService {
                 file,
                 "users/" + user.getId(),
                 "_profile.jpg",
+                MediaUploadSanitizer.MediaKind.IMAGE,
                 storageService,
                 "Falha ao enviar foto de perfil."
         );
@@ -134,6 +137,7 @@ public class UserProfileService {
         user.setStatus(UserStatus.INACTIVE);
         user.setTokenVersion(user.getTokenVersion() + 1);
         userRepository.save(user);
+        authTokenStateService.evictUserTokenState(userId);
         webSocketHandler.broadcastAfterCommit("users", "DEACTIVATED", userId, null);
     }
 
@@ -150,6 +154,7 @@ public class UserProfileService {
         user.setMustChangePassword(false);
         user.setTokenVersion(user.getTokenVersion() + 1);
         userRepository.save(user);
+        authTokenStateService.evictUserTokenState(userId);
     }
 
     @Transactional
@@ -253,6 +258,7 @@ public class UserProfileService {
         user.setPendingChanges(changes);
 
         User saved = userRepository.save(user);
+        authTokenStateService.evictUserTokenState(userId);
         webSocketHandler.broadcastAfterCommit("users", "UPDATED", saved.getId(), null);
         return UserSummaryDto.fromEntity(saved);
     }

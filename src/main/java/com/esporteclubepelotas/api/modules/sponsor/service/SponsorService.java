@@ -34,7 +34,7 @@ public class SponsorService {
     private final PortalWebSocketHandler webSocketHandler;
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "sponsors_public", key = "#scope != null ? #scope.toLowerCase() : 'main'", sync = true)
+    @Cacheable(value = "sponsors_public", key = "#scope == null || #scope.equalsIgnoreCase('home') ? 'main' : (#scope.equalsIgnoreCase('base') ? 'youth' : (#scope.equalsIgnoreCase('feminine') ? 'female' : #scope.toLowerCase()))", sync = true)
     public List<SponsorDto> findActivePublicSponsors(String scope) {
         LocalDate today = LocalDate.now();
         List<Sponsor> list;
@@ -55,7 +55,7 @@ public class SponsorService {
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "sponsors_featured", key = "#scope != null ? #scope.toLowerCase() : 'main'", sync = true)
+    @Cacheable(value = "sponsors_featured", key = "#scope == null || #scope.equalsIgnoreCase('home') ? 'main' : (#scope.equalsIgnoreCase('base') ? 'youth' : (#scope.equalsIgnoreCase('feminine') ? 'female' : #scope.toLowerCase()))", sync = true)
     public List<SponsorDto> findFeaturedPublicSponsors(String scope) {
         LocalDate today = LocalDate.now();
         List<Sponsor> list;

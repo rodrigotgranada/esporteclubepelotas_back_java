@@ -217,10 +217,14 @@ public class SquadsAdminService {
         }
 
         if (dto.getMembers() != null) {
-            squadMemberRepository.deleteBySquadId(squad.getId());
+            if (squad.getMembers() == null) {
+                squad.setMembers(new ArrayList<>());
+            } else {
+                squad.getMembers().clear();
+                squadRepository.flush();
+            }
             List<SquadMember> members = buildMemberList(squad, dto.getMembers());
-            squadMemberRepository.saveAll(members);
-            squad.setMembers(members);
+            squad.getMembers().addAll(members);
         }
 
         Squad saved = squadRepository.save(squad);
@@ -232,11 +236,15 @@ public class SquadsAdminService {
         Squad squad = squadRepository.findById(squadId)
                 .orElseThrow(() -> new BusinessException("Elenco não encontrado."));
 
-        squadMemberRepository.deleteBySquadId(squad.getId());
+        if (squad.getMembers() == null) {
+            squad.setMembers(new ArrayList<>());
+        } else {
+            squad.getMembers().clear();
+            squadRepository.flush();
+        }
 
         List<SquadMember> members = buildMemberList(squad, dto.getMembers());
-        squadMemberRepository.saveAll(members);
-        squad.setMembers(members);
+        squad.getMembers().addAll(members);
 
         return FootballMapperHelper.mapSquad(squadRepository.save(squad));
     }
@@ -286,10 +294,10 @@ public class SquadsAdminService {
         Squad squad = squadRepository.findById(squadId)
                 .orElseThrow(() -> new BusinessException("Elenco não encontrado."));
 
-        squadMemberRepository.deleteBySquadIdAndAthleteId(squad.getId(), athleteId);
         if (squad.getMembers() != null) {
             squad.getMembers().removeIf(m -> m.getAthlete() != null && m.getAthlete().getId().equals(athleteId));
         }
+        squadRepository.save(squad);
         return FootballMapperHelper.mapSquad(squad);
     }
 
@@ -377,6 +385,8 @@ public class SquadsAdminService {
                     .filter(c -> c.getName().toLowerCase().equals(clean) || clean.contains(c.getName().toLowerCase()))
                     .findFirst()
                     .orElse(null);
+
+
         }
         return null;
     }
@@ -390,11 +400,11 @@ public class SquadsAdminService {
             } catch (IllegalArgumentException ignored) {}
         }
         if (coachName != null && !coachName.trim().isEmpty()) {
-            String clean = coachName.trim().toLowerCase();
-            return athleteRepository.findAll().stream()
-                    .filter(a -> a.getAthleteType() == AthleteType.STAFF && a.getName().toLowerCase().equals(clean))
-                    .findFirst()
-                    .orElse(null);
+            return athleteRepository.findByAthleteTypeAndNameIgnoreCase(AthleteType.STAFF, coachName.trim()).stream().findFirst().orElse(null);
+
+
+
+
         }
         return null;
     }

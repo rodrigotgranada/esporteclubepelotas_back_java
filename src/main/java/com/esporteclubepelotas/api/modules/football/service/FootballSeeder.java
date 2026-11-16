@@ -8,6 +8,7 @@ import com.esporteclubepelotas.api.modules.user.entity.User;
 import com.esporteclubepelotas.api.modules.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +29,7 @@ public class FootballSeeder {
     @Transactional
     public void seedDefaultFootball() {
         User author = userRepository.findByEmail("admin@esporteclubepelotas.com.br")
-                .or(() -> userRepository.findAll().stream().findFirst())
+                .or(() -> userRepository.findAll(PageRequest.of(0, 1)).stream().findFirst())
                 .orElse(null);
 
         if (athleteRepository.count() == 0) {

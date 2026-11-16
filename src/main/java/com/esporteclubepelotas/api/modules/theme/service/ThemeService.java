@@ -10,6 +10,8 @@ import com.esporteclubepelotas.api.modules.theme.helper.PaletteGeneratorHelper;
 import com.esporteclubepelotas.api.modules.theme.repository.ThemeRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,7 +25,9 @@ public class ThemeService {
 
     private final ThemeRepository themeRepository;
 
-    @Transactional(readOnly = true)
+
+    @Transactional
+    @Cacheable(value = "activeTheme", sync = true)
     public ThemeResponseDto getActiveTheme() {
         Instant now = Instant.now();
 
@@ -40,7 +44,8 @@ public class ThemeService {
                 .orElseGet(() -> ThemeResponseDto.fromEntity(createDefaultThemeEntity()));
     }
 
-    @Transactional(readOnly = true)
+
+    @Transactional
     public List<ThemeResponseDto> findAll() {
         return themeRepository.findAllByOrderByCreatedAtDesc()
                 .stream()
@@ -48,12 +53,14 @@ public class ThemeService {
                 .toList();
     }
 
-    @Transactional(readOnly = true)
+
+    @Transactional
     public ThemeResponseDto findById(Long id) {
         return ThemeResponseDto.fromEntity(findThemeOrThrow(id));
     }
 
     @Transactional
+    @CacheEvict(value = "activeTheme", allEntries = true)
     public ThemeResponseDto create(ThemeRequestDto dto) {
         if (dto.getName() != null && themeRepository.existsByName(dto.getName())) {
             throw new BusinessException("Já existe um tema com este nome cadastrado: " + dto.getName());
@@ -104,6 +111,7 @@ public class ThemeService {
     }
 
     @Transactional
+    @CacheEvict(value = "activeTheme", allEntries = true)
     public ThemeResponseDto update(Long id, ThemeRequestDto dto) {
         Theme theme = findThemeOrThrow(id);
 
@@ -151,6 +159,7 @@ public class ThemeService {
     }
 
     @Transactional
+    @CacheEvict(value = "activeTheme", allEntries = true)
     public void activate(Long id) {
         Theme theme = findThemeOrThrow(id);
         if (!theme.isCampaign()) {
@@ -161,6 +170,7 @@ public class ThemeService {
     }
 
     @Transactional
+    @CacheEvict(value = "activeTheme", allEntries = true)
     public void deactivate(Long id) {
         Theme theme = findThemeOrThrow(id);
         if (theme.isDefault()) {
@@ -171,6 +181,7 @@ public class ThemeService {
     }
 
     @Transactional
+    @CacheEvict(value = "activeTheme", allEntries = true)
     public void delete(Long id) {
         Theme theme = findThemeOrThrow(id);
         if (theme.isDefault()) {

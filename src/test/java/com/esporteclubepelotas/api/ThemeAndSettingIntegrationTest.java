@@ -4,6 +4,8 @@ import com.esporteclubepelotas.api.common.security.JwtTokenProvider;
 import com.esporteclubepelotas.api.common.security.UserPrincipal;
 import com.esporteclubepelotas.api.modules.setting.dto.SettingUpdateDto;
 import com.esporteclubepelotas.api.modules.theme.dto.ThemeRequestDto;
+import com.esporteclubepelotas.api.modules.user.entity.User;
+import com.esporteclubepelotas.api.modules.user.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -33,18 +35,25 @@ class ThemeAndSettingIntegrationTest {
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
 
+    @Autowired
+    private UserRepository userRepository;
+
     private String adminToken;
 
     @BeforeEach
     void setUp() {
+        User admin = userRepository.findByEmail("admin@esporteclubepelotas.com.br")
+                .orElseThrow(() -> new IllegalStateException("Admin seed não encontrado nos testes."));
+
         UserPrincipal adminPrincipal = UserPrincipal.builder()
-                .id("admin-test-id")
-                .name("Administrador Lobo")
-                .email("admin@esporteclubepelotas.com.br")
-                .cpf("00000000000")
+                .id(admin.getId())
+                .name(admin.getFirstName() + " " + admin.getLastName())
+                .email(admin.getEmail())
+                .cpf(admin.getCpf())
                 .role("OWNER")
                 .permissions(List.of("*", "settings.manage", "settings.view"))
                 .active(true)
+                .tokenVersion(admin.getTokenVersion())
                 .build();
 
         adminToken = "Bearer " + jwtTokenProvider.generateAccessToken(adminPrincipal);

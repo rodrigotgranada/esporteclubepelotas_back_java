@@ -11,6 +11,9 @@ import com.esporteclubepelotas.api.modules.poll.entity.PollVote;
 import com.esporteclubepelotas.api.modules.poll.repository.PollOptionRepository;
 import com.esporteclubepelotas.api.modules.poll.repository.PollRepository;
 import com.esporteclubepelotas.api.modules.poll.repository.PollVoteRepository;
+import com.esporteclubepelotas.api.modules.user.entity.User;
+import com.esporteclubepelotas.api.modules.user.entity.UserStatus;
+import com.esporteclubepelotas.api.modules.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,9 +33,8 @@ public class PollService {
     private final PollRepository pollRepository;
     private final PollOptionRepository pollOptionRepository;
     private final PollVoteRepository pollVoteRepository;
+    private final UserRepository userRepository;
     private final PortalWebSocketHandler webSocketHandler;
-
-    // --- PÚBLICO / TORCEDOR ---
 
     @Transactional(readOnly = true)
     public Optional<PollDto> getActivePoll(UserPrincipal principal) {
@@ -49,8 +51,15 @@ public class PollService {
 
     @Transactional
     public PollDto vote(UUID pollId, VotePollDto dto, UserPrincipal principal) {
-        if (principal == null) {
+        if (principal == null || principal.getId() == null || principal.getId().isBlank()) {
             throw new BusinessException("É necessário estar autenticado para votar.");
+        }
+
+        User voter = userRepository.findById(principal.getId())
+                .orElseThrow(() -> new BusinessException("Usuário não encontrado."));
+
+        if (!voter.isActive() || voter.getStatus() != UserStatus.ACTIVE) {
+            throw new BusinessException("Sua conta precisa estar ativa para votar.");
         }
 
         Poll poll = pollRepository.findById(pollId)
@@ -68,22 +77,19 @@ public class PollService {
             throw new BusinessException("O prazo de votação desta enquete já encerrou.");
         }
 
-        // REGRA DE OURO: SOMENTE SÓCIOS (Role SOCIO, OWNER ou ADMIN)
+        // Regra de ouro: verifica status atual no banco de dados (não confia apenas no JWT em cache)
         if (poll.isOnlyMembers()) {
-            String role = principal.getRole() != null ? principal.getRole().toUpperCase() : "";
-            boolean isSocioOrStaff = role.contains("SOCIO") || role.contains("ADMIN") || role.contains("OWNER");
-            if (!isSocioOrStaff) {
+            String dbRole = voter.getRole() != null && voter.getRole().getName() != null
+                    ? voter.getRole().getName().toUpperCase()
+                    : "";
+            boolean isActiveSocio = voter.isSocio() && "ACTIVE".equalsIgnoreCase(voter.getSocioStatus());
+            boolean isAdminOrOwner = "ADMIN".equals(dbRole) || "OWNER".equals(dbRole);
+            if (!isActiveSocio && !isAdminOrOwner) {
                 throw new BusinessException("A votação nesta enquete é exclusiva para sócios adimplentes do Esporte Clube Pelotas.");
             }
         }
 
-        UUID userId;
-        try {
-            userId = UUID.fromString(principal.getId());
-        } catch (Exception e) {
-            throw new BusinessException("Identificador de usuário inválido.");
-        }
-
+        String userId = voter.getId();
         if (pollVoteRepository.existsByPollIdAndUserId(pollId, userId)) {
             throw new BusinessException("Você já registrou o seu voto nesta enquete.");
         }
@@ -95,26 +101,20 @@ public class PollService {
             throw new BusinessException("Opção não pertence a esta enquete.");
         }
 
-        // Registrar voto
         PollVote vote = PollVote.builder()
                 .pollId(pollId)
                 .optionId(option.getId())
                 .userId(userId)
-                .userRole(principal.getRole() != null ? principal.getRole() : "SOCIO")
+                .userRole(voter.getRole() != null ? voter.getRole().getName() : "SOCIO")
                 .build();
         pollVoteRepository.save(vote);
 
-        // Incrementar contador
+        // clearAutomatically=true garante leitura fresca da contagem atualizada logo abaixo
         pollOptionRepository.incrementVoteCount(option.getId());
 
-        // Notificar via WebSocket
         webSocketHandler.broadcastAfterCommit("polls", "VOTE_CAST", pollId.toString());
-
-        // Recarregar enquete atualizada
         return getPollById(pollId, principal);
     }
-
-    // --- ADMINISTRATIVO ---
 
     @Transactional(readOnly = true)
     public List<PollDto> listAllAdmin() {
@@ -200,8 +200,6 @@ public class PollService {
         webSocketHandler.broadcastAfterCommit("polls", "POLL_DELETED", id.toString());
     }
 
-    // --- CONVERSOR AUXILIAR ---
-
     private PollDto toDto(Poll poll, UserPrincipal principal) {
         int totalVotes = 0;
         if (poll.getOptions() != null) {
@@ -216,7 +214,6 @@ public class PollService {
             for (PollOption opt : poll.getOptions()) {
                 int votes = opt.getVotesCount() != null ? opt.getVotesCount() : 0;
                 double pct = finalTotal > 0 ? ((double) votes / finalTotal) * 100.0 : 0.0;
-                // format 1 decimal place
                 pct = Math.round(pct * 10.0) / 10.0;
 
                 optionDtos.add(PollOptionDto.builder()
@@ -231,15 +228,12 @@ public class PollService {
 
         boolean hasVoted = false;
         UUID votedOptionId = null;
-        if (principal != null) {
-            try {
-                UUID userId = UUID.fromString(principal.getId());
-                Optional<PollVote> voteOpt = pollVoteRepository.findByPollIdAndUserId(poll.getId(), userId);
-                if (voteOpt.isPresent()) {
-                    hasVoted = true;
-                    votedOptionId = voteOpt.get().getOptionId();
-                }
-            } catch (Exception ignored) {}
+        if (principal != null && principal.getId() != null && !principal.getId().isBlank()) {
+            Optional<PollVote> voteOpt = pollVoteRepository.findByPollIdAndUserId(poll.getId(), principal.getId());
+            if (voteOpt.isPresent()) {
+                hasVoted = true;
+                votedOptionId = voteOpt.get().getOptionId();
+            }
         }
 
         return PollDto.builder()
@@ -259,4 +253,3 @@ public class PollService {
                 .build();
     }
 }
-

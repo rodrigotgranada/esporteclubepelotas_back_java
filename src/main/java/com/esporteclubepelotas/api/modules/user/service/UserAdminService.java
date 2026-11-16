@@ -5,6 +5,7 @@ import com.esporteclubepelotas.api.common.email.EmailService;
 import com.esporteclubepelotas.api.common.email.EmailTemplateHelper;
 import com.esporteclubepelotas.api.common.exception.BusinessException;
 import com.esporteclubepelotas.api.common.exception.ResourceNotFoundException;
+import com.esporteclubepelotas.api.common.security.AuthTokenStateService;
 import com.esporteclubepelotas.api.common.storage.MediaUploadSanitizer;
 import com.esporteclubepelotas.api.common.storage.StorageService;
 import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
@@ -48,6 +49,7 @@ public class UserAdminService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuthTokenStateService authTokenStateService;
     private final StorageService storageService;
     private final EmailService emailService;
     private final PortalWebSocketHandler webSocketHandler;
@@ -136,13 +138,14 @@ public class UserAdminService {
                 file,
                 "users/" + safeFolder,
                 fileName,
+                MediaUploadSanitizer.MediaKind.IMAGE,
                 storageService,
                 "Falha ao enviar foto de perfil para o provedor de mídia.");
         return Map.of("url", url);
     }
 
     @Transactional
-    public UserSummaryDto adminCreate(CreateUserDto dto, MultipartFile avatar) {
+    public UserSummaryDto adminCreate(CreateUserDto dto, MultipartFile avatar, String actorRole) {
         String cleanEmail = dto.getEmail().trim().toLowerCase();
         String cleanCpf = dto.getCpf().replaceAll("[^0-9]", "");
 
@@ -157,6 +160,9 @@ public class UserAdminService {
                 ? UserHierarchyHelper.normalizeRoleName(dto.getRole())
                 : "USER";
 
+        // Garante que um ADMIN não consiga criar usuários com cargo igual ou superior ao seu (ex: OWNER/ADMIN)
+        UserHierarchyHelper.checkHierarchy(actorRole, targetRoleName, "promote");
+
         Role role = roleRepository.findByName(targetRoleName)
                 .orElseThrow(() -> new ResourceNotFoundException("Cargo", "name", targetRoleName));
 
@@ -167,6 +173,7 @@ public class UserAdminService {
                     avatar,
                     "users/" + UUID.randomUUID(),
                     "_profile.jpg",
+                    MediaUploadSanitizer.MediaKind.IMAGE,
                     storageService,
                     "Falha ao enviar foto de perfil do usuário.");
         }
@@ -268,6 +275,7 @@ public class UserAdminService {
         }
 
         User saved = userRepository.save(user);
+        authTokenStateService.evictUserTokenState(id);
         webSocketHandler.broadcastAfterCommit("users", "UPDATED", saved.getId(), null);
         return UserSummaryDto.fromEntity(saved);
     }
@@ -284,6 +292,7 @@ public class UserAdminService {
                 file,
                 "users/" + user.getId(),
                 "_profile.jpg",
+                MediaUploadSanitizer.MediaKind.IMAGE,
                 storageService,
                 "Falha ao enviar foto de perfil do usuário.");
         user.setAvatarUrl(avatarUrl);
@@ -322,7 +331,9 @@ public class UserAdminService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cargo", "name", normalizedNewRole));
 
         user.setRole(role);
+        user.setTokenVersion(user.getTokenVersion() + 1);
         User saved = userRepository.save(user);
+        authTokenStateService.evictUserTokenState(userId);
         webSocketHandler.broadcastAfterCommit("users", "UPDATED", saved.getId(), null);
         return UserSummaryDto.fromEntity(saved);
     }
@@ -343,8 +354,11 @@ public class UserAdminService {
             if (status == UserStatus.ACTIVE) {
                 user.setFailedLoginAttempts(0);
                 user.setLockoutUntil(null);
+            } else if (isBlocking) {
+                user.setTokenVersion(user.getTokenVersion() + 1);
             }
             User saved = userRepository.save(user);
+            authTokenStateService.evictUserTokenState(userId);
             webSocketHandler.broadcastAfterCommit("users", "UPDATED", saved.getId(), null);
             return UserSummaryDto.fromEntity(saved);
         } catch (IllegalArgumentException e) {
@@ -364,6 +378,7 @@ public class UserAdminService {
         user.setStatus(UserStatus.INACTIVE);
         user.setTokenVersion(user.getTokenVersion() + 1);
         userRepository.save(user);
+        authTokenStateService.evictUserTokenState(userId);
         webSocketHandler.broadcastAfterCommit("users", "DELETED", userId, null);
     }
 

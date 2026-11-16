@@ -42,6 +42,9 @@ public class AuthController {
     @Value("${app.cookie.same-site:Lax}")
     private String cookieSameSite;
 
+    @Value("${spring.profiles.active:dev}")
+    private String activeProfile;
+
     public AuthController(AuthService authService) {
         this.authService = authService;
     }
@@ -69,7 +72,7 @@ public class AuthController {
     @PostMapping("/resend-code")
     @Operation(summary = "Reenviar código de confirmação de e-mail")
     public ResponseEntity<Map<String, Boolean>> resendCode(@RequestBody Map<String, String> payload) {
-        String email = payload.get("email");
+        String email = payload != null ? payload.get("email") : null;
         authService.resendCode(email);
         return ResponseEntity.ok(Map.of("success", true));
     }
@@ -107,6 +110,24 @@ public class AuthController {
         return ResponseEntity.ok(result);
     }
 
+    @PostMapping("/logout")
+    @Operation(summary = "Encerrar sessão limpando o cookie de Refresh Token")
+    public ResponseEntity<Map<String, Boolean>> logout(HttpServletResponse response) {
+        ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from("refresh_token", "")
+                .httpOnly(true)
+                .secure(cookieSecure)
+                .path("/")
+                .maxAge(0)
+                .sameSite(cookieSameSite != null && !cookieSameSite.isBlank() ? cookieSameSite.trim() : "Lax");
+
+        if (cookieDomain != null && !cookieDomain.isBlank()) {
+            cookieBuilder.domain(cookieDomain.trim());
+        }
+
+        response.addHeader(HttpHeaders.SET_COOKIE, cookieBuilder.build().toString());
+        return ResponseEntity.ok(Map.of("success", true));
+    }
+
     @GetMapping("/me")
     @Operation(summary = "Obter dados do perfil do usuário autenticado")
     public ResponseEntity<UserSummaryDto> getMe(@CurrentUser UserPrincipal principal) {
@@ -114,16 +135,13 @@ public class AuthController {
     }
 
     @GetMapping("/env-test")
-    @Operation(summary = "Diagnóstico público de ambiente e conexões para o EnvironmentBadge")
+    @Operation(summary = "Diagnóstico mínimo de estágio de ambiente para o EnvironmentBadge")
     public ResponseEntity<Map<String, Object>> envTest() {
+        boolean isProd = activeProfile != null && activeProfile.toLowerCase().contains("prod");
         return ResponseEntity.ok(Map.of(
-                "stage", "DEV",
-                "environment", "development",
-                "databaseSuffix", "ecpelotas_postgres",
-                "mongoConnected", true,
-                "storageProvider", "firebase",
-                "storageProject", "esporteclubepelotasdev",
-                "storageConfigured", true
+                "stage", isProd ? "PROD" : "DEV",
+                "environment", isProd ? "production" : "development",
+                "storageProvider", "firebase"
         ));
     }
 

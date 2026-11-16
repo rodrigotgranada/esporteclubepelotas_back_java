@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,9 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final RateLimiterService rateLimiterService;
     private final ObjectMapper objectMapper;
 
+    @Value("${app.rate-limit.enabled:true}")
+    private boolean rateLimitEnabled;
+
     private static final long ONE_MINUTE_MS = 60000L;
 
     @Override
@@ -34,6 +38,10 @@ public class RateLimitFilter extends OncePerRequestFilter {
             HttpServletResponse response,
             FilterChain filterChain
     ) throws ServletException, IOException {
+        if (!rateLimitEnabled) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         String path = request.getRequestURI();
         String method = request.getMethod();
 
@@ -42,24 +50,37 @@ public class RateLimitFilter extends OncePerRequestFilter {
             return;
         }
 
-        String clientIp = extractClientIp(request);
+        // Usa getRemoteAddr() resolvido nativamente pelo container (server.forward-headers-strategy=native),
+        // evitando bypass via header X-Forwarded-For forjado pelo cliente.
+        String clientIp = request.getRemoteAddr() != null ? request.getRemoteAddr() : "127.0.0.1";
         boolean allowed = true;
-        int maxAllowed = 60;
 
         if ("POST".equalsIgnoreCase(method)) {
             if (path.endsWith("/auth/login")) {
-                maxAllowed = 10;
-                allowed = rateLimiterService.tryAcquire("login:" + clientIp, maxAllowed, ONE_MINUTE_MS);
+                allowed = rateLimiterService.tryAcquire("login:" + clientIp, 10, ONE_MINUTE_MS);
             } else if (path.endsWith("/auth/forgot-password")) {
-                maxAllowed = 3;
-                allowed = rateLimiterService.tryAcquire("forgot-pass:" + clientIp, maxAllowed, ONE_MINUTE_MS);
-            } else if (path.endsWith("/auth/register")) {
-                maxAllowed = 5;
-                allowed = rateLimiterService.tryAcquire("register:" + clientIp, maxAllowed, ONE_MINUTE_MS);
+                allowed = rateLimiterService.tryAcquire("forgot-pass:" + clientIp, 3, ONE_MINUTE_MS);
+            } else if (path.endsWith("/auth/resend-code")) {
+                allowed = rateLimiterService.tryAcquire("resend-code:" + clientIp, 3, ONE_MINUTE_MS);
+            } else if (path.endsWith("/auth/verify")) {
+                allowed = rateLimiterService.tryAcquire("verify:" + clientIp, 10, ONE_MINUTE_MS);
+            } else if (path.endsWith("/auth/reset-password")) {
+                allowed = rateLimiterService.tryAcquire("reset-pass:" + clientIp, 5, ONE_MINUTE_MS);
+            } else if (path.endsWith("/auth/register") || path.endsWith("/users/register")) {
+                allowed = rateLimiterService.tryAcquire("register:" + clientIp, 5, ONE_MINUTE_MS);
             } else if (path.contains("/news/") && path.endsWith("/comments")) {
-                maxAllowed = 5;
-                allowed = rateLimiterService.tryAcquire("comment:" + clientIp, maxAllowed, ONE_MINUTE_MS);
+                allowed = rateLimiterService.tryAcquire("comment:" + clientIp, 5, ONE_MINUTE_MS);
+            } else if (path.contains("/news/comments/") && path.endsWith("/report")) {
+                allowed = rateLimiterService.tryAcquire("comment-report:" + clientIp, 5, ONE_MINUTE_MS);
+            } else if (path.endsWith("/newsletter/subscribe")) {
+                allowed = rateLimiterService.tryAcquire("newsletter:" + clientIp, 5, ONE_MINUTE_MS);
+            } else if (path.endsWith("/membership-plans/leads")) {
+                allowed = rateLimiterService.tryAcquire("leads:" + clientIp, 5, ONE_MINUTE_MS);
+            } else if (path.contains("/polls/") && path.endsWith("/vote")) {
+                allowed = rateLimiterService.tryAcquire("poll-vote:" + clientIp, 15, ONE_MINUTE_MS);
             }
+        } else if ("GET".equalsIgnoreCase(method) && path.endsWith("/users/check-availability")) {
+            allowed = rateLimiterService.tryAcquire("check-avail:" + clientIp, 20, ONE_MINUTE_MS);
         }
 
         if (!allowed) {
@@ -80,15 +101,4 @@ public class RateLimitFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
     }
-
-    private String extractClientIp(HttpServletRequest request) {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        } else if (ip.contains(",")) {
-            ip = ip.split(",")[0].trim();
-        }
-        return ip != null ? ip : "127.0.0.1";
-    }
 }
-

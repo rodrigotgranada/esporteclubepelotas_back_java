@@ -34,13 +34,14 @@ public class MembershipLeadService {
     private final PortalWebSocketHandler webSocketHandler;
 
     @Transactional
-    public MembershipLeadDto createLead(CreateMembershipLeadDto dto) {
+    public MembershipLeadDto createLead(CreateMembershipLeadDto dto, String authenticatedUserId) {
         MembershipPlan plan = planRepository.findActiveById(dto.getPlanId())
                 .orElseThrow(() -> new BusinessException("Plano de sócio selecionado não encontrado ou inativo."));
 
+        // Vincula exclusivamente ao usuário autenticado no JWT (nunca aceita dto.getUserId() arbitrário)
         User user = null;
-        if (dto.getUserId() != null && !dto.getUserId().isBlank()) {
-            user = userRepository.findById(dto.getUserId()).orElse(null);
+        if (authenticatedUserId != null && !authenticatedUserId.isBlank()) {
+            user = userRepository.findById(authenticatedUserId).orElse(null);
         }
 
         String sanitizedPhone = dto.getPhone() != null ? dto.getPhone().trim() : "";

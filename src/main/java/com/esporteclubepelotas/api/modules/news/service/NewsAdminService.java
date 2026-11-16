@@ -14,6 +14,7 @@ import com.esporteclubepelotas.api.modules.user.repository.UserRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -118,6 +119,7 @@ public class NewsAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"news_featured", "news_categories"}, allEntries = true)
     public NewsArticleDto create(CreateNewsDto dto, String authorId) {
         if (authorId == null || authorId.isBlank()) {
             throw new BusinessException("Autor não identificado.");
@@ -198,6 +200,7 @@ public class NewsAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"news_featured", "news_categories"}, allEntries = true)
     public NewsArticleDto update(UUID id, UpdateNewsDto dto, String userId) {
         NewsArticle article = articleRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Matéria não encontrada."));
@@ -316,6 +319,7 @@ public class NewsAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"news_featured", "news_categories"}, allEntries = true)
     public void softDelete(UUID id) {
         NewsArticle article = articleRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("Matéria não encontrada."));
@@ -364,6 +368,7 @@ public class NewsAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"news_featured", "news_categories"}, allEntries = true)
     public NewsCategoryDto createCategory(CreateCategoryDto dto) {
         String baseSlug = NewsSlugHelper.slugify(dto.getName());
         String slug = baseSlug;
@@ -475,6 +480,7 @@ public class NewsAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"news_featured", "news_categories"}, allEntries = true)
     public void updateShowcase(UpdateShowcaseDto dto) {
         NewsShowcaseHelper.updateShowcase(articleRepository, dto);
         webSocketHandler.broadcastAfterCommit("news", "SHOWCASE_UPDATED", null, null);
@@ -491,6 +497,7 @@ public class NewsAdminService {
     }
 
     @Transactional
+    @CacheEvict(value = {"news_featured", "news_categories"}, allEntries = true)
     public NewsArticleDto publishNow(UUID id) {
         NewsArticleDto dto = NewsScheduledHelper.publishNow(articleRepository, id);
         webSocketHandler.broadcastAfterCommit("news", "PUBLISHED", id.toString(), dto.isYouth());

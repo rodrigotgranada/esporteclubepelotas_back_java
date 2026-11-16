@@ -12,12 +12,11 @@ import java.util.UUID;
 @Repository
 public interface MatchEventRepository extends JpaRepository<MatchEvent, UUID> {
 
-    @Query("SELECT e FROM MatchEvent e WHERE e.match.id = :matchId ORDER BY e.minute DESC, e.minuteExtra DESC NULLS LAST, e.createdAt DESC")
+    @Query("SELECT e FROM MatchEvent e LEFT JOIN FETCH e.playerAthlete LEFT JOIN FETCH e.playerOutAthlete WHERE e.match.id = :matchId ORDER BY e.minute DESC, e.minuteExtra DESC NULLS LAST, e.createdAt DESC")
     List<MatchEvent> findByMatchIdOrderByTimelineDesc(@Param("matchId") UUID matchId);
 
-    @Query("SELECT e FROM MatchEvent e WHERE e.match.id = :matchId ORDER BY e.minute ASC, e.minuteExtra ASC NULLS FIRST, e.createdAt ASC")
+    @Query("SELECT e FROM MatchEvent e LEFT JOIN FETCH e.playerAthlete LEFT JOIN FETCH e.playerOutAthlete WHERE e.match.id = :matchId ORDER BY e.minute ASC, e.minuteExtra ASC NULLS FIRST, e.createdAt ASC")
     List<MatchEvent> findByMatchIdOrderByTimelineAsc(@Param("matchId") UUID matchId);
 
     void deleteByMatchId(UUID matchId);
 }
-

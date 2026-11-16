@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.List;
 
 @Component
 public class JwtTokenProvider {
@@ -62,9 +61,12 @@ public class JwtTokenProvider {
     public String generateAccessToken(UserPrincipal userPrincipal) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
+        int tv = userPrincipal.getTokenVersion() != null ? userPrincipal.getTokenVersion() : 1;
 
         return Jwts.builder()
                 .subject(userPrincipal.getId())
+                .claim("type", "ACCESS")
+                .claim("tv", tv)
                 .claim("email", userPrincipal.getEmail())
                 .claim("name", userPrincipal.getName())
                 .claim("cpf", userPrincipal.getCpf())
@@ -79,10 +81,12 @@ public class JwtTokenProvider {
     public String generateRefreshToken(UserPrincipal userPrincipal) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + (7L * 24 * 3600000L)); // 7 dias
+        int tv = userPrincipal.getTokenVersion() != null ? userPrincipal.getTokenVersion() : 1;
 
         return Jwts.builder()
                 .subject(userPrincipal.getId())
                 .claim("type", "REFRESH")
+                .claim("tv", tv)
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(key)
@@ -116,4 +120,3 @@ public class JwtTokenProvider {
         }
     }
 }
-

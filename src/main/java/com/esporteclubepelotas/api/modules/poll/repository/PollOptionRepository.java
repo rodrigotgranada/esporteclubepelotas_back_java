@@ -15,8 +15,7 @@ public interface PollOptionRepository extends JpaRepository<PollOption, UUID> {
 
     List<PollOption> findByPollIdOrderByDisplayOrderAscCreatedAtAsc(UUID pollId);
 
-    @Modifying
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("UPDATE PollOption po SET po.votesCount = po.votesCount + 1 WHERE po.id = :id")
     void incrementVoteCount(@Param("id") UUID id);
 }
-

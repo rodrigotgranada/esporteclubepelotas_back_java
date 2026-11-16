@@ -63,6 +63,7 @@ public class SecurityConfig {
                                 "/auth/login",
                                 "/auth/register",
                                 "/auth/refresh",
+                                "/auth/logout",
                                 "/auth/verify",
                                 "/auth/resend-code",
                                 "/auth/forgot-password",
@@ -83,7 +84,7 @@ public class SecurityConfig {
                         .requestMatchers("/matches/admin/**").authenticated()
                         .requestMatchers("/championships/admin/**").authenticated()
 
-                        // 4. Consultas Publicas (GET)
+                        // 4. Consultas Publicas (GET) e Ações Públicas Controladas
                         .requestMatchers(HttpMethod.GET, "/idols", "/idols/*", "/idols/*/prev-next", "/idols/featured").permitAll()
                         .requestMatchers(HttpMethod.GET, "/news/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/squads/**").permitAll()
@@ -99,6 +100,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/kits/public", "/kits/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/matches/public", "/matches/public/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/opponents/public", "/opponents/public/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/membership-plans", "/membership-plans/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/membership-plans/leads").permitAll()
                         .requestMatchers(HttpMethod.POST, "/news/comments/*/report").permitAll()
                         .requestMatchers(HttpMethod.GET, "/system-modules", "/system-modules/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/transparency/**").permitAll()

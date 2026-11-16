@@ -1,5 +1,6 @@
 package com.esporteclubepelotas.api.common.storage;
 
+import com.esporteclubepelotas.api.common.exception.BusinessException;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobInfo;
@@ -18,12 +19,26 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
 @Service
 public class FirebaseStorageService implements StorageService {
+
+    private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
+            "image/png",
+            "image/jpeg",
+            "image/webp",
+            "image/gif",
+            "application/pdf",
+            "audio/mpeg",
+            "audio/wav",
+            "audio/ogg",
+            "audio/mp4"
+    );
 
     @Value("${firebase.credentials-base64:}")
     private String credentialsBase64;
@@ -64,14 +79,33 @@ public class FirebaseStorageService implements StorageService {
 
     @Override
     public String uploadFile(byte[] bytes, String fileName, String folder, String contentType) {
-        String cleanFolder = folder != null && !folder.isBlank() ? folder.replaceAll("^/|/$", "") + "/" : "";
-        String uniqueFileName = UUID.randomUUID() + "-" + fileName.replaceAll("[^a-zA-Z0-9._-]", "_");
+        String normalizedMime = contentType != null ? contentType.trim().toLowerCase(Locale.ROOT) : "";
+        if ("image/jpg".equals(normalizedMime)) {
+            normalizedMime = "image/jpeg";
+        }
+        if ("audio/mp3".equals(normalizedMime)) {
+            normalizedMime = "audio/mpeg";
+        }
+        if (!ALLOWED_CONTENT_TYPES.contains(normalizedMime)) {
+            throw new BusinessException("Tipo de arquivo não permitido para armazenamento: " + normalizedMime);
+        }
+
+        String safeFileName = (fileName != null ? fileName : "media").replaceAll("[^a-zA-Z0-9._-]", "_");
+        String lowerFile = safeFileName.toLowerCase(Locale.ROOT);
+        if (lowerFile.endsWith(".svg") || lowerFile.endsWith(".html") || lowerFile.endsWith(".htm")
+                || lowerFile.endsWith(".js") || lowerFile.endsWith(".xml")) {
+            throw new BusinessException("Extensão de arquivo bloqueada por política de segurança.");
+        }
+
+        String cleanFolder = folder != null && !folder.isBlank()
+                ? folder.replace("..", "").replaceAll("^/|/$", "") + "/"
+                : "";
+        String uniqueFileName = UUID.randomUUID() + "-" + safeFileName;
         String fullPath = cleanFolder + uniqueFileName;
 
         if (!initialized) {
             log.info("Mock upload realizado para {} (tamanho: {} bytes)", fullPath, bytes.length);
-            String mime = contentType != null && !contentType.isBlank() ? contentType : "image/png";
-            return "data:" + mime + ";base64," + Base64.getEncoder().encodeToString(bytes);
+            return "data:" + normalizedMime + ";base64," + Base64.getEncoder().encodeToString(bytes);
         }
 
         try {
@@ -79,12 +113,11 @@ public class FirebaseStorageService implements StorageService {
             String downloadToken = UUID.randomUUID().toString();
             Map<String, String> metadata = Collections.singletonMap("firebaseStorageDownloadTokens", downloadToken);
             BlobInfo blobInfo = BlobInfo.newBuilder(bucket.getName(), fullPath)
-                    .setContentType(contentType != null ? contentType : "application/octet-stream")
+                    .setContentType(normalizedMime)
                     .setMetadata(metadata)
                     .build();
             bucket.getStorage().create(blobInfo, bytes);
 
-            // URL pública do Firebase Storage compatível com console e clientes
             String encodedPath = URLEncoder.encode(fullPath, StandardCharsets.UTF_8).replace("+", "%20");
             return String.format("https://firebasestorage.googleapis.com/v0/b/%s/o/%s?alt=media&token=%s",
                     bucket.getName(), encodedPath, downloadToken);
@@ -100,7 +133,6 @@ public class FirebaseStorageService implements StorageService {
 
         try {
             Bucket bucket = StorageClient.getInstance().bucket();
-            // Extrai o path a partir da URL
             if (fileUrl.contains("/o/")) {
                 String encodedPath = fileUrl.split("/o/")[1].split("\\?")[0];
                 String decodedPath = java.net.URLDecoder.decode(encodedPath, StandardCharsets.UTF_8);
@@ -115,4 +147,3 @@ public class FirebaseStorageService implements StorageService {
         }
     }
 }
-

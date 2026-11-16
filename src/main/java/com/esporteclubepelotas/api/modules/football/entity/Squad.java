@@ -4,6 +4,7 @@ import com.esporteclubepelotas.api.modules.match.entity.Championship;
 import com.esporteclubepelotas.api.modules.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -63,6 +64,7 @@ public class Squad {
     private boolean isCurrent = false;
 
     @OneToMany(mappedBy = "squad", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 50)
     @Builder.Default
     private List<SquadMember> members = new ArrayList<>();
 

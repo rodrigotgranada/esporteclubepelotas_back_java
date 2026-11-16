@@ -22,14 +22,19 @@ public interface MembershipLeadRepository extends JpaRepository<MembershipLead, 
     """)
     List<MembershipLead> findAllWithPlan();
 
-    @Query("""
-        SELECT l FROM MembershipLead l
-        JOIN FETCH l.plan p
-        WHERE (:status IS NULL OR l.status = :status)
-        ORDER BY l.createdAt DESC
-    """)
+    @Query(
+        value = """
+            SELECT l FROM MembershipLead l
+            JOIN FETCH l.plan p
+            WHERE (:status IS NULL OR l.status = :status)
+            ORDER BY l.createdAt DESC
+        """,
+        countQuery = """
+            SELECT COUNT(l) FROM MembershipLead l
+            WHERE (:status IS NULL OR l.status = :status)
+        """
+    )
     Page<MembershipLead> findByStatusWithPlan(@Param("status") String status, Pageable pageable);
 
     long countByStatus(String status);
 }
-

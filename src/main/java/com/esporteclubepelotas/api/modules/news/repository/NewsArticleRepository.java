@@ -6,6 +6,8 @@ import com.esporteclubepelotas.api.modules.news.entity.NewsStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
@@ -22,6 +24,15 @@ import java.util.UUID;
 @Repository
 public interface NewsArticleRepository extends JpaRepository<NewsArticle, UUID>, JpaSpecificationExecutor<NewsArticle> {
 
+    @Override
+    @EntityGraph(attributePaths = {"category", "author", "author.role", "lastEditedBy", "lastEditedBy.role"})
+    Page<NewsArticle> findAll(Specification<NewsArticle> spec, Pageable pageable);
+
+    @Override
+    @EntityGraph(attributePaths = {"category", "author", "author.role", "lastEditedBy", "lastEditedBy.role"})
+    Optional<NewsArticle> findById(UUID id);
+
+    @EntityGraph(attributePaths = {"category", "author", "author.role", "lastEditedBy", "lastEditedBy.role"})
     Optional<NewsArticle> findBySlugAndIsActiveTrue(String slug);
 
     Optional<NewsArticle> findBySlug(String slug);
@@ -33,12 +44,14 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, UUID>,
     @Query(value = "SELECT * FROM news_articles a WHERE a.is_active = true AND a.previous_slugs @> CAST(:slugJson AS jsonb) LIMIT 1", nativeQuery = true)
     Optional<NewsArticle> findByPreviousSlugNative(@Param("slugJson") String slugJson);
 
+    @EntityGraph(attributePaths = {"category", "author", "author.role"})
     @Query("SELECT a FROM NewsArticle a WHERE a.isActive = true AND " +
             "((a.status = 'PUBLISHED' AND a.publishedAt <= :now) OR " +
             " (a.status = 'SCHEDULED' AND a.publishedAt <= :now)) " +
             "ORDER BY a.isPinned DESC, a.isFeatured DESC, a.publishedAt DESC")
     Page<NewsArticle> findPublicFeed(@Param("now") Instant now, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"category", "author", "author.role"})
     @Query("SELECT a FROM NewsArticle a WHERE a.isActive = true AND " +
             "((a.status = 'PUBLISHED' AND a.publishedAt <= :now) OR " +
             " (a.status = 'SCHEDULED' AND a.publishedAt <= :now)) AND " +
@@ -46,6 +59,7 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, UUID>,
             "ORDER BY a.publishedAt DESC")
     List<NewsArticle> findPublicBySlot(@Param("now") Instant now, @Param("slot") NewsFeaturedSlot slot, Pageable pageable);
 
+    @EntityGraph(attributePaths = {"category", "author", "author.role"})
     @Query("SELECT a FROM NewsArticle a WHERE a.isActive = true AND " +
             "((a.status = 'PUBLISHED' AND a.publishedAt <= :now) OR " +
             " (a.status = 'SCHEDULED' AND a.publishedAt <= :now)) AND " +
@@ -57,6 +71,7 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, UUID>,
             Pageable pageable
     );
 
+    @EntityGraph(attributePaths = {"category", "author", "author.role"})
     @Query("SELECT a FROM NewsArticle a WHERE a.isActive = true AND " +
             "((a.status = 'PUBLISHED' AND a.publishedAt <= :now) OR " +
             " (a.status = 'SCHEDULED' AND a.publishedAt <= :now)) AND " +
@@ -93,11 +108,13 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, UUID>,
             Pageable pageable
     );
 
+    @EntityGraph(attributePaths = {"category", "author", "author.role"})
     List<NewsArticle> findByIsActiveTrueAndStatusAndPublishedAtGreaterThanOrderByPublishedAtAsc(
             NewsStatus status,
             Instant now
     );
 
+    @EntityGraph(attributePaths = {"category", "author", "author.role"})
     @Query("SELECT a FROM NewsArticle a WHERE a.isActive = true AND a.status = 'PUBLISHED' AND a.featuredSlot = 'MAIN' ORDER BY a.publishedAt DESC")
     List<NewsArticle> findCurrentPublishedMainList(Pageable pageable);
 
@@ -105,9 +122,11 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, UUID>,
         return findCurrentPublishedMainList(PageRequest.of(0, 1)).stream().findFirst();
     }
 
+    @EntityGraph(attributePaths = {"category", "author", "author.role"})
     @Query("SELECT a FROM NewsArticle a WHERE a.isActive = true AND a.status = 'PUBLISHED' AND a.featuredSlot = 'SECONDARY' ORDER BY a.publishedAt DESC")
     List<NewsArticle> findPublishedSecondary(Pageable pageable);
 
+    @EntityGraph(attributePaths = {"category", "author", "author.role"})
     @Query("SELECT a FROM NewsArticle a WHERE a.isActive = true AND a.status = 'PUBLISHED' AND a.id NOT IN :excludedIds ORDER BY a.publishedAt DESC")
     List<NewsArticle> findPublishedAvailable(@Param("excludedIds") Collection<UUID> excludedIds, Pageable pageable);
 

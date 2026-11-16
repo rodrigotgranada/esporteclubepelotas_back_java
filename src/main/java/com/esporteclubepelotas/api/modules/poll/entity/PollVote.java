@@ -29,8 +29,8 @@ public class PollVote {
     @Column(name = "option_id", nullable = false)
     private UUID optionId;
 
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    @Column(name = "user_id", nullable = false, length = 36)
+    private String userId;
 
     @Column(name = "user_role", nullable = false, length = 50)
     private String userRole;
@@ -39,4 +39,3 @@ public class PollVote {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 }
-

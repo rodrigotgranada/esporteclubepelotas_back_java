@@ -33,7 +33,7 @@ import java.util.UUID;
 @RequestMapping("/admin/membership")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasAuthority('membership.manage') or hasRole('ADMIN') or hasRole('OWNER') or hasRole('EDITOR')")
+@PreAuthorize("hasAuthority('membership.manage') or hasRole('ADMIN') or hasRole('OWNER')")
 @Tag(name = "Planos de Sócios (Administração)", description = "Gestão de planos, vantagens, destaques e leads de adesão do Quadro Social")
 public class MembershipAdminController {
 

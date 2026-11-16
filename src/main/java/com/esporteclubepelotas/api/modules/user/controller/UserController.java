@@ -14,6 +14,8 @@ import com.esporteclubepelotas.api.modules.user.service.UserAdminService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,6 +26,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -35,9 +39,10 @@ public class UserController {
     private final UserAdminService userAdminService;
     private final AuthService authService;
     private final ObjectMapper objectMapper;
+    private final Validator validator;
 
     @GetMapping
-    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN') or hasRole('EDITOR')")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     @Operation(summary = "Listar usuários com filtros e paginação")
     public ResponseEntity<PageResponseDto<UserSummaryDto>> listUsers(
             @RequestParam(defaultValue = "1") int page,
@@ -63,7 +68,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN') or hasRole('EDITOR')")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     @Operation(summary = "Obter dados completos de um usuário por ID")
     public ResponseEntity<UserSummaryDto> getUserById(@PathVariable String id) {
         return ResponseEntity.ok(userAdminService.getUserById(id));
@@ -74,7 +79,7 @@ public class UserController {
     public ResponseEntity<UserSummaryDto> register(
             @RequestPart("data") String dataJson,
             @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
-        CreateUserDto dto = parseJson(dataJson, CreateUserDto.class);
+        CreateUserDto dto = parseAndValidateJson(dataJson, CreateUserDto.class);
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(dto, avatar));
     }
 
@@ -95,9 +100,11 @@ public class UserController {
     @Operation(summary = "Criação direta de usuário pelo Painel Administrativo")
     public ResponseEntity<UserSummaryDto> adminCreate(
             @RequestPart("data") String dataJson,
-            @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
-        CreateUserDto dto = parseJson(dataJson, CreateUserDto.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(userAdminService.adminCreate(dto, avatar));
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar,
+            @CurrentUser UserPrincipal actor) {
+        CreateUserDto dto = parseAndValidateJson(dataJson, CreateUserDto.class);
+        String actorRole = actor != null ? actor.getRole() : null;
+        return ResponseEntity.status(HttpStatus.CREATED).body(userAdminService.adminCreate(dto, avatar, actorRole));
     }
 
     @PatchMapping("/admin/{id}")
@@ -189,12 +196,21 @@ public class UserController {
         return ResponseEntity.ok(Map.of("success", true));
     }
 
-    private <T> T parseJson(String json, Class<T> clazz) {
+    private <T> T parseAndValidateJson(String json, Class<T> clazz) {
+        T dto;
         try {
-            return objectMapper.readValue(json, clazz);
+            dto = objectMapper.readValue(json, clazz);
         } catch (Exception e) {
-            log.error("Erro ao converter payload JSON: {}", json, e);
+            log.error("Erro ao converter payload JSON: {}", e.getMessage());
             throw new BusinessException("Formato JSON inválido no campo 'data'");
         }
+        Set<ConstraintViolation<T>> violations = validator.validate(dto);
+        if (!violations.isEmpty()) {
+            String message = violations.stream()
+                    .map(ConstraintViolation::getMessage)
+                    .collect(Collectors.joining("; "));
+            throw new BusinessException(message);
+        }
+        return dto;
     }
 }

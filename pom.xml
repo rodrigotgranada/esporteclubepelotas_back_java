@@ -43,10 +43,21 @@
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
 
-        <!-- Spring Boot Cache -->
+        <!-- Spring Boot Cache + Caffeine (TTL em memória sem necessidade de Redis) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
+
+        <!-- HTML Sanitizer (Prevenção XSS em conteúdos ricos/HTML) -->
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.18.3</version>
         </dependency>
 
         <!-- Spring Boot Security -->

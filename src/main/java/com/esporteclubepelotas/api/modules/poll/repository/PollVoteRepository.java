@@ -10,10 +10,9 @@ import java.util.UUID;
 @Repository
 public interface PollVoteRepository extends JpaRepository<PollVote, UUID> {
 
-    boolean existsByPollIdAndUserId(UUID pollId, UUID userId);
+    boolean existsByPollIdAndUserId(UUID pollId, String userId);
 
-    Optional<PollVote> findByPollIdAndUserId(UUID pollId, UUID userId);
+    Optional<PollVote> findByPollIdAndUserId(UUID pollId, String userId);
 
     long countByPollId(UUID pollId);
 }
-

@@ -19,7 +19,7 @@ import java.util.UUID;
 @RequestMapping("/admin/newsletter")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasAuthority('newsletter.manage') or hasRole('ADMIN') or hasRole('OWNER') or hasRole('EDITOR')")
+@PreAuthorize("hasAuthority('newsletter.manage') or hasRole('ADMIN') or hasRole('OWNER')")
 @Tag(name = "Newsletter (Admin)", description = "Gestão de inscritos e relatórios da Newsletter Oficial")
 public class NewsletterAdminController {
 

@@ -1,5 +1,6 @@
 package com.esporteclubepelotas.api.modules.user.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,7 +18,9 @@ import java.time.Instant;
 public class PendingChangeItem implements Serializable {
     private String type; // "email" or "phone"
     private String newValue;
+
+    @JsonIgnore
     private String code;
+
     private Instant expiresAt;
 }
-

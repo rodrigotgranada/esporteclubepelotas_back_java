@@ -1,7 +1,8 @@
 package com.esporteclubepelotas.api.modules.setting.service;
 
-import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+import com.esporteclubepelotas.api.common.storage.MediaUploadSanitizer;
 import com.esporteclubepelotas.api.common.storage.StorageService;
+import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
 import com.esporteclubepelotas.api.modules.setting.dto.SettingResponseDto;
 import com.esporteclubepelotas.api.modules.setting.dto.SettingUpdateDto;
 import com.esporteclubepelotas.api.modules.setting.entity.Setting;
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -28,8 +28,8 @@ public class SettingService {
     private final SettingRepository settingRepository;
     private final StorageService storageService;
 
-    @Cacheable(value = "publicSettings")
-    @Transactional(readOnly = true)
+    @Cacheable(value = "publicSettings", sync = true)
+    @Transactional
     public SettingResponseDto getSettings() {
         Setting setting = settingRepository.findFirstByOrderByIdAsc()
                 .orElseGet(this::createDefaultSettings);
@@ -37,41 +37,27 @@ public class SettingService {
     }
 
     public Map<String, String> uploadStandaloneLogo(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Nenhum arquivo enviado.");
-        }
-        try {
-            String originalFilename = file.getOriginalFilename() != null ? file.getOriginalFilename() : "logo.png";
-            String logoUrl = storageService.uploadFile(
-                    file.getBytes(),
-                    "club-logo-" + System.currentTimeMillis() + "-" + originalFilename,
-                    "settings",
-                    file.getContentType()
-            );
-            return Map.of("url", logoUrl);
-        } catch (IOException e) {
-            log.error("Erro ao ler bytes do arquivo de logo: {}", e.getMessage(), e);
-            throw new RuntimeException("Falha ao processar arquivo de logo", e);
-        }
+        String logoUrl = MediaUploadSanitizer.uploadAndVerify(
+                file,
+                "settings",
+                "club-logo-" + System.currentTimeMillis() + ".png",
+                MediaUploadSanitizer.MediaKind.IMAGE,
+                storageService,
+                "Falha ao enviar logotipo do clube."
+        );
+        return Map.of("url", logoUrl);
     }
 
     public Map<String, String> uploadStoreFacade(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Nenhum arquivo enviado.");
-        }
-        try {
-            String originalFilename = file.getOriginalFilename() != null ? file.getOriginalFilename() : "facade.jpg";
-            String facadeUrl = storageService.uploadFile(
-                    file.getBytes(),
-                    "store-facade-" + System.currentTimeMillis() + "-" + originalFilename,
-                    "settings",
-                    file.getContentType()
-            );
-            return Map.of("url", facadeUrl);
-        } catch (IOException e) {
-            log.error("Erro ao ler bytes da foto de fachada: {}", e.getMessage(), e);
-            throw new RuntimeException("Falha ao processar foto da fachada", e);
-        }
+        String facadeUrl = MediaUploadSanitizer.uploadAndVerify(
+                file,
+                "settings",
+                "store-facade-" + System.currentTimeMillis() + ".jpg",
+                MediaUploadSanitizer.MediaKind.IMAGE,
+                storageService,
+                "Falha ao enviar foto da fachada da loja."
+        );
+        return Map.of("url", facadeUrl);
     }
 
     @CacheEvict(value = "publicSettings", allEntries = true)
@@ -83,8 +69,12 @@ public class SettingService {
 
         if (dto != null) {
             if (dto.getClubName() != null) setting.setClubName(dto.getClubName());
-            if (dto.getClubLogoUrl() != null) setting.setClubLogoUrl(dto.getClubLogoUrl());
-            if (dto.getClubLogoGallery() != null) setting.setClubLogoGallery(new ArrayList<>(dto.getClubLogoGallery()));
+            if (dto.getClubLogoUrl() != null && !MediaUploadSanitizer.isBlobUrl(dto.getClubLogoUrl())) {
+                setting.setClubLogoUrl(MediaUploadSanitizer.sanitizeNullableUrl(dto.getClubLogoUrl()));
+            }
+            if (dto.getClubLogoGallery() != null) {
+                setting.setClubLogoGallery(MediaUploadSanitizer.sanitizeUrlList(dto.getClubLogoGallery()));
+            }
             if (dto.getSocialLinks() != null) setting.setSocialLinks(new ArrayList<>(dto.getSocialLinks()));
             if (dto.getContactPhones() != null) setting.setContactPhones(new ArrayList<>(dto.getContactPhones()));
             if (dto.getContactEmails() != null) setting.setContactEmails(new ArrayList<>(dto.getContactEmails()));
@@ -102,7 +92,9 @@ public class SettingService {
             // Loja Oficial Alcateia
             if (dto.getStoreName() != null) setting.setStoreName(dto.getStoreName().trim());
             if (dto.getStoreDescription() != null) setting.setStoreDescription(dto.getStoreDescription().trim());
-            if (dto.getStoreFacadeUrl() != null) setting.setStoreFacadeUrl(dto.getStoreFacadeUrl().trim());
+            if (dto.getStoreFacadeUrl() != null && !MediaUploadSanitizer.isBlobUrl(dto.getStoreFacadeUrl())) {
+                setting.setStoreFacadeUrl(MediaUploadSanitizer.sanitizeNullableUrl(dto.getStoreFacadeUrl()));
+            }
             if (dto.getStoreExternalUrl() != null) setting.setStoreExternalUrl(dto.getStoreExternalUrl().trim());
             if (dto.getStoreIsOnlineActive() != null) setting.setStoreIsOnlineActive(dto.getStoreIsOnlineActive());
             if (dto.getStoreInstagramUrl() != null) setting.setStoreInstagramUrl(dto.getStoreInstagramUrl().trim());
@@ -118,27 +110,23 @@ public class SettingService {
         }
 
         if (logoFile != null && !logoFile.isEmpty()) {
-            try {
-                String originalFilename = logoFile.getOriginalFilename() != null ? logoFile.getOriginalFilename() : "logo.png";
-                String logoUrl = storageService.uploadFile(
-                        logoFile.getBytes(),
-                        "club-logo-" + System.currentTimeMillis() + "-" + originalFilename,
-                        "settings",
-                        logoFile.getContentType()
-                );
-                setting.setClubLogoUrl(logoUrl);
+            String logoUrl = MediaUploadSanitizer.uploadAndVerify(
+                    logoFile,
+                    "settings",
+                    "club-logo-" + System.currentTimeMillis() + ".png",
+                    MediaUploadSanitizer.MediaKind.IMAGE,
+                    storageService,
+                    "Falha ao processar arquivo de logo."
+            );
+            setting.setClubLogoUrl(logoUrl);
 
-                List<String> currentGallery = setting.getClubLogoGallery() != null
-                        ? new ArrayList<>(setting.getClubLogoGallery())
-                        : new ArrayList<>();
-                if (!currentGallery.contains(logoUrl)) {
-                    currentGallery.add(0, logoUrl);
-                }
-                setting.setClubLogoGallery(currentGallery);
-            } catch (IOException e) {
-                log.error("Erro ao ler bytes do arquivo de logo: {}", e.getMessage(), e);
-                throw new RuntimeException("Falha ao processar arquivo de logo", e);
+            List<String> currentGallery = setting.getClubLogoGallery() != null
+                    ? new ArrayList<>(setting.getClubLogoGallery())
+                    : new ArrayList<>();
+            if (!currentGallery.contains(logoUrl)) {
+                currentGallery.add(0, logoUrl);
             }
+            setting.setClubLogoGallery(currentGallery);
         }
 
         Setting saved = settingRepository.save(setting);

@@ -1,5 +1,6 @@
 package com.esporteclubepelotas.api.modules.stadium.service;
 
+import com.esporteclubepelotas.api.common.security.HtmlSanitizerHelper;
 import com.esporteclubepelotas.api.common.storage.MediaUploadSanitizer;
 import com.esporteclubepelotas.api.common.storage.StorageService;
 import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,8 +29,8 @@ public class StadiumService {
     private final StorageService storageService;
     private final PortalWebSocketHandler webSocketHandler;
 
-    @Transactional(readOnly = true)
-    @Cacheable(value = "stadiumInfo")
+    @Transactional
+    @Cacheable(value = "stadiumInfo", sync = true)
     public StadiumResponseDto getStadiumInfo() {
         StadiumInfo stadium = stadiumRepository.findById(1L)
                 .orElseGet(this::createDefaultStadium);
@@ -51,11 +51,11 @@ public class StadiumService {
         stadium.setCapacity(dto.getCapacity());
         stadium.setPitchDimensions(dto.getPitchDimensions());
         stadium.setAddress(dto.getAddress());
-        stadium.setMapsDirectUrl(dto.getMapsDirectUrl());
-        stadium.setMapsEmbedUrl(dto.getMapsEmbedUrl());
+        stadium.setMapsDirectUrl(HtmlSanitizerHelper.sanitizeSafeUrl(dto.getMapsDirectUrl()));
+        stadium.setMapsEmbedUrl(HtmlSanitizerHelper.sanitizeSafeUrl(dto.getMapsEmbedUrl()));
         stadium.setStoryTitle(dto.getStoryTitle());
         stadium.setStorySubtitle(dto.getStorySubtitle());
-        stadium.setContentHtml(dto.getContentHtml());
+        stadium.setContentHtml(HtmlSanitizerHelper.sanitizeRichHtml(dto.getContentHtml()));
 
         if (dto.getGallery() != null) {
             stadium.setGallery(dto.getGallery());
@@ -79,41 +79,27 @@ public class StadiumService {
     }
 
     public Map<String, String> uploadCover(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Nenhum arquivo enviado.");
-        }
-        try {
-            String originalFilename = file.getOriginalFilename() != null ? file.getOriginalFilename() : "cover.jpg";
-            String url = storageService.uploadFile(
-                    file.getBytes(),
-                    "boca-do-lobo-cover-" + System.currentTimeMillis() + "-" + originalFilename,
-                    "stadium",
-                    file.getContentType()
-            );
-            return Map.of("url", url);
-        } catch (IOException e) {
-            log.error("Erro ao fazer upload da capa do estádio: {}", e.getMessage(), e);
-            throw new RuntimeException("Falha ao processar arquivo da capa", e);
-        }
+        String url = MediaUploadSanitizer.uploadAndVerify(
+                file,
+                "stadium",
+                "boca-do-lobo-cover-" + System.currentTimeMillis() + ".jpg",
+                MediaUploadSanitizer.MediaKind.IMAGE,
+                storageService,
+                "Falha ao processar arquivo da capa do estádio."
+        );
+        return Map.of("url", url);
     }
 
     public Map<String, String> uploadGalleryImage(MultipartFile file) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Nenhum arquivo enviado.");
-        }
-        try {
-            String originalFilename = file.getOriginalFilename() != null ? file.getOriginalFilename() : "gallery.jpg";
-            String url = storageService.uploadFile(
-                    file.getBytes(),
-                    "stadium-gallery-" + System.currentTimeMillis() + "-" + originalFilename,
-                    "stadium/gallery",
-                    file.getContentType()
-            );
-            return Map.of("url", url);
-        } catch (IOException e) {
-            log.error("Erro ao fazer upload da foto de galeria do estádio: {}", e.getMessage(), e);
-            throw new RuntimeException("Falha ao processar foto da galeria", e);
-        }
+        String url = MediaUploadSanitizer.uploadAndVerify(
+                file,
+                "stadium/gallery",
+                "stadium-gallery-" + System.currentTimeMillis() + ".jpg",
+                MediaUploadSanitizer.MediaKind.IMAGE,
+                storageService,
+                "Falha ao processar foto da galeria do estádio."
+        );
+        return Map.of("url", url);
     }
 
     private StadiumResponseDto toResponseDto(StadiumInfo entity) {

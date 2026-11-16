@@ -28,7 +28,7 @@ public class RoleController {
     private final RoleService roleService;
 
     @GetMapping
-    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN') or hasRole('EDITOR')")
+    @PreAuthorize("hasRole('OWNER') or hasRole('ADMIN')")
     @Operation(summary = "Listar todos os cargos cadastrados")
     public ResponseEntity<List<Role>> getRoles() {
         return ResponseEntity.ok(roleService.findAll());

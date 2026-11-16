@@ -1,6 +1,7 @@
 package com.esporteclubepelotas.api.common.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -16,6 +17,7 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -90,7 +92,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException ex, HttpServletRequest request) {
         ErrorResponseDto error = ErrorResponseDto.builder()
                 .statusCode(HttpStatus.PAYLOAD_TOO_LARGE.value())
-                .message("O arquivo enviado excede o limite máximo permitido (50MB).")
+                .message("O arquivo enviado excede o limite máximo permitido.")
                 .error(HttpStatus.PAYLOAD_TOO_LARGE.getReasonPhrase())
                 .timestamp(Instant.now().toString())
                 .path(request.getRequestURI())
@@ -100,9 +102,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> handleGenericException(Exception ex, HttpServletRequest request) {
+        log.error("Erro interno não tratado na rota {} {}: {}", request.getMethod(), request.getRequestURI(), ex.getMessage(), ex);
         ErrorResponseDto error = ErrorResponseDto.builder()
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                .message(ex.getMessage() != null ? ex.getMessage() : "Ocorreu um erro interno no servidor")
+                .message("Ocorreu um erro interno no servidor. Tente novamente em instantes.")
                 .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
                 .timestamp(Instant.now().toString())
                 .path(request.getRequestURI())

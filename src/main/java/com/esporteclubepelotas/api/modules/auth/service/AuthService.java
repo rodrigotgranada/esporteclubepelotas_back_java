@@ -4,8 +4,10 @@ import com.esporteclubepelotas.api.common.email.EmailService;
 import com.esporteclubepelotas.api.common.email.EmailTemplateHelper;
 import com.esporteclubepelotas.api.common.exception.BusinessException;
 import com.esporteclubepelotas.api.common.exception.UnauthorizedException;
+import com.esporteclubepelotas.api.common.security.AuthTokenStateService;
 import com.esporteclubepelotas.api.common.security.JwtTokenProvider;
 import com.esporteclubepelotas.api.common.security.UserPrincipal;
+import com.esporteclubepelotas.api.common.storage.MediaUploadSanitizer;
 import com.esporteclubepelotas.api.common.storage.StorageService;
 import com.esporteclubepelotas.api.modules.auth.dto.*;
 import com.esporteclubepelotas.api.modules.membership.entity.EleventicketsMemberCache;
@@ -15,9 +17,9 @@ import com.esporteclubepelotas.api.modules.role.repository.RoleRepository;
 import com.esporteclubepelotas.api.modules.user.dto.CreateUserDto;
 import com.esporteclubepelotas.api.modules.user.entity.User;
 import com.esporteclubepelotas.api.modules.user.entity.UserStatus;
-import com.esporteclubepelotas.api.modules.user.helper.UserHierarchyHelper;
 import com.esporteclubepelotas.api.modules.user.helper.UserLockoutHelper;
 import com.esporteclubepelotas.api.modules.user.repository.UserRepository;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,6 +46,7 @@ public class AuthService {
     private final EleventicketsMemberCacheRepository cacheRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final AuthTokenStateService authTokenStateService;
     private final StorageService storageService;
     private final EmailService emailService;
 
@@ -75,12 +78,21 @@ public class AuthService {
             throw new UnauthorizedException("Credenciais inválidas");
         }
 
-        if (!user.isActive()) {
+        if (!user.isActive() || user.getStatus() == UserStatus.BLOCKED || user.getStatus() == UserStatus.INACTIVE) {
             throw new UnauthorizedException("Conta inativa ou suspensa. Contate a administração.");
         }
 
         UserLockoutHelper.resetLoginAttempts(user);
         userRepository.save(user);
+
+        // Usuários com e-mail ainda não verificado seguem para /verify-email sem receber JWT privilegiado
+        if (user.getStatus() == UserStatus.PENDING || !user.isEmailVerified()) {
+            return AuthResponseDto.builder()
+                    .accessToken("")
+                    .refreshToken(null)
+                    .user(UserSummaryDto.fromEntity(user))
+                    .build();
+        }
 
         UserPrincipal principal = toPrincipal(user);
         String accessToken = jwtTokenProvider.generateAccessToken(principal);
@@ -105,12 +117,8 @@ public class AuthService {
             throw new BusinessException("CPF já está em uso.");
         }
 
-        String roleName = (dto.getRole() != null && !dto.getRole().isBlank())
-                ? UserHierarchyHelper.normalizeRoleName(dto.getRole())
-                : "USER";
-
-        Role role = roleRepository.findByName(roleName)
-                .orElseGet(() -> roleRepository.findByName("USER").orElse(null));
+        // Auto-cadastro público é estritamente fixado na role padrão USER (ignora dto.getRole())
+        Role role = roleRepository.findByName("USER").orElse(null);
 
         String code = String.format("%06d", new SecureRandom().nextInt(1_000_000));
         Instant expiresAt = Instant.now().plus(60, ChronoUnit.MINUTES);
@@ -146,7 +154,7 @@ public class AuthService {
                 user.setSocioSince(LocalDate.now());
                 user.setSocioLastSyncedAt(Instant.now());
                 Role socioRole = roleRepository.findByName("SOCIO").orElse(null);
-                if (socioRole != null && "USER".equals(role.getName())) {
+                if (socioRole != null) {
                     user.setRole(socioRole);
                 }
                 log.info("🎉 Auto-vínculo de Sócio ElevenTickets realizado para novo cadastro: CPF {}", cleanCpf);
@@ -156,7 +164,14 @@ public class AuthService {
         User savedUser = userRepository.save(user);
 
         if (avatar != null && !avatar.isEmpty()) {
-            String avatarUrl = storageService.uploadFile(avatar, "users/" + savedUser.getId(), "_profile.jpg");
+            String avatarUrl = MediaUploadSanitizer.uploadAndVerify(
+                    avatar,
+                    "users/" + savedUser.getId(),
+                    "_profile.jpg",
+                    MediaUploadSanitizer.MediaKind.IMAGE,
+                    storageService,
+                    "Falha ao enviar foto de perfil."
+            );
             savedUser.setAvatarUrl(avatarUrl);
             savedUser = userRepository.save(savedUser);
         }
@@ -197,6 +212,7 @@ public class AuthService {
         user.setVerificationCodeExpires(null);
         UserLockoutHelper.resetLoginAttempts(user);
         userRepository.save(user);
+        authTokenStateService.evictUserTokenState(user.getId());
 
         UserPrincipal principal = toPrincipal(user);
         String accessToken = jwtTokenProvider.generateAccessToken(principal);
@@ -278,6 +294,7 @@ public class AuthService {
         }
 
         userRepository.save(user);
+        authTokenStateService.evictUserTokenState(user.getId());
     }
 
     @Transactional(readOnly = true)
@@ -287,12 +304,23 @@ public class AuthService {
             throw new UnauthorizedException("Refresh token inválido ou expirado");
         }
 
-        String userId = jwtTokenProvider.getUserIdFromToken(token);
+        Claims claims = jwtTokenProvider.getClaimsFromToken(token);
+        String type = claims.get("type", String.class);
+        if (!"REFRESH".equalsIgnoreCase(type)) {
+            throw new UnauthorizedException("Token fornecido não é um Refresh Token válido");
+        }
+
+        String userId = claims.getSubject();
+        Integer tokenVersion = claims.get("tv", Integer.class);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UnauthorizedException("Usuário não encontrado"));
 
-        if (!user.isActive()) {
-            throw new UnauthorizedException("Conta inativa");
+        if (!user.isActive() || !user.isEmailVerified() || user.getStatus() != UserStatus.ACTIVE) {
+            throw new UnauthorizedException("Conta inativa ou não verificada");
+        }
+
+        if (tokenVersion == null || tokenVersion != user.getTokenVersion()) {
+            throw new UnauthorizedException("Sessão revogada. Faça login novamente.");
         }
 
         UserPrincipal principal = toPrincipal(user);
@@ -326,6 +354,7 @@ public class AuthService {
         user.setMustChangePassword(false);
         user.setTokenVersion(user.getTokenVersion() + 1);
         userRepository.save(user);
+        authTokenStateService.evictUserTokenState(user.getId());
 
         return UserSummaryDto.fromEntity(user);
     }
@@ -339,6 +368,7 @@ public class AuthService {
                 .cpf(user.getCpf())
                 .role(roleName)
                 .permissions(user.getRole() != null ? user.getRole().getPermissions() : Collections.emptyList())
+                .tokenVersion(user.getTokenVersion())
                 .active(user.isActive())
                 .build();
     }

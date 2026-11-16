@@ -23,7 +23,7 @@ import java.util.UUID;
 @RequestMapping("/admin/transparency")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "bearerAuth")
-@PreAuthorize("hasAuthority('transparency.manage') or hasRole('ADMIN') or hasRole('OWNER') or hasRole('EDITOR')")
+@PreAuthorize("hasAuthority('transparency.manage') or hasRole('ADMIN') or hasRole('OWNER')")
 @Tag(name = "Transparência & Governança (Admin)", description = "CRUD de balanços, relatórios, atas e diretoria do clube")
 public class TransparencyAdminController {
 

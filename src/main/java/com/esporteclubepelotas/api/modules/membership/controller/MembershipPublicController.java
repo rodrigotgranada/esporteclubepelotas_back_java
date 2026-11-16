@@ -1,5 +1,7 @@
 package com.esporteclubepelotas.api.modules.membership.controller;
 
+import com.esporteclubepelotas.api.common.security.CurrentUser;
+import com.esporteclubepelotas.api.common.security.UserPrincipal;
 import com.esporteclubepelotas.api.modules.membership.dto.CreateMembershipLeadDto;
 import com.esporteclubepelotas.api.modules.membership.dto.MembershipLeadDto;
 import com.esporteclubepelotas.api.modules.membership.dto.MembershipPlanDto;
@@ -38,8 +40,11 @@ public class MembershipPublicController {
 
     @PostMapping("/leads")
     @Operation(summary = "Registrar intenção de adesão (lead) antes do redirecionamento para o WhatsApp da secretaria")
-    public ResponseEntity<MembershipLeadDto> createLead(@RequestBody @Valid CreateMembershipLeadDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(leadService.createLead(dto));
+    public ResponseEntity<MembershipLeadDto> createLead(
+            @RequestBody @Valid CreateMembershipLeadDto dto,
+            @CurrentUser UserPrincipal principal
+    ) {
+        String authenticatedUserId = principal != null ? principal.getId() : null;
+        return ResponseEntity.status(HttpStatus.CREATED).body(leadService.createLead(dto, authenticatedUserId));
     }
 }
-

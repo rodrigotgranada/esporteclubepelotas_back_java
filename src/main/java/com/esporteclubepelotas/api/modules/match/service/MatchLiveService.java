@@ -387,11 +387,11 @@ public class MatchLiveService {
             if (byId.isPresent()) return byId.get();
         }
         if (playerName != null && !playerName.trim().isEmpty()) {
-            String clean = playerName.trim().toLowerCase();
-            return athleteRepository.findAll().stream()
-                    .filter(a -> a.getName().toLowerCase().equals(clean) || (a.getNickname() != null && a.getNickname().toLowerCase().equals(clean)))
-                    .findFirst()
-                    .orElse(null);
+            return athleteRepository.findByNameOrNicknameIgnoreCase(playerName.trim()).stream().findFirst().orElse(null);
+
+
+
+
         }
         return null;
     }

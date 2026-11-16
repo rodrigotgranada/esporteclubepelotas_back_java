@@ -1,9 +1,11 @@
 package com.esporteclubepelotas.api.modules.news.service;
 
 import com.esporteclubepelotas.api.common.exception.BusinessException;
+import com.esporteclubepelotas.api.common.security.HtmlSanitizerHelper;
 import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
 import com.esporteclubepelotas.api.modules.news.dto.*;
 import com.esporteclubepelotas.api.modules.news.entity.*;
+import com.esporteclubepelotas.api.modules.news.helper.NewsCommentsAdminHelper;
 import com.esporteclubepelotas.api.modules.news.helper.NewsMapperHelper;
 import com.esporteclubepelotas.api.modules.news.repository.*;
 import com.esporteclubepelotas.api.modules.user.entity.User;
@@ -12,6 +14,7 @@ import com.esporteclubepelotas.api.modules.user.repository.UserRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -41,23 +44,39 @@ public class NewsPublicService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException("Usuário não encontrado."));
 
-        if (user.getStatus() != UserStatus.ACTIVE || !user.isActive()) {
+        if (user.getStatus() != UserStatus.ACTIVE || !user.isActive() || !user.isEmailVerified()) {
             throw new BusinessException("Sua conta precisa estar ativa e com o e-mail verificado para interagir.");
         }
         return user;
     }
 
+    private boolean isPubliclyVisible(NewsArticle article, Instant now) {
+        if (article == null || !article.isActive()) {
+            return false;
+        }
+        return (article.getStatus() == NewsStatus.PUBLISHED || article.getStatus() == NewsStatus.SCHEDULED)
+                && article.getPublishedAt() != null
+                && !article.getPublishedAt().isAfter(now);
+    }
+
     private NewsArticle findActiveArticleBySlugOrId(String slugOrId) {
         String clean = slugOrId.trim().toLowerCase();
+        NewsArticle article = null;
         try {
             UUID id = UUID.fromString(slugOrId.trim());
-            Optional<NewsArticle> byId = articleRepository.findById(id).filter(NewsArticle::isActive);
-            if (byId.isPresent()) return byId.get();
+            article = articleRepository.findById(id).filter(NewsArticle::isActive).orElse(null);
         } catch (IllegalArgumentException ignored) {}
 
-        return articleRepository.findBySlugAndIsActiveTrue(clean)
-                .orElseGet(() -> articleRepository.findByPreviousSlugNative("[\"" + clean + "\"]")
-                        .orElseThrow(() -> new BusinessException("Matéria não encontrada ou indisponível.")));
+        if (article == null) {
+            article = articleRepository.findBySlugAndIsActiveTrue(clean)
+                    .orElseGet(() -> articleRepository.findByPreviousSlugNative("[\"" + clean + "\"]")
+                            .orElse(null));
+        }
+
+        if (!isPubliclyVisible(article, Instant.now())) {
+            throw new BusinessException("Matéria não encontrada ou indisponível.");
+        }
+        return article;
     }
 
     @Transactional(readOnly = true)
@@ -161,14 +180,7 @@ public class NewsPublicService {
             if (article != null) isRedirect = true;
         }
 
-        if (article == null) {
-            throw new BusinessException("Matéria não encontrada ou indisponível.");
-        }
-
-        boolean isPublic = (article.getStatus() == NewsStatus.PUBLISHED || article.getStatus() == NewsStatus.SCHEDULED)
-                && article.getPublishedAt() != null && !article.getPublishedAt().isAfter(now);
-
-        if (!isPublic) {
+        if (!isPubliclyVisible(article, now)) {
             throw new BusinessException("Matéria não encontrada ou indisponível.");
         }
 
@@ -182,9 +194,10 @@ public class NewsPublicService {
         return dto;
     }
 
+    @Cacheable(value = "news_featured", key = "#limit", sync = true)
     @Transactional(readOnly = true)
     public List<NewsArticleDto> findFeatured(int limit) {
-        int safeLimit = Math.max(1, limit);
+        int safeLimit = Math.max(1, Math.min(20, limit));
         Instant now = Instant.now();
 
         List<NewsArticle> mainArticles = articleRepository.findPublicBySlot(now, NewsFeaturedSlot.MAIN, PageRequest.of(0, 1));
@@ -213,6 +226,7 @@ public class NewsPublicService {
                 .toList();
     }
 
+    @Cacheable(value = "news_categories", sync = true)
     @Transactional(readOnly = true)
     public List<NewsCategoryDto> findAllCategories() {
         return categoryRepository.findByIsActiveTrueOrderByDisplayOrderAscNameAsc().stream()
@@ -251,7 +265,6 @@ public class NewsPublicService {
                 .build();
     }
 
-
     @Transactional(readOnly = true)
     public Map<String, Object> getUserReaction(String slug, String userId) {
         Map<String, Object> response = new HashMap<>();
@@ -264,6 +277,7 @@ public class NewsPublicService {
         response.put("userReaction", reactionOpt.map(r -> r.getType().getValue()).orElse(null));
         return response;
     }
+
     @Transactional
     public ReactNewsResponseDto reactToArticle(String slug, String userId, NewsReactionType type) {
         User user = validateActiveUser(userId);
@@ -342,10 +356,15 @@ public class NewsPublicService {
             throw new BusinessException("Os comentários estão desativados para esta publicação.");
         }
 
+        String sanitizedContent = HtmlSanitizerHelper.sanitizePlainText(content);
+        if (sanitizedContent == null || sanitizedContent.isBlank()) {
+            throw new BusinessException("O conteúdo do comentário não pode ficar vazio.");
+        }
+
         NewsComment comment = NewsComment.builder()
                 .article(article)
                 .author(user)
-                .content(content.trim())
+                .content(sanitizedContent)
                 .status(NewsCommentStatus.ACTIVE)
                 .isActive(true)
                 .build();
@@ -362,7 +381,7 @@ public class NewsPublicService {
                 .orElseThrow(() -> new BusinessException("Comentário não encontrado."));
 
         boolean isAuthor = comment.getAuthor().getId().equals(userId);
-        boolean isStaff = userRole != null && List.of("Owner", "Admin", "Editor", "OWNER", "ADMIN", "EDITOR").contains(userRole);
+        boolean isStaff = userRole != null && List.of("OWNER", "ADMIN", "EDITOR").contains(userRole.toUpperCase());
 
         if (!isAuthor && !isStaff) {
             throw new BusinessException("Você não tem permissão para remover este comentário.");
@@ -374,8 +393,9 @@ public class NewsPublicService {
 
     @Transactional
     public NewsCommentDto reportComment(UUID commentId, String reason) {
-        NewsCommentDto dto = com.esporteclubepelotas.api.modules.news.helper.NewsCommentsAdminHelper.publicCommentReport(
-                commentRepository, commentId, reason
+        String safeReason = reason != null ? HtmlSanitizerHelper.sanitizePlainText(reason) : null;
+        NewsCommentDto dto = NewsCommentsAdminHelper.publicCommentReport(
+                commentRepository, commentId, safeReason
         );
         webSocketHandler.broadcastAfterCommit("news-comments", "REPORTED", commentId.toString());
         return dto;
