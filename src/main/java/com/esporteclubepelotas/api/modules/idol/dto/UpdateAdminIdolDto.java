@@ -1,8 +1,10 @@
 package com.esporteclubepelotas.api.modules.idol.dto;
 
 import com.esporteclubepelotas.api.modules.idol.entity.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,6 +31,8 @@ public class UpdateAdminIdolDto {
     private List<IdolPeriod> periods;
     private Boolean isActiveInClub;
     private LocalDate birthDate;
+    @JsonProperty("isInMemoriam")
+    private Boolean isInMemoriam;
     private LocalDate deathDate;
     private String birthPlace;
     private String quote;
@@ -47,5 +51,34 @@ public class UpdateAdminIdolDto {
 
     @JsonProperty("isActive")
     private Boolean isActive;
-}
 
+    @JsonIgnore
+    @Builder.Default
+    private boolean endYearProvided = false;
+
+    @JsonIgnore
+    @Builder.Default
+    private boolean birthDateProvided = false;
+
+    @JsonIgnore
+    @Builder.Default
+    private boolean deathDateProvided = false;
+
+    @JsonSetter("endYear")
+    public void setEndYear(Integer endYear) {
+        this.endYear = endYear;
+        this.endYearProvided = true;
+    }
+
+    @JsonSetter("birthDate")
+    public void setBirthDate(LocalDate birthDate) {
+        this.birthDate = birthDate;
+        this.birthDateProvided = true;
+    }
+
+    @JsonSetter("deathDate")
+    public void setDeathDate(LocalDate deathDate) {
+        this.deathDate = deathDate;
+        this.deathDateProvided = true;
+    }
+}

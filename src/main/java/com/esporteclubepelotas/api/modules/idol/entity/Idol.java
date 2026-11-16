@@ -67,6 +67,9 @@ public class Idol {
 
     private LocalDate birthDate;
 
+    @Builder.Default
+    private boolean isInMemoriam = false;
+
     private LocalDate deathDate;
 
     @Column(length = 100)

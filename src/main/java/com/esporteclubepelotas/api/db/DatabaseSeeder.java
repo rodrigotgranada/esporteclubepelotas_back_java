@@ -262,6 +262,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .periods(List.of(new IdolPeriod(1961, 1974, "Primeira e Gloriosa Passagem")))
                 .isActiveInClub(false)
                 .birthDate(LocalDate.of(1944, 7, 9))
+                .isInMemoriam(true)
                 .deathDate(LocalDate.of(2020, 5, 18))
                 .birthPlace("Pelotas - RS")
                 .quote("A Boca do Lobo sempre foi o templo onde meu coração batia no ritmo da torcida áureo-cerúlea.")

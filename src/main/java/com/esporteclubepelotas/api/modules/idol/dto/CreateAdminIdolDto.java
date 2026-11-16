@@ -40,6 +40,8 @@ public class CreateAdminIdolDto {
     private List<IdolPeriod> periods;
     private Boolean isActiveInClub;
     private LocalDate birthDate;
+    @JsonProperty("isInMemoriam")
+    private Boolean isInMemoriam;
     private LocalDate deathDate;
     private String birthPlace;
     private String quote;

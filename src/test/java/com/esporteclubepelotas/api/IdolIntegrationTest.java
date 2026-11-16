@@ -217,5 +217,52 @@ public class IdolIntegrationTest {
                 .andExpect(jsonPath("$.urls[0]").isNotEmpty())
                 .andExpect(jsonPath("$.gallery[0]").isNotEmpty());
     }
+
+    @Test
+    @DisplayName("PATCH /idols/admin/{id} deve limpar deathDate ao desmarcar isInMemoriam")
+    void testAdminClearDeathDateWhenUnmarkingInMemoriam() throws Exception {
+        String adminToken = obtainToken("admin@esporteclubepelotas.com.br", "admin123");
+
+        CreateAdminIdolDto createDto = CreateAdminIdolDto.builder()
+                .name("Ídolo Teste Vivo Com Data Acidental")
+                .category(IdolCategory.PLAYER)
+                .startYear(1995)
+                .isInMemoriam(true)
+                .deathDate(java.time.LocalDate.of(2020, 1, 10))
+                .biography("Biografia para teste de limpeza da data de falecimento.")
+                .build();
+
+        MvcResult createdResult = mockMvc.perform(post("/idols/admin")
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(createDto)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.isInMemoriam").value(true))
+                .andExpect(jsonPath("$.deathDate").value("2020-01-10"))
+                .andReturn();
+
+        String createdId = objectMapper.readTree(createdResult.getResponse().getContentAsString()).get("id").asText();
+
+        String clearPayload = """
+                {
+                  "isInMemoriam": false,
+                  "deathDate": null
+                }
+                """;
+
+        mockMvc.perform(patch("/idols/admin/" + createdId)
+                        .header("Authorization", "Bearer " + adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(clearPayload))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isInMemoriam").value(false))
+                .andExpect(jsonPath("$.deathDate").doesNotExist());
+
+        var persisted = idolRepository.findById(createdId).orElseThrow();
+        assertThat(persisted.isInMemoriam()).isFalse();
+        assertThat(persisted.getDeathDate()).isNull();
+
+        idolRepository.deleteById(createdId);
+    }
 }
 

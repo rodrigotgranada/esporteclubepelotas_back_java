@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Slf4j
@@ -95,6 +96,11 @@ public class IdolAdminService {
             }
         }
 
+        boolean inMemoriam = dto.getIsInMemoriam() != null
+                ? Boolean.TRUE.equals(dto.getIsInMemoriam())
+                : dto.getDeathDate() != null;
+        LocalDate resolvedDeathDate = inMemoriam ? dto.getDeathDate() : null;
+
         Idol idol = Idol.builder()
                 .name(dto.getName().trim())
                 .nickname(dto.getNickname() != null ? dto.getNickname().trim() : null)
@@ -108,7 +114,8 @@ public class IdolAdminService {
                 .periods(dto.getPeriods() != null ? dto.getPeriods() : new ArrayList<>())
                 .isActiveInClub(Boolean.TRUE.equals(dto.getIsActiveInClub()))
                 .birthDate(dto.getBirthDate())
-                .deathDate(dto.getDeathDate())
+                .isInMemoriam(inMemoriam)
+                .deathDate(resolvedDeathDate)
                 .birthPlace(dto.getBirthPlace())
                 .quote(dto.getQuote())
                 .biography(dto.getBiography())
@@ -159,10 +166,25 @@ public class IdolAdminService {
         }
 
         if (dto.getStartYear() != null) idol.setStartYear(dto.getStartYear());
-        if (dto.getEndYear() != null) idol.setEndYear(dto.getEndYear());
-        if (dto.getIsActiveInClub() != null) idol.setActiveInClub(dto.getIsActiveInClub());
-        if (dto.getBirthDate() != null) idol.setBirthDate(dto.getBirthDate());
-        if (dto.getDeathDate() != null) idol.setDeathDate(dto.getDeathDate());
+        if (dto.isEndYearProvided() || dto.getEndYear() != null) idol.setEndYear(dto.getEndYear());
+        if (dto.getIsActiveInClub() != null) {
+            idol.setActiveInClub(dto.getIsActiveInClub());
+            if (Boolean.TRUE.equals(dto.getIsActiveInClub())) {
+                idol.setEndYear(null);
+            }
+        }
+        if (dto.isBirthDateProvided() || dto.getBirthDate() != null) idol.setBirthDate(dto.getBirthDate());
+        if (dto.getIsInMemoriam() != null) {
+            idol.setInMemoriam(dto.getIsInMemoriam());
+            if (Boolean.FALSE.equals(dto.getIsInMemoriam())) {
+                idol.setDeathDate(null);
+            } else if (dto.isDeathDateProvided() || dto.getDeathDate() != null) {
+                idol.setDeathDate(dto.getDeathDate());
+            }
+        } else if (dto.isDeathDateProvided() || dto.getDeathDate() != null) {
+            idol.setDeathDate(dto.getDeathDate());
+            idol.setInMemoriam(dto.getDeathDate() != null);
+        }
         if (dto.getBirthPlace() != null) idol.setBirthPlace(dto.getBirthPlace());
         if (dto.getQuote() != null) idol.setQuote(dto.getQuote());
         if (dto.getBiography() != null) idol.setBiography(dto.getBiography());

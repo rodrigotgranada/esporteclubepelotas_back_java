@@ -37,6 +37,8 @@ public class IdolDto {
     private List<IdolPeriod> periods;
     private Boolean isActiveInClub;
     private LocalDate birthDate;
+    @JsonProperty("isInMemoriam")
+    private boolean isInMemoriam;
     private LocalDate deathDate;
     private String birthPlace;
     private String quote;
@@ -76,6 +78,7 @@ public class IdolDto {
                 .periods(idol.getPeriods())
                 .isActiveInClub(idol.isActiveInClub())
                 .birthDate(idol.getBirthDate())
+                .isInMemoriam(idol.isInMemoriam() || idol.getDeathDate() != null)
                 .deathDate(idol.getDeathDate())
                 .birthPlace(idol.getBirthPlace())
                 .quote(idol.getQuote())
