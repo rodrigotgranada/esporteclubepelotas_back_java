@@ -1,6 +1,7 @@
 package com.esporteclubepelotas.api.modules.transparency.repository;
 
 import com.esporteclubepelotas.api.modules.transparency.entity.TransparencyDocument;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,5 +19,12 @@ public interface TransparencyDocumentRepository extends JpaRepository<Transparen
     List<TransparencyDocument> findPublishedWithFilters(@Param("category") String category, @Param("year") Integer year);
 
     List<TransparencyDocument> findAllByOrderByYearDescCreatedAtDesc();
+
+    @Query("SELECT d FROM TransparencyDocument d WHERE d.published = true AND (" +
+            " LOWER(d.title) LIKE :pattern ESCAPE '!' OR " +
+            " LOWER(COALESCE(d.description, '')) LIKE :pattern ESCAPE '!' OR " +
+            " LOWER(d.category) LIKE :pattern ESCAPE '!'" +
+            ") ORDER BY d.year DESC, d.createdAt DESC")
+    List<TransparencyDocument> searchPublished(@Param("pattern") String pattern, Pageable pageable);
 }
 

@@ -2,6 +2,7 @@ package com.esporteclubepelotas.api.modules.football.repository;
 
 import com.esporteclubepelotas.api.modules.football.entity.Athlete;
 import com.esporteclubepelotas.api.modules.football.entity.AthleteType;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -28,4 +29,21 @@ public interface AthleteRepository extends JpaRepository<Athlete, UUID>, JpaSpec
 
     @Query("SELECT a FROM Athlete a WHERE a.athleteType = :athleteType AND LOWER(a.name) = LOWER(:name)")
     List<Athlete> findByAthleteTypeAndNameIgnoreCase(@Param("athleteType") AthleteType athleteType, @Param("name") String name);
+
+    @Query("SELECT a FROM Athlete a WHERE a.isActive = true AND " +
+            "(:allowMalePro = true OR a.gender = com.esporteclubepelotas.api.modules.football.entity.AthleteGender.FEMALE OR a.athleteType = com.esporteclubepelotas.api.modules.football.entity.AthleteType.YOUTH) AND " +
+            "(:allowYouth = true OR a.athleteType <> com.esporteclubepelotas.api.modules.football.entity.AthleteType.YOUTH) AND " +
+            "(:allowFemale = true OR a.gender <> com.esporteclubepelotas.api.modules.football.entity.AthleteGender.FEMALE) AND " +
+            "(LOWER(a.name) LIKE :pattern ESCAPE '!' OR " +
+            " LOWER(COALESCE(a.nickname, '')) LIKE :pattern ESCAPE '!' OR " +
+            " LOWER(a.primaryPosition) LIKE :pattern ESCAPE '!' OR " +
+            " LOWER(COALESCE(a.staffRole, '')) LIKE :pattern ESCAPE '!') " +
+            "ORDER BY a.isRetired ASC, a.name ASC")
+    List<Athlete> searchPublicAthletes(
+            @Param("pattern") String pattern,
+            @Param("allowMalePro") boolean allowMalePro,
+            @Param("allowYouth") boolean allowYouth,
+            @Param("allowFemale") boolean allowFemale,
+            Pageable pageable
+    );
 }

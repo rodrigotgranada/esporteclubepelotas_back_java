@@ -1,6 +1,7 @@
 package com.esporteclubepelotas.api.modules.match.repository;
 
 import com.esporteclubepelotas.api.modules.match.entity.Match;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -54,5 +55,15 @@ public interface MatchRepository extends JpaRepository<Match, UUID> {
                                  @Param("clubName") String clubName,
                                  @Param("shortName") String shortName,
                                  @Param("badgeUrl") String badgeUrl);
+
+    @Query("SELECT m FROM Match m JOIN FETCH m.championship c LEFT JOIN FETCH m.opponentClub oc " +
+            "WHERE m.deletedAt IS NULL AND c.deletedAt IS NULL AND (" +
+            " LOWER(m.opponentName) LIKE :pattern ESCAPE '!' OR " +
+            " LOWER(COALESCE(oc.name, '')) LIKE :pattern ESCAPE '!' OR " +
+            " LOWER(c.name) LIKE :pattern ESCAPE '!' OR " +
+            " LOWER(m.roundName) LIKE :pattern ESCAPE '!' OR " +
+            " LOWER(m.stadiumName) LIKE :pattern ESCAPE '!'" +
+            ") ORDER BY m.matchDate DESC")
+    List<Match> searchPublicMatches(@Param("pattern") String pattern, Pageable pageable);
 }
 

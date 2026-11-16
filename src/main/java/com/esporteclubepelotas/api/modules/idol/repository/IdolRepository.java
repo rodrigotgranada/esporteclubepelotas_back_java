@@ -18,6 +18,12 @@ public interface IdolRepository extends JpaRepository<Idol, String>, JpaSpecific
 
     Optional<Idol> findBySlug(String slug);
 
+    @Query("SELECT i FROM Idol i WHERE i.isActive = true AND " +
+            "(LOWER(i.name) LIKE :pattern ESCAPE '!' OR " +
+            " LOWER(COALESCE(i.nickname, '')) LIKE :pattern ESCAPE '!') " +
+            "ORDER BY i.displayOrder ASC, i.name ASC")
+    List<Idol> searchPublicIdols(@Param("pattern") String pattern, Pageable pageable);
+
     Optional<Idol> findBySlugAndIsActiveTrue(String slug);
 
     List<Idol> findByIsActiveTrueAndIsFeaturedTrueOrderByDisplayOrderAscCreatedAtDesc(Pageable pageable);
@@ -62,4 +68,3 @@ public interface IdolRepository extends JpaRepository<Idol, String>, JpaSpecific
             Pageable pageable
     );
 }
-

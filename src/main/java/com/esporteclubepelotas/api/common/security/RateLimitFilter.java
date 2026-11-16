@@ -81,6 +81,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
             }
         } else if ("GET".equalsIgnoreCase(method) && path.endsWith("/users/check-availability")) {
             allowed = rateLimiterService.tryAcquire("check-avail:" + clientIp, 20, ONE_MINUTE_MS);
+        } else if ("GET".equalsIgnoreCase(method) && path.endsWith("/search")) {
+            allowed = rateLimiterService.tryAcquire("global-search:" + clientIp, 40, ONE_MINUTE_MS);
         }
 
         if (!allowed) {

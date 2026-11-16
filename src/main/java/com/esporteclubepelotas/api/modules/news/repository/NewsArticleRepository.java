@@ -153,4 +153,22 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, UUID>,
     @Modifying
     @Query("UPDATE NewsArticle a SET a.viewsCount = a.viewsCount + 1 WHERE a.id = :id")
     void incrementViewsCount(@Param("id") UUID id);
+
+    @EntityGraph(attributePaths = {"category"})
+    @Query("SELECT a FROM NewsArticle a WHERE a.isActive = true AND " +
+            "((a.status = 'PUBLISHED' AND a.publishedAt <= :now) OR " +
+            " (a.status = 'SCHEDULED' AND a.publishedAt <= :now)) AND " +
+            "(:allowYouth = true OR a.isYouth = false) AND " +
+            "(:allowFemale = true OR a.isFemale = false) AND " +
+            "(LOWER(a.title) LIKE :pattern ESCAPE '!' OR " +
+            " LOWER(COALESCE(a.subtitle, '')) LIKE :pattern ESCAPE '!' OR " +
+            " LOWER(COALESCE(a.summary, '')) LIKE :pattern ESCAPE '!') " +
+            "ORDER BY a.publishedAt DESC")
+    List<NewsArticle> searchPublicArticles(
+            @Param("now") Instant now,
+            @Param("pattern") String pattern,
+            @Param("allowYouth") boolean allowYouth,
+            @Param("allowFemale") boolean allowFemale,
+            Pageable pageable
+    );
 }

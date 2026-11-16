@@ -107,6 +107,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/transparency/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/newsletter/subscribe").permitAll()
                         .requestMatchers(HttpMethod.GET, "/polls/active", "/polls/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/search").permitAll()
 
                         // 5. Todas as rotas administrativas e modificacoes exigem autenticacao
                         .anyRequest().authenticated()
