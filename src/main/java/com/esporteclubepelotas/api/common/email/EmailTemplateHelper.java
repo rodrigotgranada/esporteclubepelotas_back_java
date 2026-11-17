@@ -1,10 +1,37 @@
 package com.esporteclubepelotas.api.common.email;
 
+import org.springframework.web.util.HtmlUtils;
+
 public final class EmailTemplateHelper {
 
     private EmailTemplateHelper() {}
 
+    private static String escapeHtml(String input) {
+        return input == null ? "" : HtmlUtils.htmlEscape(input.trim());
+    }
+
+    private static String sanitizeHttpUrl(String rawUrl) {
+        if (rawUrl == null) return "";
+        String trimmed = rawUrl.trim();
+        if (trimmed.startsWith("https://") || trimmed.startsWith("http://")) {
+            return HtmlUtils.htmlEscape(trimmed);
+        }
+        return "";
+    }
+
     private static String getBaseTemplate(String title, String contentHtml) {
+        return getBaseTemplate(title, contentHtml, null);
+    }
+
+    private static String getBaseTemplate(String title, String contentHtml, String unsubscribeUrl) {
+        String unsubscribeBlock = "";
+        if (unsubscribeUrl != null && !unsubscribeUrl.isBlank()) {
+            String safeUnsub = HtmlUtils.htmlEscape(unsubscribeUrl);
+            unsubscribeBlock = "<p style=\"margin-top: 10px;\">Não deseja mais receber nossa newsletter? <a href=\""
+                    + safeUnsub
+                    + "\" style=\"color: #0f2d59; text-decoration: underline;\">Cancelar inscrição</a>.</p>";
+        }
+
         return """
             <!DOCTYPE html>
             <html lang="pt-BR">
@@ -36,11 +63,12 @@ public final class EmailTemplateHelper {
                 </div>
                 <div class="footer">
                   <p>© Esporte Clube Pelotas — O Lobo da Boca do Lobo.<br>Este é um e-mail automático, favor não responder.</p>
+                  %s
                 </div>
               </div>
             </body>
             </html>
-            """.formatted(title, contentHtml);
+            """.formatted(escapeHtml(title), contentHtml, unsubscribeBlock);
     }
 
     public static String getVerificationEmail(String code, boolean isResend) {
@@ -53,13 +81,14 @@ public final class EmailTemplateHelper {
               <span class="code">%s</span>
             </div>
             <p class="p">Este código é válido por <strong>60 minutos</strong>. Se você não solicitou este cadastro, desconsidere esta mensagem.</p>
-            """.formatted(title, code);
+            """.formatted(title, escapeHtml(code));
         return getBaseTemplate(title, content);
     }
 
     public static String getResetPasswordEmail(String frontendUrl, String token) {
         String title = "Redefinição de Senha";
-        String resetUrl = (frontendUrl != null ? frontendUrl : "http://localhost:7999") + "/reset-password?token=" + token;
+        String baseUrl = (frontendUrl != null && !frontendUrl.isBlank() ? frontendUrl : "http://localhost:7999").replaceAll("/+$", "");
+        String resetUrl = HtmlUtils.htmlEscape(baseUrl + "/reset-password?token=" + token);
         String content = """
             <h2 class="h1">Redefinição de Senha</h2>
             <p class="p">Recebemos uma solicitação para redefinir a senha da sua conta no portal do Esporte Clube Pelotas.</p>
@@ -74,7 +103,8 @@ public final class EmailTemplateHelper {
     }
 
     public static String getChangeContactEmail(String type, String code, String newValue) {
-        String title = "Confirme a alteração de " + ("email".equalsIgnoreCase(type) ? "e-mail" : "celular");
+        String label = "email".equalsIgnoreCase(type) ? "e-mail" : "celular";
+        String title = "Confirme a alteração de " + label;
         String content = """
             <h2 class="h1">Confirmação de Alteração</h2>
             <p class="p">Você solicitou a alteração do seu <strong>%s</strong> para: <strong>%s</strong>.</p>
@@ -83,8 +113,80 @@ public final class EmailTemplateHelper {
               <span class="code">%s</span>
             </div>
             <p class="p">Este código expira em <strong>2 horas</strong>. Se você não realizou esta solicitação, entre em contato imediatamente com o suporte.</p>
-            """.formatted("email".equalsIgnoreCase(type) ? "e-mail" : "celular", newValue, code);
+            """.formatted(label, escapeHtml(newValue), escapeHtml(code));
         return getBaseTemplate(title, content);
     }
-}
 
+    public static String getNewsletterWelcomeEmail(String subscriberName, String frontendUrl, String unsubscribeUrl) {
+        String title = "Bem-vindo à Newsletter Oficial";
+        String greeting = (subscriberName != null && !subscriberName.isBlank())
+                ? "Olá, <strong>" + escapeHtml(subscriberName) + "</strong>!"
+                : "Olá, torcedor áureo-cerúleo!";
+        String baseUrl = (frontendUrl != null && !frontendUrl.isBlank() ? frontendUrl : "http://localhost:7999").replaceAll("/+$", "");
+        String safePortalUrl = HtmlUtils.htmlEscape(baseUrl + "/noticias");
+
+        String content = """
+            <h2 class="h1">Inscrição confirmada na Alcateia!</h2>
+            <p class="p">%s</p>
+            <p class="p">A partir de agora você receberá em primeira mão as notícias oficiais, bastidores da Boca do Lobo e comunicados do Esporte Clube Pelotas.</p>
+            <div style="text-align: center;">
+              <a href="%s" class="btn" style="color: #fbc02d !important;">Acessar Notícias do Lobo</a>
+            </div>
+            """.formatted(greeting, safePortalUrl);
+
+        return getBaseTemplate(title, content, unsubscribeUrl);
+    }
+
+    public static String getNewsNewsletterEmail(
+            String title,
+            String subtitle,
+            String summary,
+            String categoryName,
+            String coverImage,
+            String slug,
+            String frontendUrl,
+            String unsubscribeUrl
+    ) {
+        String baseUrl = (frontendUrl != null && !frontendUrl.isBlank() ? frontendUrl : "http://localhost:7999").replaceAll("/+$", "");
+        String articleUrl = HtmlUtils.htmlEscape(baseUrl + "/noticias/" + slug);
+        String safeCoverUrl = sanitizeHttpUrl(coverImage);
+
+        String categoryBadge = (categoryName != null && !categoryName.isBlank())
+                ? "<p style=\"display: inline-block; background-color: #fef3c7; color: #92400e; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 12px 0;\">"
+                + escapeHtml(categoryName) + "</p>"
+                : "";
+
+        String coverBlock = !safeCoverUrl.isBlank()
+                ? "<div style=\"margin-bottom: 20px; border-radius: 10px; overflow: hidden;\"><img src=\""
+                + safeCoverUrl
+                + "\" alt=\""
+                + escapeHtml(title)
+                + "\" style=\"width: 100%%; max-height: 280px; object-fit: cover; display: block;\"></div>"
+                : "";
+
+        String excerpt = (summary != null && !summary.isBlank()) ? summary
+                : (subtitle != null && !subtitle.isBlank()) ? subtitle : "";
+
+        String excerptBlock = !excerpt.isBlank()
+                ? "<p class=\"p\">" + escapeHtml(excerpt) + "</p>"
+                : "";
+
+        String content = """
+            %s
+            %s
+            <h2 class="h1">%s</h2>
+            %s
+            <div style="text-align: center;">
+              <a href="%s" class="btn" style="color: #fbc02d !important;">Ler Matéria Completa</a>
+            </div>
+            """.formatted(
+                categoryBadge,
+                coverBlock,
+                escapeHtml(title),
+                excerptBlock,
+                articleUrl
+        );
+
+        return getBaseTemplate(title, content, unsubscribeUrl);
+    }
+}

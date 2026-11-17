@@ -92,4 +92,7 @@ public class UpdateNewsDto {
 
     @Schema(description = "Permitir comentários dos torcedores")
     private Boolean allowComments;
+
+    @Schema(description = "Enviar matéria via Newsletter para os inscritos ao publicar")
+    private Boolean sendNewsletter;
 }

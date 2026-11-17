@@ -74,6 +74,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 allowed = rateLimiterService.tryAcquire("comment-report:" + clientIp, 5, ONE_MINUTE_MS);
             } else if (path.endsWith("/newsletter/subscribe")) {
                 allowed = rateLimiterService.tryAcquire("newsletter:" + clientIp, 5, ONE_MINUTE_MS);
+            } else if (path.endsWith("/newsletter/unsubscribe")) {
+                allowed = rateLimiterService.tryAcquire("newsletter-unsub:" + clientIp, 10, ONE_MINUTE_MS);
             } else if (path.endsWith("/membership-plans/leads")) {
                 allowed = rateLimiterService.tryAcquire("leads:" + clientIp, 5, ONE_MINUTE_MS);
             } else if (path.contains("/polls/") && path.endsWith("/vote")) {

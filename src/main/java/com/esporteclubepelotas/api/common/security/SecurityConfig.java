@@ -106,6 +106,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/system-modules", "/system-modules/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/transparency/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/newsletter/subscribe").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/newsletter/unsubscribe").permitAll()
                         .requestMatchers(HttpMethod.GET, "/polls/active", "/polls/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/search").permitAll()
 

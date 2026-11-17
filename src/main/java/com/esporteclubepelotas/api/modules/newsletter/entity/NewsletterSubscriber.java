@@ -29,8 +29,17 @@ public class NewsletterSubscriber {
     @Builder.Default
     private boolean active = true;
 
+    @Column(name = "unsubscribe_token", nullable = false, unique = true, length = 64)
+    private String unsubscribeToken;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
-}
 
+    @PrePersist
+    public void ensureUnsubscribeToken() {
+        if (this.unsubscribeToken == null || this.unsubscribeToken.isBlank()) {
+            this.unsubscribeToken = UUID.randomUUID().toString();
+        }
+    }
+}

@@ -129,6 +129,13 @@ public class NewsArticle {
     @Builder.Default
     private boolean allowComments = true;
 
+    @Column(name = "send_newsletter", nullable = false)
+    @Builder.Default
+    private boolean sendNewsletter = false;
+
+    @Column(name = "newsletter_sent_at")
+    private Instant newsletterSentAt;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Builder.Default
     private NewsReactionsCounter reactions = new NewsReactionsCounter();

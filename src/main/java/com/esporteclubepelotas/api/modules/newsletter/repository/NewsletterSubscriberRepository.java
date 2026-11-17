@@ -6,6 +6,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -14,8 +15,11 @@ public interface NewsletterSubscriberRepository extends JpaRepository<Newsletter
 
     Optional<NewsletterSubscriber> findByEmailIgnoreCase(String email);
 
+    Optional<NewsletterSubscriber> findByUnsubscribeToken(String unsubscribeToken);
+
     boolean existsByEmailIgnoreCase(String email);
 
     Page<NewsletterSubscriber> findAllByOrderByCreatedAtDesc(Pageable pageable);
-}
 
+    List<NewsletterSubscriber> findByActiveTrue();
+}

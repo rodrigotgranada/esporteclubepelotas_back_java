@@ -9,6 +9,7 @@ import com.esporteclubepelotas.api.modules.news.helper.*;
 import com.esporteclubepelotas.api.modules.news.repository.NewsArticleRepository;
 import com.esporteclubepelotas.api.modules.news.repository.NewsCategoryRepository;
 import com.esporteclubepelotas.api.modules.news.repository.NewsCommentRepository;
+import com.esporteclubepelotas.api.modules.newsletter.service.NewsletterService;
 import com.esporteclubepelotas.api.modules.user.entity.User;
 import com.esporteclubepelotas.api.modules.user.repository.UserRepository;
 import jakarta.persistence.criteria.Predicate;
@@ -37,6 +38,7 @@ public class NewsAdminService {
     private final UserRepository userRepository;
     private final StorageService storageService;
     private final PortalWebSocketHandler webSocketHandler;
+    private final NewsletterService newsletterService;
 
     @Transactional(readOnly = true)
     public GetNewsResponseDto adminFindAll(QueryNewsDto query) {
@@ -190,12 +192,17 @@ public class NewsAdminService {
                 .viewsCount(0L)
                 .allowReactions(!Boolean.FALSE.equals(dto.getAllowReactions()))
                 .allowComments(!Boolean.FALSE.equals(dto.getAllowComments()))
+                .sendNewsletter(Boolean.TRUE.equals(dto.getSendNewsletter()))
                 .reactions(new NewsReactionsCounter())
                 .isActive(true)
                 .build();
 
+        boolean shouldDispatch = triggerNewsletterIfEligible(article);
         NewsArticle saved = articleRepository.save(article);
         webSocketHandler.broadcastAfterCommit("news", "CREATED", saved.getId().toString(), saved.isYouth());
+        if (shouldDispatch) {
+            newsletterService.dispatchArticleAfterCommit(saved);
+        }
         return NewsMapperHelper.mapArticle(saved);
     }
 
@@ -279,6 +286,9 @@ public class NewsAdminService {
         if (dto.getAllowComments() != null) {
             article.setAllowComments(dto.getAllowComments());
         }
+        if (dto.getSendNewsletter() != null) {
+            article.setSendNewsletter(dto.getSendNewsletter());
+        }
 
         if (dto.getSlug() != null && !dto.getSlug().trim().equalsIgnoreCase(article.getSlug())) {
             String newSlug = NewsSlugHelper.generateUniqueArticleSlug(dto.getSlug(), articleRepository, article.getId());
@@ -313,9 +323,27 @@ public class NewsAdminService {
             }
         }
 
+        boolean shouldDispatch = triggerNewsletterIfEligible(article);
         NewsArticle saved = articleRepository.save(article);
         webSocketHandler.broadcastAfterCommit("news", "UPDATED", saved.getId().toString(), saved.isYouth());
+        if (shouldDispatch) {
+            newsletterService.dispatchArticleAfterCommit(saved);
+        }
         return NewsMapperHelper.mapArticle(saved);
+    }
+
+    private boolean triggerNewsletterIfEligible(NewsArticle article) {
+        if (!article.isSendNewsletter() || article.getNewsletterSentAt() != null) {
+            return false;
+        }
+        Instant now = Instant.now();
+        boolean isPublishedNow = article.getStatus() == NewsStatus.PUBLISHED
+                && (article.getPublishedAt() == null || !article.getPublishedAt().isAfter(now));
+        if (!isPublishedNow) {
+            return false;
+        }
+        article.setNewsletterSentAt(now);
+        return true;
     }
 
     @Transactional

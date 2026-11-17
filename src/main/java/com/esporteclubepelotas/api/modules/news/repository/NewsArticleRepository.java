@@ -146,6 +146,10 @@ public interface NewsArticleRepository extends JpaRepository<NewsArticle, UUID>,
     @Query("UPDATE NewsArticle a SET a.featuredSlot = 'SECONDARY', a.isFeatured = true WHERE a.id IN :ids AND a.isActive = true")
     void setSecondarySlots(@Param("ids") Collection<UUID> ids);
 
+    @EntityGraph(attributePaths = {"category"})
+    @Query("SELECT a FROM NewsArticle a WHERE a.isActive = true AND a.status = 'SCHEDULED' AND a.publishedAt <= :now AND a.sendNewsletter = true AND a.newsletterSentAt IS NULL")
+    List<NewsArticle> findDueScheduledNewsletterArticles(@Param("now") Instant now);
+
     @Modifying
     @Query("UPDATE NewsArticle a SET a.status = 'PUBLISHED' WHERE a.status = 'SCHEDULED' AND a.publishedAt <= :now AND a.isActive = true")
     int publishScheduledArticles(@Param("now") Instant now);

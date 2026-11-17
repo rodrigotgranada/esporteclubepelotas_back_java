@@ -74,6 +74,8 @@ public final class NewsMapperHelper {
                 .viewsCount(article.getViewsCount())
                 .allowReactions(article.isAllowReactions())
                 .allowComments(article.isAllowComments())
+                .sendNewsletter(article.isSendNewsletter())
+                .newsletterSentAt(article.getNewsletterSentAt())
                 .reactions(article.getReactions())
                 .lastEditedBy(mapAuthor(article.getLastEditedBy()))
                 .isActive(article.isActive())

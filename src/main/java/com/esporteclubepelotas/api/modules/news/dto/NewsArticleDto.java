@@ -69,6 +69,11 @@ public class NewsArticleDto {
     @JsonProperty("allowComments")
     private boolean allowComments;
 
+    @JsonProperty("sendNewsletter")
+    private boolean sendNewsletter;
+
+    private Instant newsletterSentAt;
+
     private NewsReactionsCounter reactions;
     private NewsArticleAuthorDto lastEditedBy;
 

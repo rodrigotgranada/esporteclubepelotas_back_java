@@ -102,4 +102,8 @@ public class CreateNewsDto {
     @Builder.Default
     @Schema(description = "Permitir comentários dos torcedores", example = "true")
     private Boolean allowComments = true;
+
+    @Builder.Default
+    @Schema(description = "Enviar matéria via Newsletter para os inscritos ao publicar", example = "false")
+    private Boolean sendNewsletter = false;
 }
