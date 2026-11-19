@@ -32,6 +32,12 @@ public class NewsletterSubscriber {
     @Column(name = "unsubscribe_token", nullable = false, unique = true, length = 64)
     private String unsubscribeToken;
 
+    @Column(name = "unsubscribe_reason", length = 255)
+    private String unsubscribeReason;
+
+    @Column(name = "unsubscribed_at")
+    private Instant unsubscribedAt;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

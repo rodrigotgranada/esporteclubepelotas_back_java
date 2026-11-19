@@ -34,7 +34,7 @@ public class NewsletterPublicController {
     @PostMapping("/unsubscribe")
     @Operation(summary = "Cancelar inscrição na Newsletter oficial via token exclusivo")
     public ResponseEntity<Map<String, Object>> unsubscribe(@Valid @RequestBody UnsubscribeNewsletterDto dto) {
-        newsletterService.unsubscribeByToken(dto.getToken());
+        newsletterService.unsubscribeByToken(dto.getToken(), dto.getReason());
         return ResponseEntity.ok(Map.of(
                 "success", true,
                 "message", "Sua inscrição na newsletter oficial foi cancelada com sucesso."

@@ -17,6 +17,7 @@ public class NewsletterSubscriberDto {
     private String email;
     private String name;
     private boolean active;
+    private String unsubscribeReason;
+    private Instant unsubscribedAt;
     private Instant createdAt;
 }
-

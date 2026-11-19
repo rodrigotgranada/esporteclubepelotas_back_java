@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.Executor;
@@ -66,6 +67,8 @@ public class NewsletterService {
             subscriber = existingOpt.get();
             if (!subscriber.isActive()) {
                 subscriber.setActive(true);
+                subscriber.setUnsubscribeReason(null);
+                subscriber.setUnsubscribedAt(null);
                 shouldSendWelcome = true;
             }
             if (subscriber.getUnsubscribeToken() == null || subscriber.getUnsubscribeToken().isBlank()) {
@@ -100,15 +103,18 @@ public class NewsletterService {
     }
 
     @Transactional
-    public void unsubscribeByToken(String token) {
+    public void unsubscribeByToken(String token, String reason) {
         if (token == null || token.isBlank()) {
             throw new BusinessException("Token de descadastro inválido.");
         }
         NewsletterSubscriber subscriber = subscriberRepository.findByUnsubscribeToken(token.trim())
                 .orElseThrow(() -> new ResourceNotFoundException("Inscrição da newsletter não encontrada ou token inválido."));
         subscriber.setActive(false);
+        subscriber.setUnsubscribedAt(Instant.now());
+        subscriber.setUnsubscribeReason(reason != null && !reason.isBlank() ? reason.trim() : null);
         subscriberRepository.save(subscriber);
-        log.info("📧 [Newsletter] Inscrito {} desativado via token de descadastro.", subscriber.getEmail());
+        log.info("📧 [Newsletter] Inscrito {} desativado via token de descadastro (motivo={}).",
+                subscriber.getEmail(), subscriber.getUnsubscribeReason());
     }
 
     public void dispatchArticleAfterCommit(NewsArticle article) {
@@ -217,6 +223,8 @@ public class NewsletterService {
                 .email(s.getEmail())
                 .name(s.getName())
                 .active(s.isActive())
+                .unsubscribeReason(s.getUnsubscribeReason())
+                .unsubscribedAt(s.getUnsubscribedAt())
                 .createdAt(s.getCreatedAt())
                 .build();
     }

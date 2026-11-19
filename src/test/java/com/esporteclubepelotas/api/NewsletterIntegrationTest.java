@@ -147,9 +147,10 @@ public class NewsletterIntegrationTest {
         verify(emailService, timeout(500).times(0))
                 .sendHtmlEmail(eq(email), contains("Lobo vence jogo-treino"), contains(subscriber.getUnsubscribeToken()));
 
-        // Descadastro via token público
+        // Descadastro via token público com motivo selecionado
         UnsubscribeNewsletterDto unsubDto = UnsubscribeNewsletterDto.builder()
                 .token(subscriber.getUnsubscribeToken())
+                .reason("Recebo muitos e-mails")
                 .build();
 
         mockMvc.perform(post("/newsletter/unsubscribe")
@@ -160,6 +161,8 @@ public class NewsletterIntegrationTest {
 
         var updatedSub = subscriberRepository.findById(subscriber.getId()).orElseThrow();
         assertThat(updatedSub.isActive()).isFalse();
+        assertThat(updatedSub.getUnsubscribeReason()).isEqualTo("Recebo muitos e-mails");
+        assertThat(updatedSub.getUnsubscribedAt()).isNotNull();
 
         articleRepository.deleteById(UUID.fromString(articleId));
         subscriberRepository.deleteById(subscriber.getId());
