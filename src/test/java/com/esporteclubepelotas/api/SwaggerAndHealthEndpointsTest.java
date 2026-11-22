@@ -49,5 +49,14 @@ class SwaggerAndHealthEndpointsTest {
         mockMvc.perform(get("/swagger-ui/index.html"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    @DisplayName("Diagnóstico /auth/env-test deve retornar estágio DEV fora de produção")
+    void shouldReturnDevStageOnEnvTest() throws Exception {
+        mockMvc.perform(get("/auth/env-test"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stage").value("DEV"))
+                .andExpect(jsonPath("$.environment").value("development"));
+    }
 }
 
