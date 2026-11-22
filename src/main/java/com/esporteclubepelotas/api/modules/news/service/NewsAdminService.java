@@ -22,6 +22,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
@@ -34,11 +35,11 @@ public class NewsAdminService {
 
     private final NewsArticleRepository articleRepository;
     private final NewsCategoryRepository categoryRepository;
-    private final NewsCommentRepository commentRepository;
     private final UserRepository userRepository;
     private final StorageService storageService;
     private final PortalWebSocketHandler webSocketHandler;
     private final NewsletterService newsletterService;
+    private final TransactionTemplate transactionTemplate;
 
     @Transactional(readOnly = true)
     public GetNewsResponseDto adminFindAll(QueryNewsDto query) {
@@ -366,28 +367,38 @@ public class NewsAdminService {
         return Map.of("urls", urls);
     }
 
-    @Transactional
+    @CacheEvict(value = {"news_featured", "news_categories"}, allEntries = true)
     public Map<String, String> uploadCover(UUID id, MultipartFile file) {
-        NewsArticle article = articleRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Matéria não encontrada."));
+        if (!articleRepository.existsById(id)) {
+            throw new BusinessException("Matéria não encontrada.");
+        }
         String url = NewsMediaUploadHelper.uploadCoverFile(file, id.toString(), storageService);
-        article.setCoverImage(url);
-        articleRepository.save(article);
-        webSocketHandler.broadcastAfterCommit("news", "UPDATED", article.getId().toString(), article.isYouth());
+        transactionTemplate.executeWithoutResult(status -> {
+            NewsArticle article = articleRepository.findById(id)
+                    .orElseThrow(() -> new BusinessException("Matéria não encontrada."));
+            article.setCoverImage(url);
+            articleRepository.save(article);
+            webSocketHandler.broadcastAfterCommit("news", "UPDATED", article.getId().toString(), article.isYouth());
+        });
         return Map.of("url", url);
     }
 
-    @Transactional
+    @CacheEvict(value = {"news_featured", "news_categories"}, allEntries = true)
     public Map<String, List<String>> uploadGallery(UUID id, List<MultipartFile> files) {
-        NewsArticle article = articleRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Matéria não encontrada."));
-        List<String> urls = NewsMediaUploadHelper.uploadGalleryFiles(files, id.toString(), storageService);
-        if (article.getGallery() == null) {
-            article.setGallery(new ArrayList<>());
+        if (!articleRepository.existsById(id)) {
+            throw new BusinessException("Matéria não encontrada.");
         }
-        article.getGallery().addAll(urls);
-        articleRepository.save(article);
-        webSocketHandler.broadcastAfterCommit("news", "UPDATED", article.getId().toString(), article.isYouth());
+        List<String> urls = NewsMediaUploadHelper.uploadGalleryFiles(files, id.toString(), storageService);
+        transactionTemplate.executeWithoutResult(status -> {
+            NewsArticle article = articleRepository.findById(id)
+                    .orElseThrow(() -> new BusinessException("Matéria não encontrada."));
+            if (article.getGallery() == null) {
+                article.setGallery(new ArrayList<>());
+            }
+            article.getGallery().addAll(urls);
+            articleRepository.save(article);
+            webSocketHandler.broadcastAfterCommit("news", "UPDATED", article.getId().toString(), article.isYouth());
+        });
         return Map.of("urls", urls);
     }
 
@@ -397,34 +408,6 @@ public class NewsAdminService {
 
     @Transactional
     @CacheEvict(value = {"news_featured", "news_categories"}, allEntries = true)
-    public NewsCategoryDto createCategory(CreateCategoryDto dto) {
-        String baseSlug = NewsSlugHelper.slugify(dto.getName());
-        String slug = baseSlug;
-        int counter = 1;
-        while (categoryRepository.existsBySlug(slug)) {
-            slug = baseSlug + "-" + counter++;
-        }
-
-        NewsCategory category = NewsCategory.builder()
-                .name(dto.getName().trim())
-                .slug(slug)
-                .description(dto.getDescription() != null ? dto.getDescription().trim() : null)
-                .isActive(true)
-                .displayOrder(0)
-                .build();
-
-        NewsCategory saved = categoryRepository.save(category);
-        return NewsMapperHelper.mapCategory(saved);
-    }
-
-    @Transactional(readOnly = true)
-    public List<NewsCategoryDto> adminFindAllCategories() {
-        return categoryRepository.findByIsActiveTrueOrderByDisplayOrderAscNameAsc().stream()
-                .map(NewsMapperHelper::mapCategory)
-                .toList();
-    }
-
-    @Transactional
     public NewsArticleDto duplicate(UUID id, String userId) {
         NewsArticle original = articleRepository.findById(id)
                 .filter(NewsArticle::isActive)
@@ -478,56 +461,16 @@ public class NewsAdminService {
         return NewsMapperHelper.mapArticle(saved);
     }
 
-    @Transactional(readOnly = true)
-    public GetNewsCommentsResponseDto adminFindComments(Integer page, Integer limit, NewsCommentStatus status, String search, String articleId, Boolean reportedOnly) {
-        return NewsCommentsAdminHelper.adminFindComments(commentRepository, page, limit, status, search, articleId, reportedOnly);
-    }
-
-    @Transactional
-    public NewsCommentDto adminDismissCommentReport(UUID commentId) {
-        NewsCommentDto dto = NewsCommentsAdminHelper.adminDismissCommentReport(commentRepository, commentId);
-        webSocketHandler.broadcastAfterCommit("news-comments", "UPDATED", commentId.toString());
-        return dto;
-    }
-
-    @Transactional
-    public NewsCommentDto adminUpdateCommentStatus(UUID commentId, NewsCommentStatus status) {
-        NewsCommentDto dto = NewsCommentsAdminHelper.adminUpdateCommentStatus(commentRepository, commentId, status);
-        webSocketHandler.broadcastAfterCommit("news-comments", "UPDATED", commentId.toString());
-        return dto;
-    }
-
-    @Transactional
-    public void adminDeleteComment(UUID commentId) {
-        NewsCommentsAdminHelper.adminDeleteComment(commentRepository, commentId);
-    }
-
-    @Transactional(readOnly = true)
-    public ShowcaseResponseDto getShowcase() {
-        return NewsShowcaseHelper.getShowcase(articleRepository);
-    }
-
-    @Transactional
-    @CacheEvict(value = {"news_featured", "news_categories"}, allEntries = true)
-    public void updateShowcase(UpdateShowcaseDto dto) {
-        NewsShowcaseHelper.updateShowcase(articleRepository, dto);
-        webSocketHandler.broadcastAfterCommit("news", "SHOWCASE_UPDATED", null, null);
-    }
-
-    @Transactional(readOnly = true)
-    public NewsArticleDto getCurrentMain() {
-        return NewsShowcaseHelper.getCurrentMain(articleRepository);
-    }
-
-    @Transactional(readOnly = true)
-    public Map<String, Object> getScheduledArticles() {
-        return NewsScheduledHelper.getScheduledArticles(articleRepository);
-    }
-
     @Transactional
     @CacheEvict(value = {"news_featured", "news_categories"}, allEntries = true)
     public NewsArticleDto publishNow(UUID id) {
-        NewsArticleDto dto = NewsScheduledHelper.publishNow(articleRepository, id);
+        NewsArticle article = NewsScheduledHelper.markPublishedNow(articleRepository, id);
+        boolean shouldDispatch = triggerNewsletterIfEligible(article);
+        NewsArticle saved = articleRepository.save(article);
+        if (shouldDispatch) {
+            newsletterService.dispatchArticleAfterCommit(saved);
+        }
+        NewsArticleDto dto = NewsMapperHelper.mapArticle(saved);
         webSocketHandler.broadcastAfterCommit("news", "PUBLISHED", id.toString(), dto.isYouth());
         return dto;
     }

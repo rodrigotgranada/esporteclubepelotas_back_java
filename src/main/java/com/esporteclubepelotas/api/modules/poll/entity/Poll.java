@@ -2,6 +2,7 @@ package com.esporteclubepelotas.api.modules.poll.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -43,7 +44,8 @@ public class Poll {
     @Column(name = "ends_at")
     private Instant endsAt;
 
-    @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "poll", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @BatchSize(size = 20)
     @OrderBy("displayOrder ASC, createdAt ASC")
     @Builder.Default
     private List<PollOption> options = new ArrayList<>();
@@ -56,4 +58,3 @@ public class Poll {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 }
-

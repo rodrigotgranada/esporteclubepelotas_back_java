@@ -14,6 +14,7 @@ import com.esporteclubepelotas.api.modules.news.dto.ShowcaseResponseDto;
 import com.esporteclubepelotas.api.modules.news.dto.UpdateNewsDto;
 import com.esporteclubepelotas.api.modules.news.dto.UpdateShowcaseDto;
 import com.esporteclubepelotas.api.modules.news.entity.NewsCommentStatus;
+import com.esporteclubepelotas.api.modules.news.service.NewsAdminGovernanceService;
 import com.esporteclubepelotas.api.modules.news.service.NewsAdminService;
 import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,9 +40,11 @@ import java.util.UUID;
 public class NewsAdminController {
 
     private final NewsAdminService newsAdminService;
+    private final NewsAdminGovernanceService newsGovernanceService;
 
-    public NewsAdminController(NewsAdminService newsAdminService) {
+    public NewsAdminController(NewsAdminService newsAdminService, NewsAdminGovernanceService newsGovernanceService) {
         this.newsAdminService = newsAdminService;
+        this.newsGovernanceService = newsGovernanceService;
     }
 
     @GetMapping
@@ -53,14 +56,14 @@ public class NewsAdminController {
     @GetMapping("/categories")
     @Operation(summary = "Listar todas as categorias para seleção no editor")
     public ResponseEntity<List<NewsCategoryDto>> adminFindAllCategories() {
-        return ResponseEntity.ok(newsAdminService.adminFindAllCategories());
+        return ResponseEntity.ok(newsGovernanceService.adminFindAllCategories());
     }
 
     @PostMapping("/categories")
     @AuditLog(module = "news", action = "CREATE_CATEGORY", description = "Criação de categoria de matéria")
     @Operation(summary = "Criar uma nova categoria in-line diretamente pelo editor")
     public ResponseEntity<NewsCategoryDto> createCategory(@RequestBody @Valid CreateCategoryDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(newsAdminService.createCategory(dto));
+        return ResponseEntity.status(HttpStatus.CREATED).body(newsGovernanceService.createCategory(dto));
     }
 
     @PostMapping(value = "/upload-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -116,14 +119,14 @@ public class NewsAdminController {
             @RequestParam(required = false) String articleId,
             @RequestParam(required = false) Boolean reportedOnly
     ) {
-        return ResponseEntity.ok(newsAdminService.adminFindComments(page, limit, status, search, articleId, reportedOnly));
+        return ResponseEntity.ok(newsGovernanceService.adminFindComments(page, limit, status, search, articleId, reportedOnly));
     }
 
     @PatchMapping("/comments/{commentId}/dismiss-report")
     @AuditLog(module = "news-comments", action = "DISMISS_REPORT", description = "Denúncia de comentário desconsiderada como falso positivo")
     @Operation(summary = "Ignorar denúncia de comentário (Falso Positivo) mantendo-o ativo")
     public ResponseEntity<NewsCommentDto> adminDismissCommentReport(@PathVariable UUID commentId) {
-        return ResponseEntity.ok(newsAdminService.adminDismissCommentReport(commentId));
+        return ResponseEntity.ok(newsGovernanceService.adminDismissCommentReport(commentId));
     }
 
     @PatchMapping("/comments/{commentId}/status")
@@ -133,42 +136,51 @@ public class NewsAdminController {
             @PathVariable UUID commentId,
             @RequestBody Map<String, String> body
     ) {
-        NewsCommentStatus status = NewsCommentStatus.valueOf(body.get("status").toUpperCase());
-        return ResponseEntity.ok(newsAdminService.adminUpdateCommentStatus(commentId, status));
+        String rawStatus = body != null ? body.get("status") : null;
+        if (rawStatus == null || rawStatus.isBlank()) {
+            throw new IllegalArgumentException("O campo 'status' é obrigatório.");
+        }
+        NewsCommentStatus status;
+        try {
+            status = NewsCommentStatus.valueOf(rawStatus.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Status inválido. Informe ACTIVE ou HIDDEN.");
+        }
+        return ResponseEntity.ok(newsGovernanceService.adminUpdateCommentStatus(commentId, status));
     }
 
     @DeleteMapping("/comments/{commentId}")
     @AuditLog(module = "news-comments", action = "DELETE_COMMENT", description = "Exclusão lógica de comentário pelo moderador")
     @Operation(summary = "Excluir comentário na moderação (soft-delete)")
     public ResponseEntity<Map<String, Object>> adminDeleteComment(@PathVariable UUID commentId) {
-        newsAdminService.adminDeleteComment(commentId);
+        newsGovernanceService.adminDeleteComment(commentId);
         return ResponseEntity.ok(Map.of("success", true, "message", "Comentário excluído com sucesso."));
     }
 
     @GetMapping("/showcase")
     @Operation(summary = "Obter dados atuais da vitrine da capa (Manchetão e Destaques Secundários)")
     public ResponseEntity<ShowcaseResponseDto> getShowcase() {
-        return ResponseEntity.ok(newsAdminService.getShowcase());
+        return ResponseEntity.ok(newsGovernanceService.getShowcase());
     }
 
     @PutMapping("/showcase")
     @AuditLog(module = "news", action = "UPDATE_SHOWCASE", description = "Atualização dos slots da vitrine da capa")
     @Operation(summary = "Atualizar os slots da vitrine da capa de forma atômica (Manchetão e Secundários)")
-    public ResponseEntity<Map<String, Object>> updateShowcase(@RequestBody UpdateShowcaseDto dto) {
-        newsAdminService.updateShowcase(dto);
+    public ResponseEntity<Map<String, Object>> updateShowcase(@Valid @RequestBody UpdateShowcaseDto dto) {
+        newsGovernanceService.updateShowcase(dto);
         return ResponseEntity.ok(Map.of("success", true, "message", "Vitrine da capa atualizada com sucesso."));
     }
 
     @GetMapping("/current-main")
     @Operation(summary = "Verificar se já existe um Manchetão Principal ativo na capa")
     public ResponseEntity<NewsArticleDto> getCurrentMain() {
-        return ResponseEntity.ok(newsAdminService.getCurrentMain());
+        return ResponseEntity.ok(newsGovernanceService.getCurrentMain());
     }
 
     @GetMapping("/scheduled")
     @Operation(summary = "Listar matérias agendadas que ainda não entraram no ar (ordem cronológica)")
     public ResponseEntity<Map<String, Object>> getScheduledArticles() {
-        return ResponseEntity.ok(newsAdminService.getScheduledArticles());
+        return ResponseEntity.ok(newsGovernanceService.getScheduledArticles());
     }
 
     @GetMapping("/{id}")

@@ -2,6 +2,7 @@ package com.esporteclubepelotas.api.modules.theme.service;
 
 import com.esporteclubepelotas.api.common.exception.BusinessException;
 import com.esporteclubepelotas.api.common.exception.ResourceNotFoundException;
+import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
 import com.esporteclubepelotas.api.modules.theme.dto.ThemeRequestDto;
 import com.esporteclubepelotas.api.modules.theme.dto.ThemeResponseDto;
 import com.esporteclubepelotas.api.modules.theme.entity.Theme;
@@ -24,6 +25,7 @@ import java.util.List;
 public class ThemeService {
 
     private final ThemeRepository themeRepository;
+    private final PortalWebSocketHandler webSocketHandler;
 
 
     @Transactional
@@ -107,6 +109,7 @@ public class ThemeService {
                 .build();
 
         Theme saved = themeRepository.save(theme);
+        webSocketHandler.broadcastAfterCommit("themes", "CREATED", String.valueOf(saved.getId()));
         return ThemeResponseDto.fromEntity(saved);
     }
 
@@ -155,6 +158,7 @@ public class ThemeService {
         }
 
         Theme updated = themeRepository.save(theme);
+        webSocketHandler.broadcastAfterCommit("themes", "UPDATED", String.valueOf(updated.getId()));
         return ThemeResponseDto.fromEntity(updated);
     }
 
@@ -167,6 +171,7 @@ public class ThemeService {
         }
         theme.setActive(true);
         themeRepository.save(theme);
+        webSocketHandler.broadcastAfterCommit("themes", "UPDATED", String.valueOf(id));
     }
 
     @Transactional
@@ -178,6 +183,7 @@ public class ThemeService {
         }
         theme.setActive(false);
         themeRepository.save(theme);
+        webSocketHandler.broadcastAfterCommit("themes", "UPDATED", String.valueOf(id));
     }
 
     @Transactional
@@ -188,6 +194,7 @@ public class ThemeService {
             throw new BusinessException("O tema padrão do Esporte Clube Pelotas não pode ser excluído.");
         }
         themeRepository.delete(theme);
+        webSocketHandler.broadcastAfterCommit("themes", "DELETED", String.valueOf(id));
     }
 
     @Transactional

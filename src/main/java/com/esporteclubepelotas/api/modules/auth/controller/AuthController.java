@@ -71,7 +71,7 @@ public class AuthController {
 
     @PostMapping("/resend-code")
     @Operation(summary = "Reenviar código de confirmação de e-mail")
-    public ResponseEntity<Map<String, Boolean>> resendCode(@RequestBody Map<String, String> payload) {
+    public ResponseEntity<Map<String, Boolean>> resendCode(@RequestBody(required = false) Map<String, String> payload) {
         String email = payload != null ? payload.get("email") : null;
         authService.resendCode(email);
         return ResponseEntity.ok(Map.of("success", true));

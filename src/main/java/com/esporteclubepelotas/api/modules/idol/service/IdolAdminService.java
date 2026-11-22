@@ -19,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
@@ -31,6 +32,7 @@ public class IdolAdminService {
 
     private final IdolRepository idolRepository;
     private final StorageService storageService;
+    private final TransactionTemplate transactionTemplate;
 
     @Transactional(readOnly = true)
     public GetIdolsResponseDto findAll(int page, int limit, String search, IdolCategory category, Boolean isFeatured) {
@@ -77,10 +79,10 @@ public class IdolAdminService {
         List<IdolGalleryItem> galleryItems = new ArrayList<>();
 
         if (dto.getGalleryItems() != null && !dto.getGalleryItems().isEmpty()) {
-            galleryItems = new ArrayList<>(dto.getGalleryItems());
+            galleryItems = sanitizeGalleryItems(dto.getGalleryItems());
             galleryUrls = galleryItems.stream().map(IdolGalleryItem::getUrl).toList();
         } else if (dto.getGallery() != null && !dto.getGallery().isEmpty()) {
-            galleryUrls = new ArrayList<>(dto.getGallery());
+            galleryUrls = MediaUploadSanitizer.sanitizeUrlList(dto.getGallery());
             galleryItems = galleryUrls.stream().map(url -> new IdolGalleryItem(url, "")).toList();
         }
 
@@ -106,7 +108,7 @@ public class IdolAdminService {
                 .nickname(dto.getNickname() != null ? dto.getNickname().trim() : null)
                 .slug(uniqueSlug)
                 .category(dto.getCategory())
-                .photoUrl(dto.getPhotoUrl())
+                .photoUrl(MediaUploadSanitizer.sanitizeNullableUrl(dto.getPhotoUrl()))
                 .gallery(galleryUrls)
                 .galleryItems(galleryItems)
                 .startYear(startYear != null ? startYear : 1908)
@@ -145,13 +147,17 @@ public class IdolAdminService {
         if (dto.getName() != null) idol.setName(dto.getName().trim());
         if (dto.getNickname() != null) idol.setNickname(dto.getNickname().trim());
         if (dto.getCategory() != null) idol.setCategory(dto.getCategory());
-        if (dto.getPhotoUrl() != null) idol.setPhotoUrl(dto.getPhotoUrl());
+        if (dto.getPhotoUrl() != null) idol.setPhotoUrl(MediaUploadSanitizer.sanitizeNullableUrl(dto.getPhotoUrl()));
 
         if (dto.getGalleryItems() != null) {
-            idol.setGalleryItems(dto.getGalleryItems());
+            List<IdolGalleryItem> sanitized = sanitizeGalleryItems(dto.getGalleryItems());
+            idol.setGalleryItems(sanitized);
+            idol.setGallery(sanitized.stream().map(IdolGalleryItem::getUrl).toList());
             idol.setGallery(dto.getGalleryItems().stream().map(IdolGalleryItem::getUrl).toList());
         } else if (dto.getGallery() != null) {
-            idol.setGallery(dto.getGallery());
+            List<String> sanitizedUrls = MediaUploadSanitizer.sanitizeUrlList(dto.getGallery());
+            idol.setGallery(sanitizedUrls);
+            idol.setGalleryItems(sanitizedUrls.stream().map(url -> new IdolGalleryItem(url, "")).toList());
             idol.setGalleryItems(dto.getGallery().stream().map(url -> new IdolGalleryItem(url, "")).toList());
         }
 
@@ -223,7 +229,7 @@ public class IdolAdminService {
 
         String fileName = "photo-" + System.currentTimeMillis() + ".jpg";
         String folder = "idols/" + id;
-        String url = storageService.uploadFile(file, folder, fileName);
+        String url = MediaUploadSanitizer.uploadAndVerify(file, folder, fileName, MediaUploadSanitizer.MediaKind.IMAGE, storageService, "Falha ao enviar foto do ídolo.");
 
         idol.setPhotoUrl(url);
         idolRepository.save(idol);
@@ -246,7 +252,7 @@ public class IdolAdminService {
 
         for (MultipartFile file : files) {
             String fileName = "gallery-" + UUID.randomUUID().toString() + ".jpg";
-            String url = storageService.uploadFile(file, "idols/" + id + "/gallery", fileName);
+            String url = MediaUploadSanitizer.uploadAndVerify(file, "idols/" + id + "/gallery", fileName, MediaUploadSanitizer.MediaKind.IMAGE, storageService, "Falha ao enviar foto para a galeria do ídolo.");
             newUrls.add(url);
             currentUrls.add(url);
             currentItems.add(new IdolGalleryItem(url, ""));
@@ -298,5 +304,20 @@ public class IdolAdminService {
             throw new BusinessException("Nenhum arquivo válido enviado para a galeria.");
         }
         return Map.of("urls", urls, "gallery", urls);
+    }
+
+    private List<IdolGalleryItem> sanitizeGalleryItems(List<IdolGalleryItem> items) {
+        if (items == null || items.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<IdolGalleryItem> sanitized = new ArrayList<>();
+        for (IdolGalleryItem item : items) {
+            if (item == null) continue;
+            String cleanUrl = MediaUploadSanitizer.sanitizeNullableUrl(item.getUrl());
+            if (cleanUrl != null) {
+                sanitized.add(new IdolGalleryItem(cleanUrl, item.getCaption()));
+            }
+        }
+        return sanitized;
     }
 }

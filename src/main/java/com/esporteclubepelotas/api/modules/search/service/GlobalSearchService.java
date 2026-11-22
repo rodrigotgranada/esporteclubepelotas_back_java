@@ -14,7 +14,7 @@ import com.esporteclubepelotas.api.modules.news.repository.NewsArticleRepository
 import com.esporteclubepelotas.api.modules.search.dto.GlobalSearchItemDto;
 import com.esporteclubepelotas.api.modules.search.dto.GlobalSearchResponseDto;
 import com.esporteclubepelotas.api.modules.systemmodule.entity.SystemModule;
-import com.esporteclubepelotas.api.modules.systemmodule.repository.SystemModuleRepository;
+import com.esporteclubepelotas.api.modules.systemmodule.service.SystemModuleService;
 import com.esporteclubepelotas.api.modules.transparency.entity.TransparencyDocument;
 import com.esporteclubepelotas.api.modules.transparency.repository.TransparencyDocumentRepository;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +45,7 @@ public class GlobalSearchService {
     private final IdolRepository idolRepository;
     private final MatchRepository matchRepository;
     private final TransparencyDocumentRepository transparencyDocumentRepository;
-    private final SystemModuleRepository systemModuleRepository;
+    private final SystemModuleService systemModuleService;
 
     @Transactional(readOnly = true)
     public GlobalSearchResponseDto search(String rawQuery, int limit) {
@@ -70,7 +70,7 @@ public class GlobalSearchService {
         PageRequest pageable = PageRequest.of(0, safeLimit);
         String likePattern = buildSafeLikePattern(normalized);
 
-        Map<String, Boolean> moduleStates = systemModuleRepository.findAll().stream()
+        Map<String, Boolean> moduleStates = systemModuleService.findAll().stream()
                 .collect(Collectors.toMap(SystemModule::getSlug, SystemModule::isActive, (a, b) -> b));
 
         boolean newsActive = moduleStates.getOrDefault("news", true);

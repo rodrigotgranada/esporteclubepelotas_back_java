@@ -1,7 +1,7 @@
 package com.esporteclubepelotas.api.modules.systemmodule.service;
 
 import com.esporteclubepelotas.api.common.exception.ResourceNotFoundException;
-import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
 import com.esporteclubepelotas.api.modules.systemmodule.dto.UpdateSystemModuleStatusDto;
 import com.esporteclubepelotas.api.modules.systemmodule.entity.SystemModule;
 import com.esporteclubepelotas.api.modules.systemmodule.repository.SystemModuleRepository;
@@ -21,10 +21,18 @@ import java.util.List;
 public class SystemModuleService {
 
     private final SystemModuleRepository moduleRepository;
+    private final PortalWebSocketHandler webSocketHandler;
 
-    @Cacheable(value = "systemModules")
+    @Cacheable(value = "systemModules", key = "'all'")
     public List<SystemModule> findAll() {
         return moduleRepository.findAllByOrderByCreatedAtAsc();
+    }
+
+    @Cacheable(value = "systemModules", key = "'active:' + #slug")
+    public boolean isModuleActive(String slug) {
+        return moduleRepository.findBySlug(slug)
+                .map(SystemModule::isActive)
+                .orElse(true);
     }
 
     public SystemModule findById(String id) {
@@ -33,7 +41,6 @@ public class SystemModuleService {
     }
 
     @CacheEvict(value = "systemModules", allEntries = true)
-    @AuditLog(module = "SYSTEM_MODULES", action = "TOGGLE", description = "Alternância de Feature Flag do Módulo")
     @Transactional
     public SystemModule toggleStatus(String id, UpdateSystemModuleStatusDto dto) {
         SystemModule module = findById(id);
@@ -45,6 +52,8 @@ public class SystemModuleService {
         }
 
         log.info("Status do módulo {} alterado para: {}", module.getName(), module.isActive());
-        return moduleRepository.save(module);
+        SystemModule saved = moduleRepository.save(module);
+        webSocketHandler.broadcastAfterCommit("systemModules", "UPDATED", saved.getSlug());
+        return saved;
     }
 }

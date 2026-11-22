@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Valid;
 import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,9 +79,10 @@ public class UserController {
     @Operation(summary = "Cadastro público de novos torcedores/sócios com avatar opcional")
     public ResponseEntity<UserSummaryDto> register(
             @RequestPart("data") String dataJson,
+            @RequestPart(value = "file", required = false) MultipartFile file,
             @RequestPart(value = "avatar", required = false) MultipartFile avatar) {
         CreateUserDto dto = parseAndValidateJson(dataJson, CreateUserDto.class);
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(dto, avatar));
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.register(dto, file != null ? file : avatar));
     }
 
     @PostMapping(value = "/admin/upload-avatar", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -100,11 +102,12 @@ public class UserController {
     @Operation(summary = "Criação direta de usuário pelo Painel Administrativo")
     public ResponseEntity<UserSummaryDto> adminCreate(
             @RequestPart("data") String dataJson,
+            @RequestPart(value = "file", required = false) MultipartFile file,
             @RequestPart(value = "avatar", required = false) MultipartFile avatar,
             @CurrentUser UserPrincipal actor) {
         CreateUserDto dto = parseAndValidateJson(dataJson, CreateUserDto.class);
         String actorRole = actor != null ? actor.getRole() : null;
-        return ResponseEntity.status(HttpStatus.CREATED).body(userAdminService.adminCreate(dto, avatar, actorRole));
+        return ResponseEntity.status(HttpStatus.CREATED).body(userAdminService.adminCreate(dto, file != null ? file : avatar, actorRole));
     }
 
     @PatchMapping("/admin/{id}")
@@ -113,7 +116,7 @@ public class UserController {
     @Operation(summary = "Edição cadastral de usuário pelo Administrador")
     public ResponseEntity<UserSummaryDto> adminUpdate(
             @PathVariable String id,
-            @RequestBody AdminUpdateUserDto dto,
+            @Valid @RequestBody AdminUpdateUserDto dto,
             @CurrentUser UserPrincipal actor) {
         return ResponseEntity.ok(userAdminService.adminUpdate(id, dto, actor.getRole()));
     }
@@ -124,9 +127,14 @@ public class UserController {
     @Operation(summary = "Upload de foto de perfil de qualquer usuário pelo Admin")
     public ResponseEntity<Map<String, String>> adminUpdateAvatar(
             @PathVariable String id,
-            @RequestPart("avatar") MultipartFile avatar,
+            @RequestPart(value = "file", required = false) MultipartFile file,
+            @RequestPart(value = "avatar", required = false) MultipartFile avatar,
             @CurrentUser UserPrincipal actor) {
-        return ResponseEntity.ok(userAdminService.adminUpdateAvatar(id, avatar, actor.getRole()));
+        MultipartFile target = file != null ? file : avatar;
+        if (target == null || target.isEmpty()) {
+            throw new BusinessException("Nenhum arquivo de avatar enviado.");
+        }
+        return ResponseEntity.ok(userAdminService.adminUpdateAvatar(id, target, actor.getRole()));
     }
 
     @DeleteMapping("/admin/{id}/avatar")

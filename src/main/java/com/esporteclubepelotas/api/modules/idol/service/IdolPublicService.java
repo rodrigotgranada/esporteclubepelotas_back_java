@@ -8,7 +8,7 @@ import com.esporteclubepelotas.api.modules.idol.entity.Idol;
 import com.esporteclubepelotas.api.modules.idol.entity.IdolCategory;
 import com.esporteclubepelotas.api.modules.idol.helper.IdolSpecifications;
 import com.esporteclubepelotas.api.modules.idol.repository.IdolRepository;
-import com.esporteclubepelotas.api.modules.systemmodule.repository.SystemModuleRepository;
+import com.esporteclubepelotas.api.modules.systemmodule.service.SystemModuleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -27,12 +27,10 @@ import java.util.List;
 public class IdolPublicService {
 
     private final IdolRepository idolRepository;
-    private final SystemModuleRepository moduleRepository;
+    private final SystemModuleService moduleService;
 
     private boolean isModuleActive() {
-        return moduleRepository.findBySlug("idols")
-                .map(m -> m.isActive())
-                .orElse(true);
+        return moduleService.isModuleActive("idols");
     }
 
     @Transactional(readOnly = true)
@@ -52,7 +50,6 @@ public class IdolPublicService {
                 Sort.Order.desc("createdAt")
         );
         Pageable pageable = PageRequest.of(pageIndex, pageSize, sort);
-
 
         Page<Idol> idolsPage = idolRepository.findAll(
                 IdolSpecifications.withFilters(search, category, isFeatured, false),
@@ -115,4 +112,3 @@ public class IdolPublicService {
                 .build();
     }
 }
-

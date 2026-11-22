@@ -30,7 +30,7 @@ public class UserProfileController {
     @PatchMapping("/me")
     @Operation(summary = "Atualizar dados cadastrais do próprio perfil")
     public ResponseEntity<UserSummaryDto> updateMe(
-            @RequestBody UpdateMeDto dto,
+            @Valid @RequestBody UpdateMeDto dto,
             @CurrentUser UserPrincipal principal) {
         return ResponseEntity.ok(userProfileService.updateMe(principal.getId(), dto));
     }
@@ -59,7 +59,7 @@ public class UserProfileController {
     public ResponseEntity<Map<String, Boolean>> deactivateMe(
             @RequestBody Map<String, String> payload,
             @CurrentUser UserPrincipal principal) {
-        String password = payload.get("password");
+        String password = payload != null ? payload.get("password") : null;
         userProfileService.deactivateMe(principal.getId(), password);
         return ResponseEntity.ok(Map.of("success", true));
     }

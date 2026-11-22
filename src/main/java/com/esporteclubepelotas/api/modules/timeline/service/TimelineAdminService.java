@@ -3,6 +3,7 @@ package com.esporteclubepelotas.api.modules.timeline.service;
 import com.esporteclubepelotas.api.common.exception.ResourceNotFoundException;
 import com.esporteclubepelotas.api.common.storage.MediaUploadSanitizer;
 import com.esporteclubepelotas.api.common.storage.StorageService;
+import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
 import com.esporteclubepelotas.api.modules.timeline.dto.*;
 import com.esporteclubepelotas.api.modules.timeline.entity.TimelineCategory;
 import com.esporteclubepelotas.api.modules.timeline.entity.TimelineEvent;
@@ -19,9 +20,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +39,8 @@ public class TimelineAdminService {
     private final UserRepository userRepository;
     private final StorageService storageService;
     private final TimelineCategoryService timelineCategoryService;
+    private final TransactionTemplate transactionTemplate;
+    private final PortalWebSocketHandler webSocketHandler;
 
     private static final DateTimeFormatter PT_BR_DATE_FORMATTER = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", new Locale("pt", "BR"));
 
@@ -113,110 +116,118 @@ public class TimelineAdminService {
         return TimelineMapperHelper.map(event);
     }
 
-    @Transactional
     public TimelineEventDto create(CreateTimelineEventDto dto, MultipartFile photoFile, String userId) {
-        User creator = null;
-        if (userId != null && !userId.isBlank()) {
-            creator = userRepository.findById(userId).orElse(null);
-        }
-
-        String imageUrl = dto.getImageUrl();
+        String resolvedImageUrl = MediaUploadSanitizer.sanitizeNullableUrl(dto.getImageUrl());
         if (photoFile != null && !photoFile.isEmpty()) {
-            try {
-                String originalFilename = photoFile.getOriginalFilename() != null ? photoFile.getOriginalFilename() : "timeline.png";
-                imageUrl = storageService.uploadFile(
-                        photoFile.getBytes(),
-                        "timeline-" + dto.getYear() + "-" + System.currentTimeMillis() + "-" + originalFilename,
-                        "timeline",
-                        photoFile.getContentType()
-                );
-            } catch (IOException e) {
-                log.error("Erro ao realizar upload de imagem da linha do tempo: {}", e.getMessage(), e);
-                throw new RuntimeException("Falha ao salvar imagem histórica", e);
-            }
-        }
-
-        TimelineCategory resolvedCategory = timelineCategoryService.resolveCategory(dto.getCategory(), dto.getCategoryId());
-
-        String dateFormatted = dto.getDateFormatted() != null && !dto.getDateFormatted().isBlank()
-                ? dto.getDateFormatted().trim()
-                : (dto.getEventDate() != null ? dto.getEventDate().format(PT_BR_DATE_FORMATTER) : null);
-
-        int year = dto.getYear();
-        if (year <= 0 && dto.getEventDate() != null) {
-            year = dto.getEventDate().getYear();
-        }
-
-        TimelineEvent event = TimelineEvent.builder()
-                .year(year)
-                .title(dto.getTitle().trim())
-                .description(dto.getDescription().trim())
-                .category(resolvedCategory)
-                .categoryLegacy(resolvedCategory != null ? resolvedCategory.getSlug() : (dto.getCategory() != null ? dto.getCategory().trim() : null))
-                .imageUrl(imageUrl)
-                .galleryUrls(dto.getGalleryUrls() != null ? dto.getGalleryUrls() : new ArrayList<>())
-                .eventDate(dto.getEventDate())
-                .dateFormatted(dateFormatted)
-                .displayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : 0)
-                .isHighlighted(Boolean.TRUE.equals(dto.getIsHighlighted()))
-                .isActive(dto.getIsActive() == null || dto.getIsActive())
-                .createdBy(creator)
-                .build();
-
-        TimelineEvent saved = timelineEventRepository.save(event);
-        log.info("✅ Marco histórico criado com sucesso: {} - {}", saved.getYear(), saved.getTitle());
-        return TimelineMapperHelper.map(saved);
-    }
-
-    @Transactional
-    public TimelineEventDto update(UUID id, UpdateTimelineEventDto dto, MultipartFile photoFile) {
-        TimelineEvent event = timelineEventRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Marco Histórico", "id", id));
-
-        if (photoFile != null && !photoFile.isEmpty()) {
-            String imageUrl = MediaUploadSanitizer.uploadAndVerify(
+            resolvedImageUrl = MediaUploadSanitizer.uploadAndVerify(
                     photoFile,
                     "timeline",
-                    "timeline-" + event.getYear() + "-" + System.currentTimeMillis() + ".jpg",
+                    "timeline-" + dto.getYear() + "-" + System.currentTimeMillis() + ".jpg",
+                    MediaUploadSanitizer.MediaKind.IMAGE,
+                    storageService,
+                    "Falha ao salvar imagem histórica"
+            );
+        }
+
+        final String finalImageUrl = resolvedImageUrl;
+        return transactionTemplate.execute(status -> {
+            User creator = null;
+            if (userId != null && !userId.isBlank()) {
+                creator = userRepository.findById(userId).orElse(null);
+            }
+
+            TimelineCategory resolvedCategory = timelineCategoryService.resolveCategory(dto.getCategory(), dto.getCategoryId());
+
+            String dateFormatted = dto.getDateFormatted() != null && !dto.getDateFormatted().isBlank()
+                    ? dto.getDateFormatted().trim()
+                    : (dto.getEventDate() != null ? dto.getEventDate().format(PT_BR_DATE_FORMATTER) : null);
+
+            int year = dto.getYear();
+            if (year <= 0 && dto.getEventDate() != null) {
+                year = dto.getEventDate().getYear();
+            }
+
+            TimelineEvent event = TimelineEvent.builder()
+                    .year(year)
+                    .title(dto.getTitle().trim())
+                    .description(dto.getDescription().trim())
+                    .category(resolvedCategory)
+                    .categoryLegacy(resolvedCategory != null ? resolvedCategory.getSlug() : (dto.getCategory() != null ? dto.getCategory().trim() : null))
+                    .imageUrl(finalImageUrl)
+                    .galleryUrls(MediaUploadSanitizer.sanitizeUrlList(dto.getGalleryUrls()))
+                    .eventDate(dto.getEventDate())
+                    .dateFormatted(dateFormatted)
+                    .displayOrder(dto.getDisplayOrder() != null ? dto.getDisplayOrder() : 0)
+                    .isHighlighted(Boolean.TRUE.equals(dto.getIsHighlighted()))
+                    .isActive(dto.getIsActive() == null || dto.getIsActive())
+                    .createdBy(creator)
+                    .build();
+
+            TimelineEvent saved = timelineEventRepository.save(event);
+            webSocketHandler.broadcastAfterCommit("timeline", "CREATED", saved.getId().toString());
+            log.info("✅ Marco histórico criado com sucesso: {} - {}", saved.getYear(), saved.getTitle());
+            return TimelineMapperHelper.map(saved);
+        });
+    }
+
+    public TimelineEventDto update(UUID id, UpdateTimelineEventDto dto, MultipartFile photoFile) {
+        String uploadedUrl = null;
+        if (photoFile != null && !photoFile.isEmpty()) {
+            TimelineEvent existing = timelineEventRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Marco Histórico", "id", id));
+            uploadedUrl = MediaUploadSanitizer.uploadAndVerify(
+                    photoFile,
+                    "timeline",
+                    "timeline-" + existing.getYear() + "-" + System.currentTimeMillis() + ".jpg",
                     MediaUploadSanitizer.MediaKind.IMAGE,
                     storageService,
                     "Falha ao atualizar imagem histórica"
             );
-            event.setImageUrl(imageUrl);
-        } else if (dto != null && dto.getImageUrl() != null) {
-            event.setImageUrl(dto.getImageUrl());
         }
 
-        if (dto != null) {
-            if (dto.getYear() != null) event.setYear(dto.getYear());
-            if (dto.getTitle() != null && !dto.getTitle().isBlank()) event.setTitle(dto.getTitle().trim());
-            if (dto.getDescription() != null && !dto.getDescription().isBlank()) event.setDescription(dto.getDescription().trim());
+        final String finalUploadedUrl = uploadedUrl;
+        return transactionTemplate.execute(status -> {
+            TimelineEvent event = timelineEventRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Marco Histórico", "id", id));
 
-            if (dto.getCategoryId() != null || (dto.getCategory() != null && !dto.getCategory().isBlank())) {
-                TimelineCategory resolved = timelineCategoryService.resolveCategory(dto.getCategory(), dto.getCategoryId());
-                if (resolved != null) {
-                    event.setCategory(resolved);
-                    event.setCategoryLegacy(resolved.getSlug());
-                }
+            if (finalUploadedUrl != null) {
+                event.setImageUrl(finalUploadedUrl);
+            } else if (dto != null && dto.getImageUrl() != null) {
+                event.setImageUrl(MediaUploadSanitizer.sanitizeNullableUrl(dto.getImageUrl()));
             }
 
-            if (dto.getEventDate() != null) {
-                event.setEventDate(dto.getEventDate());
-                if (dto.getDateFormatted() == null || dto.getDateFormatted().isBlank()) {
-                    event.setDateFormatted(dto.getEventDate().format(PT_BR_DATE_FORMATTER));
+            if (dto != null) {
+                if (dto.getYear() != null) event.setYear(dto.getYear());
+                if (dto.getTitle() != null && !dto.getTitle().isBlank()) event.setTitle(dto.getTitle().trim());
+                if (dto.getDescription() != null && !dto.getDescription().isBlank()) event.setDescription(dto.getDescription().trim());
+
+                if (dto.getCategoryId() != null || (dto.getCategory() != null && !dto.getCategory().isBlank())) {
+                    TimelineCategory resolved = timelineCategoryService.resolveCategory(dto.getCategory(), dto.getCategoryId());
+                    if (resolved != null) {
+                        event.setCategory(resolved);
+                        event.setCategoryLegacy(resolved.getSlug());
+                    }
                 }
+
+                if (dto.getEventDate() != null) {
+                    event.setEventDate(dto.getEventDate());
+                    if (dto.getDateFormatted() == null || dto.getDateFormatted().isBlank()) {
+                        event.setDateFormatted(dto.getEventDate().format(PT_BR_DATE_FORMATTER));
+                    }
+                }
+
+                if (dto.getDateFormatted() != null) event.setDateFormatted(dto.getDateFormatted().trim());
+                if (dto.getGalleryUrls() != null) event.setGalleryUrls(MediaUploadSanitizer.sanitizeUrlList(dto.getGalleryUrls()));
+                if (dto.getDisplayOrder() != null) event.setDisplayOrder(dto.getDisplayOrder());
+                if (dto.getIsHighlighted() != null) event.setHighlighted(dto.getIsHighlighted());
+                if (dto.getIsActive() != null) event.setActive(dto.getIsActive());
             }
 
-            if (dto.getDateFormatted() != null) event.setDateFormatted(dto.getDateFormatted().trim());
-            if (dto.getGalleryUrls() != null) event.setGalleryUrls(dto.getGalleryUrls());
-            if (dto.getDisplayOrder() != null) event.setDisplayOrder(dto.getDisplayOrder());
-            if (dto.getIsHighlighted() != null) event.setHighlighted(dto.getIsHighlighted());
-            if (dto.getIsActive() != null) event.setActive(dto.getIsActive());
-        }
-
-        TimelineEvent saved = timelineEventRepository.save(event);
-        log.info("✅ Marco histórico atualizado: {} - {}", saved.getYear(), saved.getTitle());
-        return TimelineMapperHelper.map(saved);
+            TimelineEvent saved = timelineEventRepository.save(event);
+            webSocketHandler.broadcastAfterCommit("timeline", "UPDATED", saved.getId().toString());
+            log.info("✅ Marco histórico atualizado: {} - {}", saved.getYear(), saved.getTitle());
+            return TimelineMapperHelper.map(saved);
+        });
     }
 
     @Transactional
@@ -225,6 +236,7 @@ public class TimelineAdminService {
                 .orElseThrow(() -> new ResourceNotFoundException("Marco Histórico", "id", id));
         event.setActive(false);
         timelineEventRepository.save(event);
+        webSocketHandler.broadcastAfterCommit("timeline", "DELETED", id.toString());
         log.info("🗑️ Marco histórico inativado (soft delete): {}", id);
     }
 

@@ -84,7 +84,9 @@ public class UserSummaryDto {
                     .id(user.getRole().getId())
                     .name(user.getRole().getName())
                     .label(user.getRole().getLabel())
-                    .permissions(user.getRole().getPermissions())
+                    .permissions(user.getRole().getPermissions() != null
+                            ? new java.util.ArrayList<>(user.getRole().getPermissions())
+                            : java.util.List.of())
                     .build();
         }
 

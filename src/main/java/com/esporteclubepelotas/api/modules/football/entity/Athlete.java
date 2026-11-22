@@ -3,6 +3,7 @@ package com.esporteclubepelotas.api.modules.football.entity;
 import com.esporteclubepelotas.api.modules.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -15,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
+@BatchSize(size = 50)
 @Table(name = "athletes", indexes = {
         @Index(name = "idx_athletes_slug", columnList = "slug", unique = true),
         @Index(name = "idx_athletes_active_name", columnList = "is_active, name"),

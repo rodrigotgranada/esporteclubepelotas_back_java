@@ -2,6 +2,7 @@ package com.esporteclubepelotas.api.modules.membership.service;
 
 import com.esporteclubepelotas.api.common.exception.BusinessException;
 import com.esporteclubepelotas.api.common.exception.ResourceNotFoundException;
+import com.esporteclubepelotas.api.common.security.AuthTokenStateService;
 import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
 import com.esporteclubepelotas.api.modules.membership.dto.EleventicketsImportSummaryDto;
 import com.esporteclubepelotas.api.modules.membership.dto.EleventicketsMemberDto;
@@ -16,7 +17,9 @@ import com.esporteclubepelotas.api.modules.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,6 +40,7 @@ public class EleventicketsSyncService {
     private final RoleRepository roleRepository;
     private final EleventicketsMemberCacheRepository cacheRepository;
     private final PortalWebSocketHandler webSocketHandler;
+    private final AuthTokenStateService authTokenStateService;
 
     @Transactional
     public EleventicketsImportSummaryDto importCsv(MultipartFile file) {
@@ -140,12 +144,16 @@ public class EleventicketsSyncService {
                         }
                         if (user.getRole() != null && "USER".equals(user.getRole().getName()) && socioRole != null) {
                             user.setRole(socioRole);
+                            user.setTokenVersion(user.getTokenVersion() + 1);
+                            authTokenStateService.evictUserTokenState(user.getId());
                         }
                         summary.setUsersActivated(summary.getUsersActivated() + 1);
                     } else {
                         user.setSocio(false);
                         if (user.getRole() != null && "SOCIO".equals(user.getRole().getName()) && userRole != null) {
                             user.setRole(userRole);
+                            user.setTokenVersion(user.getTokenVersion() + 1);
+                            authTokenStateService.evictUserTokenState(user.getId());
                         }
                         summary.setUsersDeactivated(summary.getUsersDeactivated() + 1);
                     }
@@ -203,6 +211,21 @@ public class EleventicketsSyncService {
             Boolean isSocio,
             String status,
             String syncMode,
+            int page,
+            int limit
+    ) {
+        int pageIndex = Math.max(0, page - 1);
+        int pageSize = Math.max(1, Math.min(limit, 100));
+        Pageable pageable = PageRequest.of(pageIndex, pageSize, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return getMembers(search, isSocio, status, syncMode, pageable);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EleventicketsMemberDto> getMembers(
+            String search,
+            Boolean isSocio,
+            String status,
+            String syncMode,
             Pageable pageable
     ) {
         String cleanSearch = (search != null && !search.isBlank()) ? search.trim().toLowerCase() : null;
@@ -240,10 +263,14 @@ public class EleventicketsSyncService {
             }
             if (user.getRole() != null && "USER".equals(user.getRole().getName()) && socioRole != null) {
                 user.setRole(socioRole);
+                user.setTokenVersion(user.getTokenVersion() + 1);
+                authTokenStateService.evictUserTokenState(user.getId());
             }
         } else {
             if (user.getRole() != null && "SOCIO".equals(user.getRole().getName()) && userRole != null) {
                 user.setRole(userRole);
+                user.setTokenVersion(user.getTokenVersion() + 1);
+                authTokenStateService.evictUserTokenState(user.getId());
             }
         }
 

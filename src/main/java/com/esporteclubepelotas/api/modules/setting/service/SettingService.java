@@ -2,7 +2,8 @@ package com.esporteclubepelotas.api.modules.setting.service;
 
 import com.esporteclubepelotas.api.common.storage.MediaUploadSanitizer;
 import com.esporteclubepelotas.api.common.storage.StorageService;
-import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
+import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
+import com.esporteclubepelotas.api.modules.membership.dto.MembershipSystemConfigDto;
 import com.esporteclubepelotas.api.modules.setting.dto.SettingResponseDto;
 import com.esporteclubepelotas.api.modules.setting.dto.SettingUpdateDto;
 import com.esporteclubepelotas.api.modules.setting.entity.Setting;
@@ -14,6 +15,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
@@ -27,6 +29,8 @@ public class SettingService {
 
     private final SettingRepository settingRepository;
     private final StorageService storageService;
+    private final TransactionTemplate transactionTemplate;
+    private final PortalWebSocketHandler webSocketHandler;
 
     @Cacheable(value = "publicSettings", sync = true)
     @Transactional
@@ -61,76 +65,111 @@ public class SettingService {
     }
 
     @CacheEvict(value = "publicSettings", allEntries = true)
-    @AuditLog(module = "SETTINGS", action = "UPDATE", description = "Atualização de Configurações Globais")
-    @Transactional
     public SettingResponseDto updateSettings(SettingUpdateDto dto, MultipartFile logoFile) {
-        Setting setting = settingRepository.findFirstByOrderByIdAsc()
-                .orElseGet(this::createDefaultSettings);
+        // Upload prévio fora de transação JDBC para não prender conexão do pool durante I/O Firebase
+        String uploadedLogoUrl = (logoFile != null && !logoFile.isEmpty())
+                ? MediaUploadSanitizer.uploadAndVerify(
+                        logoFile,
+                        "settings",
+                        "club-logo-" + System.currentTimeMillis() + ".png",
+                        MediaUploadSanitizer.MediaKind.IMAGE,
+                        storageService,
+                        "Falha ao processar arquivo de logo."
+                )
+                : null;
 
-        if (dto != null) {
-            if (dto.getClubName() != null) setting.setClubName(dto.getClubName());
-            if (dto.getClubLogoUrl() != null && !MediaUploadSanitizer.isBlobUrl(dto.getClubLogoUrl())) {
-                setting.setClubLogoUrl(MediaUploadSanitizer.sanitizeNullableUrl(dto.getClubLogoUrl()));
+        return transactionTemplate.execute(status -> {
+            Setting setting = settingRepository.findFirstByOrderByIdAsc()
+                    .orElseGet(this::createDefaultSettings);
+
+            if (dto != null) {
+                if (dto.getClubName() != null) setting.setClubName(dto.getClubName());
+                if (dto.getClubLogoUrl() != null && !MediaUploadSanitizer.isBlobUrl(dto.getClubLogoUrl())) {
+                    setting.setClubLogoUrl(MediaUploadSanitizer.sanitizeNullableUrl(dto.getClubLogoUrl()));
+                }
+                if (dto.getClubLogoGallery() != null) {
+                    setting.setClubLogoGallery(MediaUploadSanitizer.sanitizeUrlList(dto.getClubLogoGallery()));
+                }
+                if (dto.getSocialLinks() != null) setting.setSocialLinks(new ArrayList<>(dto.getSocialLinks()));
+                if (dto.getContactPhones() != null) setting.setContactPhones(new ArrayList<>(dto.getContactPhones()));
+                if (dto.getContactEmails() != null) setting.setContactEmails(new ArrayList<>(dto.getContactEmails()));
+                if (dto.getOpeningHours() != null) setting.setOpeningHours(new ArrayList<>(dto.getOpeningHours()));
+                if (dto.getFooterNavigationLinks() != null) setting.setFooterNavigationLinks(new ArrayList<>(dto.getFooterNavigationLinks()));
+                if (dto.getStadiumName() != null) setting.setStadiumName(dto.getStadiumName());
+                if (dto.getStadiumAddress() != null) setting.setStadiumAddress(dto.getStadiumAddress());
+                if (dto.getGoogleMapsEmbedUrl() != null) setting.setGoogleMapsEmbedUrl(dto.getGoogleMapsEmbedUrl());
+                if (dto.getCopyrightText() != null) setting.setCopyrightText(dto.getCopyrightText());
+                if (dto.getMembershipSystemProvider() != null) setting.setMembershipSystemProvider(dto.getMembershipSystemProvider().trim().toUpperCase());
+                if (dto.getMembershipExternalUrl() != null) setting.setMembershipExternalUrl(dto.getMembershipExternalUrl().trim());
+                if (dto.getYouthPillars() != null) setting.setYouthPillars(new ArrayList<>(dto.getYouthPillars()));
+                if (dto.getYouthTryouts() != null) setting.setYouthTryouts(dto.getYouthTryouts());
+
+                // Loja Oficial Alcateia
+                if (dto.getStoreName() != null) setting.setStoreName(dto.getStoreName().trim());
+                if (dto.getStoreDescription() != null) setting.setStoreDescription(dto.getStoreDescription().trim());
+                if (dto.getStoreFacadeUrl() != null && !MediaUploadSanitizer.isBlobUrl(dto.getStoreFacadeUrl())) {
+                    setting.setStoreFacadeUrl(MediaUploadSanitizer.sanitizeNullableUrl(dto.getStoreFacadeUrl()));
+                }
+                if (dto.getStoreExternalUrl() != null) setting.setStoreExternalUrl(dto.getStoreExternalUrl().trim());
+                if (dto.getStoreIsOnlineActive() != null) setting.setStoreIsOnlineActive(dto.getStoreIsOnlineActive());
+                if (dto.getStoreInstagramUrl() != null) setting.setStoreInstagramUrl(dto.getStoreInstagramUrl().trim());
+                if (dto.getStoreInstagramDescription() != null) setting.setStoreInstagramDescription(dto.getStoreInstagramDescription().trim());
+                if (dto.getStoreWhatsappNumber() != null) setting.setStoreWhatsappNumber(dto.getStoreWhatsappNumber().trim());
+                if (dto.getStoreWhatsappDescription() != null) setting.setStoreWhatsappDescription(dto.getStoreWhatsappDescription().trim());
+                if (dto.getStoreWhatsappMessage() != null) setting.setStoreWhatsappMessage(dto.getStoreWhatsappMessage().trim());
+                if (dto.getStoreOpeningHours() != null) setting.setStoreOpeningHours(dto.getStoreOpeningHours().trim());
+                if (dto.getStoreAddress() != null) setting.setStoreAddress(dto.getStoreAddress().trim());
+                if (dto.getStoreHasMemberDiscount() != null) setting.setStoreHasMemberDiscount(dto.getStoreHasMemberDiscount());
+                if (dto.getStoreMemberDiscountText() != null) setting.setStoreMemberDiscountText(dto.getStoreMemberDiscountText().trim());
+                if (dto.getNewsletterIsActive() != null) setting.setNewsletterIsActive(dto.getNewsletterIsActive());
             }
-            if (dto.getClubLogoGallery() != null) {
-                setting.setClubLogoGallery(MediaUploadSanitizer.sanitizeUrlList(dto.getClubLogoGallery()));
+
+            if (uploadedLogoUrl != null) {
+                setting.setClubLogoUrl(uploadedLogoUrl);
+
+                List<String> currentGallery = setting.getClubLogoGallery() != null
+                        ? new ArrayList<>(setting.getClubLogoGallery())
+                        : new ArrayList<>();
+                if (!currentGallery.contains(uploadedLogoUrl)) {
+                    currentGallery.add(0, uploadedLogoUrl);
+                }
+                setting.setClubLogoGallery(currentGallery);
             }
-            if (dto.getSocialLinks() != null) setting.setSocialLinks(new ArrayList<>(dto.getSocialLinks()));
-            if (dto.getContactPhones() != null) setting.setContactPhones(new ArrayList<>(dto.getContactPhones()));
-            if (dto.getContactEmails() != null) setting.setContactEmails(new ArrayList<>(dto.getContactEmails()));
-            if (dto.getOpeningHours() != null) setting.setOpeningHours(new ArrayList<>(dto.getOpeningHours()));
-            if (dto.getFooterNavigationLinks() != null) setting.setFooterNavigationLinks(new ArrayList<>(dto.getFooterNavigationLinks()));
-            if (dto.getStadiumName() != null) setting.setStadiumName(dto.getStadiumName());
-            if (dto.getStadiumAddress() != null) setting.setStadiumAddress(dto.getStadiumAddress());
-            if (dto.getGoogleMapsEmbedUrl() != null) setting.setGoogleMapsEmbedUrl(dto.getGoogleMapsEmbedUrl());
-            if (dto.getCopyrightText() != null) setting.setCopyrightText(dto.getCopyrightText());
-            if (dto.getMembershipSystemProvider() != null) setting.setMembershipSystemProvider(dto.getMembershipSystemProvider().trim().toUpperCase());
-            if (dto.getMembershipExternalUrl() != null) setting.setMembershipExternalUrl(dto.getMembershipExternalUrl().trim());
-            if (dto.getYouthPillars() != null) setting.setYouthPillars(new ArrayList<>(dto.getYouthPillars()));
-            if (dto.getYouthTryouts() != null) setting.setYouthTryouts(dto.getYouthTryouts());
 
-            // Loja Oficial Alcateia
-            if (dto.getStoreName() != null) setting.setStoreName(dto.getStoreName().trim());
-            if (dto.getStoreDescription() != null) setting.setStoreDescription(dto.getStoreDescription().trim());
-            if (dto.getStoreFacadeUrl() != null && !MediaUploadSanitizer.isBlobUrl(dto.getStoreFacadeUrl())) {
-                setting.setStoreFacadeUrl(MediaUploadSanitizer.sanitizeNullableUrl(dto.getStoreFacadeUrl()));
-            }
-            if (dto.getStoreExternalUrl() != null) setting.setStoreExternalUrl(dto.getStoreExternalUrl().trim());
-            if (dto.getStoreIsOnlineActive() != null) setting.setStoreIsOnlineActive(dto.getStoreIsOnlineActive());
-            if (dto.getStoreInstagramUrl() != null) setting.setStoreInstagramUrl(dto.getStoreInstagramUrl().trim());
-            if (dto.getStoreInstagramDescription() != null) setting.setStoreInstagramDescription(dto.getStoreInstagramDescription().trim());
-            if (dto.getStoreWhatsappNumber() != null) setting.setStoreWhatsappNumber(dto.getStoreWhatsappNumber().trim());
-            if (dto.getStoreWhatsappDescription() != null) setting.setStoreWhatsappDescription(dto.getStoreWhatsappDescription().trim());
-            if (dto.getStoreWhatsappMessage() != null) setting.setStoreWhatsappMessage(dto.getStoreWhatsappMessage().trim());
-            if (dto.getStoreOpeningHours() != null) setting.setStoreOpeningHours(dto.getStoreOpeningHours().trim());
-            if (dto.getStoreAddress() != null) setting.setStoreAddress(dto.getStoreAddress().trim());
-            if (dto.getStoreHasMemberDiscount() != null) setting.setStoreHasMemberDiscount(dto.getStoreHasMemberDiscount());
-            if (dto.getStoreMemberDiscountText() != null) setting.setStoreMemberDiscountText(dto.getStoreMemberDiscountText().trim());
-            if (dto.getNewsletterIsActive() != null) setting.setNewsletterIsActive(dto.getNewsletterIsActive());
-        }
+            Setting saved = settingRepository.save(setting);
+            webSocketHandler.broadcastAfterCommit("settings", "UPDATED", "global");
+            return SettingResponseDto.fromEntity(saved);
+        });
+    }
 
-        if (logoFile != null && !logoFile.isEmpty()) {
-            String logoUrl = MediaUploadSanitizer.uploadAndVerify(
-                    logoFile,
-                    "settings",
-                    "club-logo-" + System.currentTimeMillis() + ".png",
-                    MediaUploadSanitizer.MediaKind.IMAGE,
-                    storageService,
-                    "Falha ao processar arquivo de logo."
-            );
-            setting.setClubLogoUrl(logoUrl);
+    public MembershipSystemConfigDto getMembershipSystemConfig() {
+        SettingResponseDto settings = getSettings();
+        return MembershipSystemConfigDto.builder()
+                .provider(settings.getMembershipSystemProvider() != null ? settings.getMembershipSystemProvider() : "ELEVENTICKETS")
+                .externalUrl(settings.getMembershipExternalUrl() != null ? settings.getMembershipExternalUrl() : "https://socioecpelotas.eleventickets.com/#/")
+                .build();
+    }
 
-            List<String> currentGallery = setting.getClubLogoGallery() != null
-                    ? new ArrayList<>(setting.getClubLogoGallery())
-                    : new ArrayList<>();
-            if (!currentGallery.contains(logoUrl)) {
-                currentGallery.add(0, logoUrl);
-            }
-            setting.setClubLogoGallery(currentGallery);
-        }
+    @CacheEvict(value = "publicSettings", allEntries = true)
+    public MembershipSystemConfigDto updateMembershipSystemConfig(MembershipSystemConfigDto dto) {
+        String provider = (dto.getProvider() != null && !dto.getProvider().isBlank())
+                ? dto.getProvider().trim().toUpperCase()
+                : "ELEVENTICKETS";
+        String externalUrl = (dto.getExternalUrl() != null && !dto.getExternalUrl().isBlank())
+                ? dto.getExternalUrl().trim()
+                : "https://socioecpelotas.eleventickets.com/#/";
 
-        Setting saved = settingRepository.save(setting);
-        return SettingResponseDto.fromEntity(saved);
+        SettingUpdateDto updateDto = SettingUpdateDto.builder()
+                .membershipSystemProvider(provider)
+                .membershipExternalUrl(externalUrl)
+                .build();
+
+        updateSettings(updateDto, null);
+        webSocketHandler.broadcastAfterCommit("membership_config", "UPDATED", provider);
+        return MembershipSystemConfigDto.builder()
+                .provider(provider)
+                .externalUrl(externalUrl)
+                .build();
     }
 
     @Transactional

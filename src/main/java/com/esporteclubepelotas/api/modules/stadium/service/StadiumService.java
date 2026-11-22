@@ -38,7 +38,6 @@ public class StadiumService {
     }
 
     @Transactional
-    @AuditLog(module = "STADIUM", action = "UPDATE", description = "Atualização dos dados e memorial do Estádio Boca do Lobo")
     @CacheEvict(value = "stadiumInfo", allEntries = true)
     public StadiumResponseDto updateStadiumInfo(UpdateStadiumDto dto) {
         StadiumInfo stadium = stadiumRepository.findById(1L)

@@ -9,6 +9,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -29,6 +32,7 @@ public class SettingController {
 
     private final SettingService settingService;
     private final ObjectMapper objectMapper;
+    private final Validator validator;
 
     @GetMapping
     @Operation(summary = "Obtém as configurações globais do portal (Público)")
@@ -83,18 +87,26 @@ public class SettingController {
     @Operation(summary = "Atualiza configurações globais via Multipart (com upload de logo opcional) (Admin)")
     public ResponseEntity<SettingResponseDto> updateSettingsMultipart(
             @RequestParam(value = "data", required = false) String dataStr,
+            @RequestPart(value = "file", required = false) MultipartFile file,
             @RequestPart(value = "logo", required = false) MultipartFile logoFile
     ) {
         SettingUpdateDto dto = null;
         if (dataStr != null && !dataStr.isBlank()) {
             try {
                 dto = objectMapper.readValue(dataStr, SettingUpdateDto.class);
+                var violations = validator.validate(dto);
+                if (!violations.isEmpty()) {
+                    throw new IllegalArgumentException(violations.iterator().next().getMessage());
+                }
+            } catch (IllegalArgumentException e) {
+                throw e;
             } catch (Exception e) {
                 log.error("Erro ao converter payload JSON de configurações: {}", e.getMessage());
                 throw new IllegalArgumentException("Payload 'data' não é um JSON válido: " + e.getMessage());
             }
         }
-        return ResponseEntity.ok(settingService.updateSettings(dto, logoFile));
+        MultipartFile targetLogo = file != null ? file : logoFile;
+        return ResponseEntity.ok(settingService.updateSettings(dto, targetLogo));
     }
 
     @PutMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -103,7 +115,7 @@ public class SettingController {
     @PreAuthorize("hasAnyAuthority('settings.manage', 'users.manage', 'ROLE_ADMIN', 'ROLE_OWNER')")
     @Operation(summary = "Atualiza configurações globais diretamente via JSON (Admin)")
     public ResponseEntity<SettingResponseDto> updateSettingsJson(
-            @RequestBody SettingUpdateDto dto
+            @Valid @RequestBody SettingUpdateDto dto
     ) {
         return ResponseEntity.ok(settingService.updateSettings(dto, null));
     }

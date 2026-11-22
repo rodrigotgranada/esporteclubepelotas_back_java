@@ -5,6 +5,8 @@ import com.esporteclubepelotas.api.modules.user.entity.PhoneItem;
 import com.esporteclubepelotas.api.modules.user.entity.UserPreferences;
 import com.esporteclubepelotas.api.modules.user.entity.UserStatus;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,8 +21,11 @@ import java.util.List;
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AdminUpdateUserDto {
+    @Size(max = 100)
     private String firstName;
+    @Size(max = 100)
     private String lastName;
+    @Email(message = "E-mail inválido")
     private String email;
     private String cpf;
     private LocalDate birthDate;

@@ -1,5 +1,6 @@
 package com.esporteclubepelotas.api.modules.transparency.controller;
 
+import com.esporteclubepelotas.api.modules.systemmodule.service.SystemModuleService;
 import com.esporteclubepelotas.api.modules.transparency.dto.TransparencyBoardMemberDto;
 import com.esporteclubepelotas.api.modules.transparency.dto.TransparencyDocumentDto;
 import com.esporteclubepelotas.api.modules.transparency.service.TransparencyService;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -21,6 +23,7 @@ import java.util.List;
 public class TransparencyPublicController {
 
     private final TransparencyService transparencyService;
+    private final SystemModuleService systemModuleService;
 
     @GetMapping("/documents")
     @Operation(summary = "Listar documentos oficiais de transparência publicados")
@@ -28,6 +31,9 @@ public class TransparencyPublicController {
             @RequestParam(required = false) String category,
             @RequestParam(required = false) Integer year
     ) {
+        if (!systemModuleService.isModuleActive("transparency")) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
         return ResponseEntity.ok(transparencyService.listPublicDocuments(category, year));
     }
 
@@ -36,6 +42,9 @@ public class TransparencyPublicController {
     public ResponseEntity<List<TransparencyBoardMemberDto>> listBoardMembers(
             @RequestParam(required = false) String boardType
     ) {
+        if (!systemModuleService.isModuleActive("transparency")) {
+            return ResponseEntity.ok(Collections.emptyList());
+        }
         return ResponseEntity.ok(transparencyService.listPublicBoardMembers(boardType));
     }
 }

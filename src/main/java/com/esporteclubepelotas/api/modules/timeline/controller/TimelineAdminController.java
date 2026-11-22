@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.Validator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -35,6 +36,7 @@ public class TimelineAdminController {
 
     private final TimelineAdminService timelineAdminService;
     private final ObjectMapper objectMapper;
+    private final Validator validator;
 
     @GetMapping
     @Operation(summary = "Listar marcos históricos para o painel de administração com filtros")
@@ -53,13 +55,18 @@ public class TimelineAdminController {
     @Operation(summary = "Criar novo marco histórico com foto opcional (Multipart)")
     public ResponseEntity<TimelineEventDto> createMultipart(
             @RequestParam("data") String dataJson,
+            @RequestPart(value = "file", required = false) MultipartFile file,
             @RequestPart(value = "photo", required = false) MultipartFile photoFile,
             @AuthenticationPrincipal UserPrincipal principal
     ) {
         try {
             CreateTimelineEventDto dto = objectMapper.readValue(dataJson, CreateTimelineEventDto.class);
+            var violations = validator.validate(dto);
+            if (!violations.isEmpty()) {
+                throw new IllegalArgumentException(violations.iterator().next().getMessage());
+            }
             String userId = principal != null ? principal.getId() : null;
-            return ResponseEntity.status(HttpStatus.CREATED).body(timelineAdminService.create(dto, photoFile, userId));
+            return ResponseEntity.status(HttpStatus.CREATED).body(timelineAdminService.create(dto, file != null ? file : photoFile, userId));
         } catch (Exception e) {
             log.error("Erro ao processar JSON de criação do marco histórico: {}", e.getMessage(), e);
             throw new IllegalArgumentException("Payload 'data' inválido: " + e.getMessage());
@@ -83,18 +90,23 @@ public class TimelineAdminController {
     public ResponseEntity<TimelineEventDto> updateMultipart(
             @PathVariable UUID id,
             @RequestParam(value = "data", required = false) String dataJson,
+            @RequestPart(value = "file", required = false) MultipartFile file,
             @RequestPart(value = "photo", required = false) MultipartFile photoFile
     ) {
         UpdateTimelineEventDto dto = null;
         if (dataJson != null && !dataJson.isBlank()) {
             try {
                 dto = objectMapper.readValue(dataJson, UpdateTimelineEventDto.class);
+                var violations = validator.validate(dto);
+                if (!violations.isEmpty()) {
+                    throw new IllegalArgumentException(violations.iterator().next().getMessage());
+                }
             } catch (Exception e) {
                 log.error("Erro ao converter payload JSON de atualização do marco: {}", e.getMessage(), e);
                 throw new IllegalArgumentException("Payload 'data' inválido: " + e.getMessage());
             }
         }
-        return ResponseEntity.ok(timelineAdminService.update(id, dto, photoFile));
+        return ResponseEntity.ok(timelineAdminService.update(id, dto, file != null ? file : photoFile));
     }
 
     @PatchMapping(value = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)

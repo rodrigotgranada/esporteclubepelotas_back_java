@@ -9,8 +9,7 @@ import com.esporteclubepelotas.api.modules.football.entity.Squad;
 import com.esporteclubepelotas.api.modules.football.entity.SquadCategory;
 import com.esporteclubepelotas.api.modules.football.helper.FootballMapperHelper;
 import com.esporteclubepelotas.api.modules.football.repository.SquadRepository;
-import com.esporteclubepelotas.api.modules.systemmodule.entity.SystemModule;
-import com.esporteclubepelotas.api.modules.systemmodule.repository.SystemModuleRepository;
+import com.esporteclubepelotas.api.modules.systemmodule.service.SystemModuleService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,17 +28,27 @@ import java.util.*;
 public class SquadsPublicService {
 
     private final SquadRepository squadRepository;
-    private final SystemModuleRepository moduleRepository;
+    private final SystemModuleService moduleService;
 
-    private boolean isModuleActive() {
-        return moduleRepository.findBySlug("football")
-                .map(SystemModule::isActive)
-                .orElse(true);
+    private boolean isScopeActive(String scope, SquadCategory category) {
+        if ("YOUTH".equalsIgnoreCase(scope)
+                || category == SquadCategory.SUB_20
+                || category == SquadCategory.SUB_17
+                || category == SquadCategory.SUB_15) {
+            return moduleService.isModuleActive("youth");
+        }
+        if ("FEMALE".equalsIgnoreCase(scope) || "FEMININE".equalsIgnoreCase(scope)
+                || category == SquadCategory.FEMININE) {
+            return moduleService.isModuleActive("female");
+        }
+        return moduleService.isModuleActive("football");
     }
 
     @Transactional(readOnly = true)
     public SquadSeasonsResponseDto getSeasons() {
-        if (!isModuleActive()) {
+        if (!moduleService.isModuleActive("football")
+                && !moduleService.isModuleActive("youth")
+                && !moduleService.isModuleActive("female")) {
             return SquadSeasonsResponseDto.builder()
                     .years(Collections.emptyList())
                     .categories(Collections.emptyList())
@@ -73,7 +82,7 @@ public class SquadsPublicService {
 
     @Transactional(readOnly = true)
     public GetSquadsResponseDto findAll(QuerySquadsDto query) {
-        if (!isModuleActive()) {
+        if (!isScopeActive(query.getScope(), query.getCategory())) {
             return GetSquadsResponseDto.builder()
                     .data(Collections.emptyList())
                     .total(0)
@@ -138,11 +147,10 @@ public class SquadsPublicService {
 
     @Transactional(readOnly = true)
     public SquadDto getCurrent(SquadCategory category) {
-        if (!isModuleActive()) {
+        SquadCategory cat = category != null ? category : SquadCategory.PROFESSIONAL;
+        if (!isScopeActive(null, cat)) {
             return null;
         }
-
-        SquadCategory cat = category != null ? category : SquadCategory.PROFESSIONAL;
 
         Squad squad = squadRepository.findFirstByCategoryAndIsCurrentTrueAndIsActiveTrue(cat)
                 .or(() -> squadRepository.findFirstByCategoryAndIsActiveTrueOrderByYearDescCreatedAtDesc(cat))
@@ -157,20 +165,20 @@ public class SquadsPublicService {
 
     @Transactional(readOnly = true)
     public SquadDto getById(UUID id) {
-        if (!isModuleActive()) {
-            throw new BusinessException("Módulo de Futebol está temporariamente desativado.");
-        }
-
         Squad squad = squadRepository.findById(id)
                 .filter(Squad::isActive)
                 .orElseThrow(() -> new BusinessException("Elenco não encontrado."));
+
+        if (!isScopeActive(null, squad.getCategory())) {
+            throw new BusinessException("Módulo de Futebol está temporariamente desativado.");
+        }
 
         return FootballMapperHelper.organizeSquadSectors(squad);
     }
 
     @Transactional(readOnly = true)
     public SquadDto getByYearAndCategory(int year, SquadCategory category) {
-        if (!isModuleActive()) {
+        if (!isScopeActive(null, category)) {
             throw new BusinessException("Módulo de Futebol está temporariamente desativado.");
         }
 

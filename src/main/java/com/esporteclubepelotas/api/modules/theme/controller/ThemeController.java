@@ -64,7 +64,7 @@ public class ThemeController {
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyAuthority('settings.manage', 'ROLE_ADMIN', 'ROLE_OWNER')")
     @Operation(summary = "Atualiza parcialmente os dados ou cores de um tema (Admin)")
-    public ResponseEntity<ThemeResponseDto> update(@PathVariable Long id, @RequestBody ThemeRequestDto dto) {
+    public ResponseEntity<ThemeResponseDto> update(@PathVariable Long id, @Valid @RequestBody ThemeRequestDto dto) {
         return ResponseEntity.ok(themeService.update(id, dto));
     }
 

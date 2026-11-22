@@ -231,8 +231,10 @@ public class AuthService {
             throw new BusinessException("O e-mail é obrigatório");
         }
 
-        User user = userRepository.findByEmail(email.trim().toLowerCase())
-                .orElseThrow(() -> new BusinessException("Usuário não encontrado"));
+        User user = userRepository.findByEmail(email.trim().toLowerCase()).orElse(null);
+        if (user == null) {
+            return;
+        }
 
         if (user.getStatus() == UserStatus.ACTIVE && user.isEmailVerified()) {
             throw new BusinessException("Usuário já está verificado");
@@ -261,7 +263,7 @@ public class AuthService {
         }
 
         if (user == null) {
-            throw new BusinessException("Usuário não encontrado");
+            return;
         }
 
         String token = UUID.randomUUID().toString().replace("-", "") + UUID.randomUUID().toString().replace("-", "");
@@ -367,7 +369,9 @@ public class AuthService {
                 .email(user.getEmail())
                 .cpf(user.getCpf())
                 .role(roleName)
-                .permissions(user.getRole() != null ? user.getRole().getPermissions() : Collections.emptyList())
+                .permissions(user.getRole() != null && user.getRole().getPermissions() != null
+                        ? new java.util.ArrayList<>(user.getRole().getPermissions())
+                        : Collections.emptyList())
                 .tokenVersion(user.getTokenVersion())
                 .active(user.isActive())
                 .build();

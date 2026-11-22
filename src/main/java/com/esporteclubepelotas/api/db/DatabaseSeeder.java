@@ -20,7 +20,11 @@ import com.esporteclubepelotas.api.modules.user.entity.UserStatus;
 import com.esporteclubepelotas.api.modules.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -42,16 +46,19 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final ThemeService themeService;
     private final SettingService settingService;
-    private final FootballSeeder footballSeeder;
+    private final ObjectProvider<FootballSeeder> footballSeederProvider;
+    private final Environment environment;
 
     @Override
     public void run(String... args) {
         seedRoles();
         seedModules();
-        seedUsers();
+        if (!environment.acceptsProfiles(Profiles.of("prod"))) {
+            seedUsers();
         seedIdols();
         seedNews();
-        footballSeeder.seedDefaultFootball();
+            footballSeederProvider.ifAvailable(FootballSeeder::seedDefaultFootball);
+        }
         themeService.seedDefaultTheme();
         settingService.seedDefaultSettings();
     }
@@ -400,7 +407,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         newsCategoryRepository.saveAll(List.of(futebol, institucional, base, social));
 
         User author = userRepository.findByEmail("admin@esporteclubepelotas.com.br")
-                .or(() -> userRepository.findAll().stream().findFirst())
+                .or(() -> userRepository.findAll(PageRequest.of(0, 1)).stream().findFirst())
                 .orElse(null);
 
         if (author == null) {

@@ -2,7 +2,6 @@ package com.esporteclubepelotas.api.modules.role.service;
 
 import com.esporteclubepelotas.api.common.exception.BusinessException;
 import com.esporteclubepelotas.api.common.exception.ResourceNotFoundException;
-import com.esporteclubepelotas.api.modules.audit.annotation.AuditLog;
 import com.esporteclubepelotas.api.modules.role.dto.CreateRoleDto;
 import com.esporteclubepelotas.api.modules.role.dto.UpdateRoleDto;
 import com.esporteclubepelotas.api.modules.role.entity.Role;
@@ -12,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -23,15 +23,18 @@ public class RoleService {
     private final RoleRepository roleRepository;
 
     public List<Role> findAll() {
-        return roleRepository.findAll();
+        List<Role> roles = roleRepository.findAll();
+        roles.forEach(this::detachPermissions);
+        return roles;
     }
 
     public Role findById(String id) {
-        return roleRepository.findById(id)
+        Role role = roleRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Cargo", "id", id));
+        detachPermissions(role);
+        return role;
     }
 
-    @AuditLog(module = "ROLES", action = "CREATE", description = "Criação de novo cargo no sistema")
     @Transactional
     public Role createRole(CreateRoleDto dto) {
         String normalizedName = dto.getName().trim().toUpperCase();
@@ -47,17 +50,19 @@ public class RoleService {
                 .name(normalizedName)
                 .label(label)
                 .description(dto.getDescription() != null ? dto.getDescription().trim() : "")
-                .permissions(dto.getPermissions() != null ? dto.getPermissions() : List.of())
+                .permissions(dto.getPermissions() != null ? new ArrayList<>(dto.getPermissions()) : new ArrayList<>())
                 .build();
 
         log.info("Criando novo cargo: {}", normalizedName);
-        return roleRepository.save(role);
+        Role saved = roleRepository.save(role);
+        detachPermissions(saved);
+        return saved;
     }
 
-    @AuditLog(module = "ROLES", action = "UPDATE", description = "Atualização de permissões ou dados do cargo")
     @Transactional
     public Role updateRole(String id, UpdateRoleDto dto) {
-        Role role = findById(id);
+        Role role = roleRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Cargo", "id", id));
 
         if (role.isImmutable()) {
             throw new BusinessException("Cargos nativos e imutáveis não podem ter suas permissões principais alteradas.");
@@ -70,14 +75,15 @@ public class RoleService {
             role.setDescription(dto.getDescription().trim());
         }
         if (dto.getPermissions() != null) {
-            role.setPermissions(dto.getPermissions());
+            role.setPermissions(new ArrayList<>(dto.getPermissions()));
         }
 
         log.info("Atualizando cargo: {}", role.getName());
-        return roleRepository.save(role);
+        Role saved = roleRepository.save(role);
+        detachPermissions(saved);
+        return saved;
     }
 
-    @AuditLog(module = "ROLES", action = "DELETE", description = "Exclusão de cargo no sistema")
     @Transactional
     public void deleteRole(String id) {
         Role role = findById(id);
@@ -89,5 +95,10 @@ public class RoleService {
         log.info("Excluindo cargo: {}", role.getName());
         roleRepository.delete(role);
     }
-}
 
+    private void detachPermissions(Role role) {
+        if (role != null && role.getPermissions() != null) {
+            role.setPermissions(new ArrayList<>(role.getPermissions()));
+        }
+    }
+}

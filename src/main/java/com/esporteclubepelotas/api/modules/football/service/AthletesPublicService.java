@@ -10,8 +10,7 @@ import com.esporteclubepelotas.api.modules.football.entity.SquadMember;
 import com.esporteclubepelotas.api.modules.football.helper.FootballMapperHelper;
 import com.esporteclubepelotas.api.modules.football.repository.AthleteRepository;
 import com.esporteclubepelotas.api.modules.football.repository.SquadMemberRepository;
-import com.esporteclubepelotas.api.modules.systemmodule.entity.SystemModule;
-import com.esporteclubepelotas.api.modules.systemmodule.repository.SystemModuleRepository;
+import com.esporteclubepelotas.api.modules.systemmodule.service.SystemModuleService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,17 +32,21 @@ public class AthletesPublicService {
 
     private final AthleteRepository athleteRepository;
     private final SquadMemberRepository squadMemberRepository;
-    private final SystemModuleRepository moduleRepository;
+    private final SystemModuleService moduleService;
 
-    private boolean isModuleActive() {
-        return moduleRepository.findBySlug("football")
-                .map(SystemModule::isActive)
-                .orElse(true);
+    private boolean isScopeActive(com.esporteclubepelotas.api.modules.football.entity.AthleteType type, com.esporteclubepelotas.api.modules.football.entity.AthleteGender gender) {
+        if (type == com.esporteclubepelotas.api.modules.football.entity.AthleteType.YOUTH) {
+            return moduleService.isModuleActive("youth");
+        }
+        if (gender == com.esporteclubepelotas.api.modules.football.entity.AthleteGender.FEMALE) {
+            return moduleService.isModuleActive("female");
+        }
+        return moduleService.isModuleActive("football");
     }
 
     @Transactional(readOnly = true)
     public GetAthletesResponseDto findAll(QueryAthletesDto query) {
-        boolean active = isModuleActive();
+        boolean active = isScopeActive(query.getAthleteType(), query.getGender());
         if (!active) {
             return GetAthletesResponseDto.builder()
                     .data(Collections.emptyList())
@@ -100,7 +103,9 @@ public class AthletesPublicService {
 
     @Transactional(readOnly = true)
     public AthleteDto findBySlug(String slug) {
-        if (!isModuleActive()) {
+        if (!moduleService.isModuleActive("football")
+                && !moduleService.isModuleActive("youth")
+                && !moduleService.isModuleActive("female")) {
             throw new BusinessException("Módulo de Futebol está temporariamente desativado.");
         }
 

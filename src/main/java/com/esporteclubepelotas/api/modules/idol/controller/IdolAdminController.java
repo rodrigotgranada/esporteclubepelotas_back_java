@@ -66,7 +66,7 @@ public class IdolAdminController {
     @Operation(summary = "Atualizar dados de um ídolo existente")
     public ResponseEntity<IdolDto> update(
             @PathVariable String id,
-            @RequestBody UpdateAdminIdolDto dto,
+            @Valid @RequestBody UpdateAdminIdolDto dto,
             @CurrentUser UserPrincipal user) {
         String userId = user != null ? user.getId() : null;
         return ResponseEntity.ok(idolAdminService.update(id, dto, userId));
@@ -113,8 +113,9 @@ public class IdolAdminController {
     @Operation(summary = "Upload de fotos para a galeria histórica do ídolo")
     public ResponseEntity<Map<String, Object>> uploadGallery(
             @PathVariable String id,
+            @RequestParam(value = "file", required = false) List<MultipartFile> singleFiles,
             @RequestParam(value = "files", required = false) List<MultipartFile> files, @RequestParam(value = "gallery", required = false) List<MultipartFile> gallery) {
-        List<MultipartFile> target = files != null && !files.isEmpty() ? files : gallery; return ResponseEntity.ok(idolAdminService.uploadGallery(id, target));
+        List<MultipartFile> target = files != null && !files.isEmpty() ? files : (gallery != null && !gallery.isEmpty() ? gallery : singleFiles); return ResponseEntity.ok(idolAdminService.uploadGallery(id, target));
     }
 }
 

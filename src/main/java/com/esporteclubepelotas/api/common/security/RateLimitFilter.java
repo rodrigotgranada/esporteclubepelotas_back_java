@@ -66,6 +66,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 allowed = rateLimiterService.tryAcquire("verify:" + clientIp, 10, ONE_MINUTE_MS);
             } else if (path.endsWith("/auth/reset-password")) {
                 allowed = rateLimiterService.tryAcquire("reset-pass:" + clientIp, 5, ONE_MINUTE_MS);
+            } else if (path.endsWith("/auth/refresh")) {
+                allowed = rateLimiterService.tryAcquire("refresh:" + clientIp, 20, ONE_MINUTE_MS);
             } else if (path.endsWith("/auth/register") || path.endsWith("/users/register")) {
                 allowed = rateLimiterService.tryAcquire("register:" + clientIp, 5, ONE_MINUTE_MS);
             } else if (path.contains("/news/") && path.endsWith("/comments")) {
@@ -80,6 +82,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
                 allowed = rateLimiterService.tryAcquire("leads:" + clientIp, 5, ONE_MINUTE_MS);
             } else if (path.contains("/polls/") && path.endsWith("/vote")) {
                 allowed = rateLimiterService.tryAcquire("poll-vote:" + clientIp, 15, ONE_MINUTE_MS);
+            } else if (path.contains("/sponsors/") && path.endsWith("/click")) {
+                allowed = rateLimiterService.tryAcquire("sponsor-click:" + clientIp, 30, ONE_MINUTE_MS);
             }
         } else if ("GET".equalsIgnoreCase(method) && path.endsWith("/users/check-availability")) {
             allowed = rateLimiterService.tryAcquire("check-avail:" + clientIp, 20, ONE_MINUTE_MS);

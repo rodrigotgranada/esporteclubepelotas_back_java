@@ -15,6 +15,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.text.Normalizer;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -25,20 +29,31 @@ public class TimelineCategoryService {
 
     private final TimelineCategoryRepository categoryRepository;
 
+    private Map<UUID, Long> loadEventCountsByCategory() {
+        return categoryRepository.countActiveEventsGroupedByCategory().stream()
+                .collect(Collectors.toMap(
+                        row -> (UUID) row[0],
+                        row -> ((Number) row[1]).longValue(),
+                        (a, b) -> a
+                ));
+    }
+
     private static final Pattern NONLATIN = Pattern.compile("[^\\w-]");
     private static final Pattern WHITESPACE = Pattern.compile("[\\s]");
 
     @Transactional(readOnly = true)
     public List<TimelineCategoryDto> findAllPublic() {
+        Map<UUID, Long> counts = loadEventCountsByCategory();
         return categoryRepository.findByIsActiveTrueOrderByDisplayOrderAscNameAsc().stream()
-                .map(cat -> TimelineMapperHelper.mapCategory(cat, categoryRepository.countEventsByCategoryId(cat.getId())))
+                .map(cat -> TimelineMapperHelper.mapCategory(cat, counts.getOrDefault(cat.getId(), 0L)))
                 .toList();
     }
 
     @Transactional(readOnly = true)
     public List<TimelineCategoryDto> findAllAdmin() {
+        Map<UUID, Long> counts = loadEventCountsByCategory();
         return categoryRepository.findAllByOrderByDisplayOrderAscNameAsc().stream()
-                .map(cat -> TimelineMapperHelper.mapCategory(cat, categoryRepository.countEventsByCategoryId(cat.getId())))
+                .map(cat -> TimelineMapperHelper.mapCategory(cat, counts.getOrDefault(cat.getId(), 0L)))
                 .toList();
     }
 

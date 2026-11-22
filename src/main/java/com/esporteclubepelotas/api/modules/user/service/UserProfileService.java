@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.SecureRandom;
@@ -40,6 +41,7 @@ public class UserProfileService {
     private final StorageService storageService;
     private final EmailService emailService;
     private final PortalWebSocketHandler webSocketHandler;
+    private final TransactionTemplate transactionTemplate;
 
     @Transactional(readOnly = true)
     public UserSummaryDto getMe(String userId) {
@@ -89,22 +91,27 @@ public class UserProfileService {
         return UserSummaryDto.fromEntity(saved);
     }
 
-    @Transactional
     public Map<String, String> updateAvatar(String userId, MultipartFile file) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário", "id", userId));
+        if (!userRepository.existsById(userId)) {
+            throw new ResourceNotFoundException("Usuário", "id", userId);
+        }
 
         String url = MediaUploadSanitizer.uploadAndVerify(
                 file,
-                "users/" + user.getId(),
+                "users/" + userId,
                 "_profile.jpg",
                 MediaUploadSanitizer.MediaKind.IMAGE,
                 storageService,
                 "Falha ao enviar foto de perfil."
         );
-        user.setAvatarUrl(url);
-        userRepository.save(user);
-        webSocketHandler.broadcastAfterCommit("users", "UPDATED", user.getId(), null);
+
+        transactionTemplate.executeWithoutResult(status -> {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuário", "id", userId));
+            user.setAvatarUrl(url);
+            userRepository.save(user);
+            webSocketHandler.broadcastAfterCommit("users", "UPDATED", user.getId(), null);
+        });
 
         return Map.of("url", url);
     }

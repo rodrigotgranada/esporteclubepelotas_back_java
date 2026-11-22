@@ -31,6 +31,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.SecureRandom;
@@ -53,6 +54,7 @@ public class UserAdminService {
     private final StorageService storageService;
     private final EmailService emailService;
     private final PortalWebSocketHandler webSocketHandler;
+    private final TransactionTemplate transactionTemplate;
 
     @Value("${frontend.url:https://esporte-clube-pelotas-dev.vercel.app}")
     private String frontendUrl;
@@ -280,7 +282,6 @@ public class UserAdminService {
         return UserSummaryDto.fromEntity(saved);
     }
 
-    @Transactional
     public Map<String, String> adminUpdateAvatar(String id, MultipartFile file, String actorRole) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário", "id", id));
@@ -290,14 +291,19 @@ public class UserAdminService {
 
         String avatarUrl = MediaUploadSanitizer.uploadAndVerify(
                 file,
-                "users/" + user.getId(),
+                "users/" + id,
                 "_profile.jpg",
                 MediaUploadSanitizer.MediaKind.IMAGE,
                 storageService,
                 "Falha ao enviar foto de perfil do usuário.");
-        user.setAvatarUrl(avatarUrl);
-        userRepository.save(user);
-        webSocketHandler.broadcastAfterCommit("users", "UPDATED", user.getId(), null);
+
+        transactionTemplate.executeWithoutResult(status -> {
+            User target = userRepository.findById(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuário", "id", id));
+            target.setAvatarUrl(avatarUrl);
+            userRepository.save(target);
+            webSocketHandler.broadcastAfterCommit("users", "UPDATED", target.getId(), null);
+        });
 
         return Map.of("url", avatarUrl);
     }

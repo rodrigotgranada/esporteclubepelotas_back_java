@@ -2,11 +2,13 @@ package com.esporteclubepelotas.api.modules.news.service;
 
 import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
 import com.esporteclubepelotas.api.modules.news.entity.NewsArticle;
+import com.esporteclubepelotas.api.modules.news.entity.NewsStatus;
 import com.esporteclubepelotas.api.modules.news.repository.NewsArticleRepository;
 import com.esporteclubepelotas.api.modules.newsletter.service.NewsletterService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,13 +24,17 @@ public class NewsSchedulerService {
     private final NewsArticleRepository articleRepository;
     private final PortalWebSocketHandler webSocketHandler;
     private final NewsletterService newsletterService;
+    private final CacheManager cacheManager;
 
     @Scheduled(cron = "0 * * * * *")
     @Transactional
-    @CacheEvict(value = "news_featured", allEntries = true)
     public void handleScheduledNewsPublishing() {
         Instant now = Instant.now();
         try {
+            if (!articleRepository.existsByIsActiveTrueAndStatusAndPublishedAtLessThanEqual(NewsStatus.SCHEDULED, now)) {
+                return;
+            }
+
             List<NewsArticle> dueForNewsletter = articleRepository.findDueScheduledNewsletterArticles(now);
             if (!dueForNewsletter.isEmpty()) {
                 for (NewsArticle article : dueForNewsletter) {
@@ -39,6 +45,10 @@ public class NewsSchedulerService {
 
             int publishedCount = articleRepository.publishScheduledArticles(now);
             if (publishedCount > 0) {
+                Cache featuredCache = cacheManager.getCache("news_featured");
+                if (featuredCache != null) {
+                    featuredCache.clear();
+                }
                 log.info("[NewsScheduler] Publicadas {} matéria(s) agendada(s) automaticamente.", publishedCount);
                 webSocketHandler.broadcastAfterCommit("news", "SCHEDULED_PUBLISHED", null, null);
                 for (NewsArticle article : dueForNewsletter) {

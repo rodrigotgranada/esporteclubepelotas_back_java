@@ -33,7 +33,7 @@ public final class NewsScheduledHelper {
         );
     }
 
-    public static NewsArticleDto publishNow(NewsArticleRepository repository, UUID id) {
+    public static NewsArticle markPublishedNow(NewsArticleRepository repository, UUID id) {
         NewsArticle article = repository.findById(id)
                 .filter(NewsArticle::isActive)
                 .orElseThrow(() -> new BusinessException("Matéria agendada não encontrada."));
@@ -44,9 +44,11 @@ public final class NewsScheduledHelper {
 
         article.setStatus(NewsStatus.PUBLISHED);
         article.setPublishedAt(Instant.now());
+        return article;
+    }
 
-        NewsArticle saved = repository.save(article);
+    public static NewsArticleDto publishNow(NewsArticleRepository repository, UUID id) {
+        NewsArticle saved = repository.save(markPublishedNow(repository, id));
         return NewsMapperHelper.mapArticle(saved);
     }
 }
-

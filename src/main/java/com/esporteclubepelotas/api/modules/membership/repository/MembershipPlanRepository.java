@@ -32,6 +32,7 @@ public interface MembershipPlanRepository extends JpaRepository<MembershipPlan, 
     @Query("""
         SELECT p FROM MembershipPlan p
         WHERE p.slug = :slug
+          AND p.active = true
           AND p.deletedAt IS NULL
     """)
     Optional<MembershipPlan> findBySlug(@Param("slug") String slug);

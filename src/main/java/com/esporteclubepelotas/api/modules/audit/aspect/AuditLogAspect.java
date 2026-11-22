@@ -49,12 +49,8 @@ public class AuditLogAspect {
                     (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
             if (attributes != null) {
                 HttpServletRequest request = attributes.getRequest();
-                String ip = request.getHeader("X-Forwarded-For");
-                if (ip == null || ip.isBlank() || "unknown".equalsIgnoreCase(ip)) {
-                    ip = request.getRemoteAddr();
-                } else if (ip.contains(",")) {
-                    ip = ip.split(",")[0].trim();
-                }
+                // Usa getRemoteAddr() resolvido pelo container (forward-headers-strategy), evitando forja de X-Forwarded-For
+                String ip = request.getRemoteAddr();
                 builder.ipAddress(ip);
                 builder.userAgent(request.getHeader("User-Agent"));
             }

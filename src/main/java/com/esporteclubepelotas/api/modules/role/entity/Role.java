@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -26,15 +27,16 @@ public class Role {
     private String id;
 
     @Column(nullable = false, unique = true, length = 50)
-    private String name; // OWNER, ADMIN, SOCIO, EDITOR, USER
+    private String name;
 
     @Column(length = 100)
-    private String label; // Proprietário, Administrador, Sócio, etc.
+    private String label;
 
     @Column(length = 255)
     private String description;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
+    @BatchSize(size = 20)
     @CollectionTable(name = "role_permissions", joinColumns = @JoinColumn(name = "role_id"))
     @Column(name = "permission")
     @Builder.Default
@@ -58,4 +60,3 @@ public class Role {
         }
     }
 }
-

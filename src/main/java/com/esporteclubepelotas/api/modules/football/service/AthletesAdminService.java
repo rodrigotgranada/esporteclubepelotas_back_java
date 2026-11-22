@@ -26,6 +26,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
@@ -43,6 +44,7 @@ public class AthletesAdminService {
     private final AthleteRepository athleteRepository;
     private final UserRepository userRepository;
     private final StorageService storageService;
+    private final TransactionTemplate transactionTemplate;
 
     @Transactional(readOnly = true)
     public GetAthletesResponseDto findAll(QueryAthletesDto query) {
@@ -144,7 +146,7 @@ public class AthletesAdminService {
                 .name(dto.getName().trim())
                 .nickname(dto.getNickname() != null ? dto.getNickname().trim() : null)
                 .slug(slug)
-                .photoUrl(dto.getPhotoUrl())
+                .photoUrl(MediaUploadSanitizer.sanitizeNullableUrl(dto.getPhotoUrl()))
                 .gender(dto.getGender() != null ? dto.getGender() : AthleteGender.MALE)
                 .athleteType(dto.getAthleteType() != null ? dto.getAthleteType() : AthleteType.PROFESSIONAL)
                 .youthCategory(dto.getYouthCategory())
@@ -193,7 +195,7 @@ public class AthletesAdminService {
         }
 
         if (dto.getPhotoUrl() != null) {
-            athlete.setPhotoUrl(dto.getPhotoUrl());
+            athlete.setPhotoUrl(MediaUploadSanitizer.sanitizeNullableUrl(dto.getPhotoUrl()));
         }
 
         if (dto.getGender() != null) {
@@ -285,20 +287,30 @@ public class AthletesAdminService {
         delete(id);
     }
 
-    @Transactional
     public Map<String, String> uploadPhoto(UUID id, MultipartFile file) {
-        Athlete athlete = athleteRepository.findById(id)
-                .orElseThrow(() -> new BusinessException("Atleta não encontrado para upload de foto."));
+        if (!athleteRepository.existsById(id)) {
+            throw new BusinessException("Atleta não encontrado para upload de foto.");
+        }
 
         if (file == null || file.isEmpty()) {
             throw new BusinessException("Nenhum arquivo enviado.");
         }
 
-        String path = "athletes/" + id + "/" + System.currentTimeMillis() + "-" + file.getOriginalFilename();
-        String photoUrl = storageService.uploadFile(file, path);
+        String photoUrl = MediaUploadSanitizer.uploadAndVerify(
+                file,
+                "athletes/" + id,
+                "photo-" + System.currentTimeMillis() + ".jpg",
+                MediaUploadSanitizer.MediaKind.IMAGE,
+                storageService,
+                "Falha ao enviar foto do atleta."
+        );
 
-        athlete.setPhotoUrl(photoUrl);
-        athleteRepository.save(athlete);
+        transactionTemplate.executeWithoutResult(status -> {
+            Athlete athlete = athleteRepository.findById(id)
+                    .orElseThrow(() -> new BusinessException("Atleta não encontrado para upload de foto."));
+            athlete.setPhotoUrl(photoUrl);
+            athleteRepository.save(athlete);
+        });
 
         return Map.of("photoUrl", photoUrl);
     }

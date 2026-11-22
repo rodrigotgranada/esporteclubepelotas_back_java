@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.List;
 
 @Data
 @Builder
@@ -18,5 +19,6 @@ public class UpdatePollDto {
     private Boolean active;
     private Instant startsAt;
     private Instant endsAt;
+    private List<String> options;
 }
 

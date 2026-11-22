@@ -21,7 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -175,10 +178,46 @@ public class PollService {
         if (dto.getEndsAt() != null) {
             poll.setEndsAt(dto.getEndsAt());
         }
+        if (dto.getOptions() != null && !dto.getOptions().isEmpty()) {
+            syncPollOptions(poll, dto.getOptions());
+        }
 
         poll = pollRepository.save(poll);
         webSocketHandler.broadcastAfterCommit("polls", "POLL_UPDATED", poll.getId().toString());
         return toDto(poll, null);
+    }
+
+    private void syncPollOptions(Poll poll, List<String> requestedTitles) {
+        List<String> cleanTitles = requestedTitles.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isBlank())
+                .distinct()
+                .toList();
+        if (cleanTitles.size() < 2) {
+            return;
+        }
+        Map<String, PollOption> existingByTitle = new LinkedHashMap<>();
+        for (PollOption opt : poll.getOptions()) {
+            existingByTitle.put(opt.getTitle().trim().toLowerCase(), opt);
+        }
+        // Remove apenas opções zeradas em votos que saíram da lista (preserva histórico FK com votos)
+        poll.getOptions().removeIf(opt -> opt.getVotesCount() == 0 && cleanTitles.stream().noneMatch(t -> t.equalsIgnoreCase(opt.getTitle())));
+        int order = 1;
+        for (String title : cleanTitles) {
+            PollOption match = existingByTitle.get(title.toLowerCase());
+            if (match != null) {
+                match.setTitle(title);
+                match.setDisplayOrder(order++);
+            } else {
+                poll.getOptions().add(PollOption.builder()
+                        .poll(poll)
+                        .title(title)
+                        .votesCount(0)
+                        .displayOrder(order++)
+                        .build());
+            }
+        }
     }
 
     @Transactional
