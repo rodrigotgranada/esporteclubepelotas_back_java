@@ -64,58 +64,78 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     private void seedRoles() {
-        if (roleRepository.count() > 0) return;
+        int createdCount = 0;
 
-        log.info("🌱 [DatabaseSeeder] Criando Roles padrão do sistema...");
+        if (ensureRole(
+                "OWNER",
+                "Proprietário",
+                "Controle irrestrito e absoluto de todo o portal e permissões",
+                List.of("*"),
+                true
+        )) createdCount++;
 
-        Role owner = Role.builder()
-                .name("OWNER")
-                .label("Proprietário")
-                .description("Controle irrestrito e absoluto de todo o portal e permissões")
-                .permissions(List.of("*"))
-                .isImmutable(true)
-                .build();
+        if (ensureRole(
+                "ADMIN",
+                "Administrador",
+                "Gestão completa de notícias, futebol, ídolos e torcedores",
+                List.of("news.manage", "football.manage", "idols.manage", "users.manage", "settings.manage"),
+                true
+        )) createdCount++;
 
-        Role admin = Role.builder()
-                .name("ADMIN")
-                .label("Administrador")
-                .description("Gestão completa de notícias, futebol, ídolos e torcedores")
-                .permissions(List.of(
-                        "news.manage",
-                        "football.manage",
-                        "idols.manage",
-                        "users.manage",
-                        "settings.manage"
-                ))
-                .isImmutable(true)
-                .build();
+        if (ensureRole(
+                "EDITOR",
+                "Editor de Comunicação",
+                "Redação e publicação de matérias, fotos e memorial",
+                List.of("news.manage", "idols.manage"),
+                false
+        )) createdCount++;
 
-        Role editor = Role.builder()
-                .name("EDITOR")
-                .label("Editor de Comunicação")
-                .description("Redação e publicação de matérias, fotos e memorial")
-                .permissions(List.of("news.manage", "idols.manage"))
-                .isImmutable(false)
-                .build();
+        if (ensureRole(
+                "SOCIO",
+                "Sócio Áureo-Cerúleo",
+                "Acesso exclusivo a benefícios do quadro social e ingressos",
+                List.of("socio.read"),
+                false
+        )) createdCount++;
 
-        Role socio = Role.builder()
-                .name("SOCIO")
-                .label("Sócio Áureo-Cerúleo")
-                .description("Acesso exclusivo a benefícios do quadro social e ingressos")
-                .permissions(List.of("socio.read"))
-                .isImmutable(false)
-                .build();
+        if (ensureRole(
+                "USER",
+                "Torcedor",
+                "Acesso público a comentários, reações e perfil",
+                List.of(),
+                false
+        )) createdCount++;
 
-        Role user = Role.builder()
-                .name("USER")
-                .label("Torcedor")
-                .description("Acesso público a comentários, reações e perfil")
-                .permissions(List.of())
-                .isImmutable(false)
-                .build();
+        if (createdCount > 0) {
+            log.info("✅ [DatabaseSeeder] {} Role(s) padrão garantida(s) com sucesso.", createdCount);
+        }
+    }
 
-        roleRepository.saveAll(List.of(owner, admin, editor, socio, user));
-        log.info("✅ [DatabaseSeeder] 5 Roles cadastradas com sucesso.");
+    private boolean ensureRole(
+            String name,
+            String label,
+            String description,
+            List<String> permissions,
+            boolean isImmutable
+    ) {
+        Role existing = roleRepository.findWithPermissionsByName(name).orElse(null);
+        if (existing == null) {
+            Role role = Role.builder()
+                    .name(name)
+                    .label(label)
+                    .description(description)
+                    .permissions(new ArrayList<>(permissions))
+                    .isImmutable(isImmutable)
+                    .build();
+            roleRepository.save(role);
+            return true;
+        }
+
+        if ((existing.getPermissions() == null || existing.getPermissions().isEmpty()) && !permissions.isEmpty()) {
+            existing.setPermissions(new ArrayList<>(permissions));
+            roleRepository.save(existing);
+        }
+        return false;
     }
 
     private void seedModules() {
