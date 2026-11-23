@@ -1,6 +1,7 @@
 package com.esporteclubepelotas.api.modules.setting.dto;
 
 import com.esporteclubepelotas.api.modules.setting.model.*;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.util.List;
@@ -45,4 +46,11 @@ public class SettingUpdateDto {
     private Boolean storeHasMemberDiscount;
     private String storeMemberDiscountText;
     private Boolean newsletterIsActive;
+    private Boolean developerCreditEnabled;
+
+    @Size(max = 120, message = "O nome de exibição do desenvolvedor deve ter no máximo 120 caracteres.")
+    private String developerCreditName;
+
+    @Size(max = 500, message = "O link do desenvolvedor deve ter no máximo 500 caracteres.")
+    private String developerCreditUrl;
 }

@@ -53,6 +53,9 @@ public class SettingResponseDto {
     private Boolean storeHasMemberDiscount;
     private String storeMemberDiscountText;
     private Boolean newsletterIsActive;
+    private Boolean developerCreditEnabled;
+    private String developerCreditName;
+    private String developerCreditUrl;
 
     private Instant createdAt;
     private Instant updatedAt;
@@ -96,6 +99,9 @@ public class SettingResponseDto {
                 .storeHasMemberDiscount(setting.getStoreHasMemberDiscount() != null ? setting.getStoreHasMemberDiscount() : true)
                 .storeMemberDiscountText(setting.getStoreMemberDiscountText())
                 .newsletterIsActive(setting.getNewsletterIsActive() != null ? setting.getNewsletterIsActive() : true)
+                .developerCreditEnabled(Boolean.TRUE.equals(setting.getDeveloperCreditEnabled()))
+                .developerCreditName(setting.getDeveloperCreditName())
+                .developerCreditUrl(setting.getDeveloperCreditUrl())
                 .createdAt(setting.getCreatedAt())
                 .updatedAt(setting.getUpdatedAt())
                 .build();

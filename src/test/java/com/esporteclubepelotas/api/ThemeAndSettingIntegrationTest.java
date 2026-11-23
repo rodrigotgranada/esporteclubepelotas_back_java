@@ -136,4 +136,59 @@ class ThemeAndSettingIntegrationTest {
                 .andExpect(jsonPath("$.clubName").value("Esporte Clube Pelotas - Centenário"))
                 .andExpect(jsonPath("$.stadiumName").value("Estádio Boca do Lobo (Pelotas)"));
     }
+
+    @Test
+    @DisplayName("Apenas OWNER deve conseguir configurar créditos de desenvolvimento no rodapé")
+    void shouldAllowOnlyOwnerToUpdateDeveloperCredits() throws Exception {
+        SettingUpdateDto ownerUpdate = SettingUpdateDto.builder()
+                .developerCreditEnabled(true)
+                .developerCreditName("Rodrigo Granada")
+                .developerCreditUrl("https://rodrigogranada.dev")
+                .build();
+
+        mockMvc.perform(put("/settings")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(ownerUpdate)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.developerCreditEnabled").value(true))
+                .andExpect(jsonPath("$.developerCreditName").value("Rodrigo Granada"))
+                .andExpect(jsonPath("$.developerCreditUrl").value("https://rodrigogranada.dev"));
+
+        User adminUser = userRepository.findByEmail("admin@esporteclubepelotas.com.br")
+                .orElseThrow();
+        UserPrincipal nonOwnerAdmin = UserPrincipal.builder()
+                .id(adminUser.getId())
+                .name("Administrador Teste")
+                .email(adminUser.getEmail())
+                .cpf(adminUser.getCpf())
+                .role("ADMIN")
+                .permissions(List.of("settings.manage", "settings.view"))
+                .active(true)
+                .tokenVersion(adminUser.getTokenVersion())
+                .build();
+        String nonOwnerToken = "Bearer " + jwtTokenProvider.generateAccessToken(nonOwnerAdmin);
+
+        SettingUpdateDto adminAttempt = SettingUpdateDto.builder()
+                .developerCreditEnabled(false)
+                .build();
+
+        mockMvc.perform(put("/settings")
+                        .header("Authorization", nonOwnerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(adminAttempt)))
+                .andExpect(status().isForbidden());
+
+        SettingUpdateDto invalidUrlAttempt = SettingUpdateDto.builder()
+                .developerCreditEnabled(true)
+                .developerCreditName("Rodrigo Granada")
+                .developerCreditUrl("javascript:alert(1)")
+                .build();
+
+        mockMvc.perform(put("/settings")
+                        .header("Authorization", adminToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidUrlAttempt)))
+                .andExpect(status().isBadRequest());
+    }
 }

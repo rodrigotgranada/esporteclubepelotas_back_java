@@ -157,6 +157,16 @@ public class Setting {
     @Column(name = "newsletter_is_active", nullable = false)
     private Boolean newsletterIsActive = true;
 
+    @Builder.Default
+    @Column(name = "developer_credit_enabled", nullable = false)
+    private Boolean developerCreditEnabled = false;
+
+    @Column(name = "developer_credit_name", length = 120)
+    private String developerCreditName;
+
+    @Column(name = "developer_credit_url", length = 500)
+    private String developerCreditUrl;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;

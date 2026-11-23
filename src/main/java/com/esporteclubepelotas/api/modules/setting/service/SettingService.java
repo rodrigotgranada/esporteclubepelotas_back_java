@@ -1,5 +1,8 @@
 package com.esporteclubepelotas.api.modules.setting.service;
 
+import com.esporteclubepelotas.api.common.exception.BusinessException;
+import com.esporteclubepelotas.api.common.exception.ForbiddenException;
+import com.esporteclubepelotas.api.common.security.UserPrincipal;
 import com.esporteclubepelotas.api.common.storage.MediaUploadSanitizer;
 import com.esporteclubepelotas.api.common.storage.StorageService;
 import com.esporteclubepelotas.api.common.websocket.PortalWebSocketHandler;
@@ -13,13 +16,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Slf4j
@@ -122,6 +130,8 @@ public class SettingService {
                 if (dto.getStoreHasMemberDiscount() != null) setting.setStoreHasMemberDiscount(dto.getStoreHasMemberDiscount());
                 if (dto.getStoreMemberDiscountText() != null) setting.setStoreMemberDiscountText(dto.getStoreMemberDiscountText().trim());
                 if (dto.getNewsletterIsActive() != null) setting.setNewsletterIsActive(dto.getNewsletterIsActive());
+
+                applyDeveloperCreditUpdates(setting, dto);
             }
 
             if (uploadedLogoUrl != null) {
@@ -241,5 +251,77 @@ public class SettingService {
                 .build();
 
         return settingRepository.save(setting);
+    }
+
+    private void applyDeveloperCreditUpdates(Setting setting, SettingUpdateDto dto) {
+        boolean hasCreditUpdate = dto.getDeveloperCreditEnabled() != null
+                || dto.getDeveloperCreditName() != null
+                || dto.getDeveloperCreditUrl() != null;
+        if (!hasCreditUpdate) {
+            return;
+        }
+
+        if (!isCurrentUserOwner()) {
+            throw new ForbiddenException("Apenas o usuário OWNER pode alterar as configurações de créditos no rodapé.");
+        }
+
+        if (dto.getDeveloperCreditName() != null) {
+            String trimmedName = dto.getDeveloperCreditName().trim();
+            setting.setDeveloperCreditName(trimmedName.isEmpty() ? null : trimmedName);
+        }
+
+        if (dto.getDeveloperCreditUrl() != null) {
+            setting.setDeveloperCreditUrl(normalizeDeveloperCreditUrl(dto.getDeveloperCreditUrl()));
+        }
+
+        if (dto.getDeveloperCreditEnabled() != null) {
+            setting.setDeveloperCreditEnabled(dto.getDeveloperCreditEnabled());
+        }
+
+        if (Boolean.TRUE.equals(setting.getDeveloperCreditEnabled())
+                && (setting.getDeveloperCreditName() == null || setting.getDeveloperCreditName().isBlank())) {
+            throw new BusinessException(
+                    "Informe o nome de exibição do desenvolvedor antes de ativar os créditos no rodapé.",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
+    }
+
+    private boolean isCurrentUserOwner() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            return false;
+        }
+        if (auth.getPrincipal() instanceof UserPrincipal principal) {
+            return "OWNER".equalsIgnoreCase(principal.getRole())
+                    || "ROLE_OWNER".equalsIgnoreCase(principal.getRole());
+        }
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_OWNER".equalsIgnoreCase(a.getAuthority())
+                        || "OWNER".equalsIgnoreCase(a.getAuthority()));
+    }
+
+    private String normalizeDeveloperCreditUrl(String rawUrl) {
+        if (rawUrl == null || rawUrl.isBlank()) {
+            return null;
+        }
+        String trimmed = rawUrl.trim();
+        try {
+            URI parsed = URI.create(trimmed);
+            String scheme = parsed.getScheme() != null ? parsed.getScheme().toLowerCase(Locale.ROOT) : "";
+            if ((!"http".equals(scheme) && !"https".equals(scheme))
+                    || parsed.getHost() == null || parsed.getHost().isBlank()) {
+                throw new BusinessException(
+                        "O link do desenvolvedor deve ser uma URL válida iniciando com http:// ou https://.",
+                        HttpStatus.BAD_REQUEST
+                );
+            }
+            return trimmed;
+        } catch (IllegalArgumentException ex) {
+            throw new BusinessException(
+                    "O link do desenvolvedor deve ser uma URL válida iniciando com http:// ou https://.",
+                    HttpStatus.BAD_REQUEST
+            );
+        }
     }
 }
