@@ -69,6 +69,7 @@ public class SecurityConfig {
                                 "/auth/forgot-password",
                                 "/auth/reset-password",
                                 "/auth/env-test",
+                                "/integrations/store/**",
                                 "/users/register",
                                 "/users/check-availability"
                         ).permitAll()

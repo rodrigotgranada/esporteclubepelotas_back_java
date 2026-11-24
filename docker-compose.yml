@@ -52,6 +52,7 @@ services:
       FIREBASE_STORAGE_BUCKET: ${FIREBASE_STORAGE_BUCKET:-esporteclubepelotasdev.firebasestorage.app}
       FIREBASE_CREDENTIALS_BASE64: ${FIREBASE_CREDENTIALS_BASE64:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
+      STORE_INTERNAL_API_KEY: ${STORE_INTERNAL_API_KEY:-}
 
 volumes:
   ecpelotas_pgdata:
