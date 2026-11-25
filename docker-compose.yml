@@ -53,6 +53,7 @@ services:
       FIREBASE_CREDENTIALS_BASE64: ${FIREBASE_CREDENTIALS_BASE64:-}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
       STORE_INTERNAL_API_KEY: ${STORE_INTERNAL_API_KEY:-}
+      STORE_API_URL: http://host.docker.internal:7996
 
 volumes:
   ecpelotas_pgdata:

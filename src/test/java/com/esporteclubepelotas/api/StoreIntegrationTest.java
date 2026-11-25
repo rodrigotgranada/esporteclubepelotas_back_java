@@ -69,4 +69,38 @@ class StoreIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.found").value(true));
     }
+
+    @Test
+    @DisplayName("Deve emitir token SSO para usuário logado e retornar storeOnline=false sem erro 500 se Loja estiver offline")
+    void shouldIssueSsoTokenAndHandleOfflineStoreGracefully() throws Exception {
+        mockMvc.perform(post("/auth/store-sso-token"))
+                .andExpect(status().isUnauthorized());
+
+        LoginRequestDto login = LoginRequestDto.builder()
+                .cpf("00000000004")
+                .password("admin123")
+                .build();
+
+        String loginJson = mockMvc.perform(post("/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(login)))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString();
+
+        String jwt = "Bearer " + objectMapper.readTree(loginJson).get("accessToken").asText();
+
+        mockMvc.perform(post("/auth/store-sso-token")
+                        .header("Authorization", jwt))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ssoToken").isNotEmpty())
+                .andExpect(jsonPath("$.expiresInSeconds").value(60));
+
+        mockMvc.perform(get("/users/me/store-orders")
+                        .header("Authorization", jwt))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.storeOnline").value(false))
+                .andExpect(jsonPath("$.orders").isArray());
+    }
 }
